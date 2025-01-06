@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaVideo, FaPhone, FaEllipsisV } from 'react-icons/fa';
+import { useParams } from 'next/navigation';  // Import useParams
 
 const chatData = {
   1: {
     title: "A Couple's Fight",
+    genre: 'Romance',
     contactName: 'Wifey',
     profilePic:
       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7Kdc1T3y-DObJAzbBQ1Fe-orIp8Oj2lgdCA&s',
@@ -43,6 +45,7 @@ const chatData = {
   },
   2: {
     title: 'Family Gossip',
+    genre: 'Family',
     contactName: 'Happy Family',
     profilePic:
       'https://allie.photo/wp-content/uploads/2021/01/what-to-wear-for-large-group-family-photos_0066.jpg',
@@ -65,10 +68,34 @@ const chatData = {
       },
     },
   },
+  3: {
+    title: 'Office Drama',
+    genre: 'Drama',
+    contactName: 'Boss',
+    profilePic:
+      'https://img.freepik.com/free-photo/vintage-style-office-workers-having-desk-job_23-2149851039.jpg?semt=ais_hybrid',
+    status: 'Online',
+    episodes: {
+      1: {
+        title: 'Episode 1',
+        chats: [
+          { sender: 'Boss', text: 'Team, we need to discuss last quarter’s performance.', time: '10:00 AM' },
+          { sender: 'Alice', text: 'Sure. Is there something specific to focus on?', time: '10:02 AM' },
+          { sender: 'Boss', text: 'Yes, the marketing team missed key deadlines.', time: '10:03 AM' },
+          { sender: 'Bob', text: 'It wasn’t just us. We were waiting on approval from the finance team.', time: '10:04 AM' },
+          { sender: 'Boss', text: 'Let’s not point fingers. We need to work as a team.', time: '10:05 AM' },
+          { sender: 'Alice', text: 'How can we ensure smoother communication next time?', time: '10:06 AM' },
+          { sender: 'Boss', text: 'Good question. Let’s set weekly cross-department updates.', time: '10:07 AM' },
+          { sender: 'Bob', text: 'Agreed. That should help a lot.', time: '10:08 AM' },
+        ],
+      },
+    },
+  },
 };
-
 const ChatPage = () => {
-  const [currentStoryId, setCurrentStoryId] = useState(null);
+  const { id } = useParams(); // Access params with useParams hook
+  const storyId = id; // Story ID passed via URL
+  const story = chatData[storyId];
   const [currentEpisodeId, setCurrentEpisodeId] = useState(null);
   const [isMobileView, setIsMobileView] = useState(false);
 
@@ -82,11 +109,6 @@ const ChatPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleStorySelect = (storyId) => {
-    setCurrentStoryId(storyId);
-    setCurrentEpisodeId(null);
-  };
-
   const handleEpisodeSelect = (episodeId) => {
     setCurrentEpisodeId(episodeId);
   };
@@ -96,30 +118,18 @@ const ChatPage = () => {
       {/* Sidebar */}
       {(currentEpisodeId === null || !isMobileView) && (
         <div className="sm:w-1/4 w-full bg-gray-800 p-4 border-r border-gray-700">
-          <h2 className="text-lg font-bold mb-4">Stories</h2>
-          {Object.entries(chatData).map(([storyId, story]) => (
-            <div key={storyId} className="mb-4">
+          <h2 className="text-lg font-bold mb-4">{story.title}</h2>
+          <div className="ml-4 mt-2">
+            {Object.entries(story.episodes).map(([episodeId, episode]) => (
               <div
-                onClick={() => handleStorySelect(storyId)}
-                className="p-2 bg-gray-700 hover:bg-gray-600 text-white cursor-pointer rounded"
+                key={episodeId}
+                onClick={() => handleEpisodeSelect(episodeId)}
+                className="p-2 bg-gray-600 hover:bg-gray-500 text-white cursor-pointer rounded mb-2"
               >
-                {story.title}
+                {episode.title}
               </div>
-              {currentStoryId === storyId && (
-                <div className="ml-4 mt-2">
-                  {Object.entries(story.episodes).map(([episodeId, episode]) => (
-                    <div
-                      key={episodeId}
-                      onClick={() => handleEpisodeSelect(episodeId)}
-                      className="p-2 bg-gray-600 hover:bg-gray-500 text-white cursor-pointer rounded mb-2"
-                    >
-                      {episode.title}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -127,21 +137,17 @@ const ChatPage = () => {
       {(currentEpisodeId !== null || !isMobileView) && (
         <div className="flex flex-col w-full sm:w-3/4">
           {/* Navbar */}
-          {currentStoryId && currentEpisodeId && (
+          {currentEpisodeId && (
             <div className="bg-gray-800 p-4 flex items-center justify-between">
               <div className="flex items-center">
                 <img
-                  src={chatData[currentStoryId].profilePic}
+                  src={story.profilePic}
                   alt="Profile"
                   className="w-10 h-10 rounded-full mr-2"
                 />
                 <div>
-                  <h2 className="text-lg font-bold">
-                    {chatData[currentStoryId].contactName}
-                  </h2>
-                  <p className="text-sm text-gray-400">
-                    {chatData[currentStoryId].status}
-                  </p>
+                  <h2 className="text-lg font-bold">{story.contactName}</h2>
+                  <p className="text-sm text-gray-400">{story.status}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4 text-gray-300">
@@ -154,22 +160,20 @@ const ChatPage = () => {
 
           {/* Chat Messages */}
           <div className="flex-1 bg-gray-900 p-6 overflow-y-auto">
-            {currentStoryId && currentEpisodeId ? (
+            {currentEpisodeId ? (
               <div className="flex flex-col space-y-4">
-                {chatData[currentStoryId].episodes[currentEpisodeId].chats.map((chat, index) => (
+                {story.episodes[currentEpisodeId].chats.map((chat, index) => (
                   <div
                     key={index}
                     className={`relative p-3 rounded-lg max-w-xs ${
-                      ['Wife', 'Mom', 'Ana', 'Tina'].includes(chat.sender)
+                      ['Wife', 'Mom', 'Ana', 'Tina', 'Boss'].includes(chat.sender)
                         ? 'bg-gray-800 text-gray-300 self-start'
                         : 'bg-green-700 text-white self-end'
                     }`}
                   >
                     <strong>{chat.sender}: </strong>
                     <p>{chat.text}</p>
-                    <p className="text-xs text-gray-400 absolute bottom-1 right-2">
-                      {chat.time}
-                    </p>
+                    <p className="text-xs text-gray-400 absolute bottom-1 right-2">{chat.time}</p>
                   </div>
                 ))}
               </div>
