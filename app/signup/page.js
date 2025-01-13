@@ -1,34 +1,53 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const SignupPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [isMounted, setIsMounted] = useState(false); // Ensure client-side rendering
   const router = useRouter();
 
-  const handleLogin = (e) => {
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Dummy validation
-    if (email === 'user@example.com' && password === 'password123') {
-      localStorage.setItem('isLoggedIn', 'true');
-      router.push('/'); // Redirect to homepage
-    } else {
-      alert('Invalid credentials. Please try again.');
+    try {
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage(data.message);
+        router.push("/home"); // Redirect to home page after successful sign up
+      } else {
+        setMessage(data.message);
+      }
+    } catch (error) {
+      console.error("Signup Error:", error);
+      setMessage("An unexpected error occurred.");
     }
   };
+
+  if (!isMounted) return null;
 
   return (
     <div className="flex h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
       <div className="bg-gray-800 bg-opacity-90 rounded-md shadow-lg p-8 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-white text-center mb-6">Sign In</h2>
-        <form onSubmit={handleLogin}>
+        <h2 className="text-3xl font-bold text-white text-center mb-6">Sign Up</h2>
+        <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-sm text-gray-300 font-medium mb-2"
-            >
+            <label htmlFor="email" className="block text-sm text-gray-300 font-medium mb-2">
               Email
             </label>
             <input
@@ -42,10 +61,7 @@ const LoginPage = () => {
             />
           </div>
           <div className="mb-6">
-            <label
-              htmlFor="password"
-              className="block text-sm text-gray-300 font-medium mb-2"
-            >
+            <label htmlFor="password" className="block text-sm text-gray-300 font-medium mb-2">
               Password
             </label>
             <input
@@ -62,16 +78,19 @@ const LoginPage = () => {
             type="submit"
             className="w-full bg-red-600 text-white py-3 px-4 rounded font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            Sign In
+            Sign Up
           </button>
         </form>
+        {message && (
+          <p className="mt-4 text-center text-sm text-green-400">{message}</p>
+        )}
         <p className="text-gray-400 text-sm text-center mt-6">
-          New to Fictional Chats?{' '}
+          Already have an account?{" "}
           <a
-            href="/signup"
+            href="/"
             className="text-red-500 hover:underline font-semibold"
           >
-            Sign up now
+            Sign in now
           </a>
         </p>
       </div>
@@ -79,4 +98,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default SignupPage;

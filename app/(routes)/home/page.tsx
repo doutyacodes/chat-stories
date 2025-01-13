@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Creators from "../../creators/page"
 
 const HomePage = () => {
   const router = useRouter();
@@ -75,17 +76,17 @@ const HomePage = () => {
       {/* Main Poster Section */}
       <div className="relative h-[50vh] bg-gradient-to-b from-gray-800 to-gray-900">
         <img
-          src={stories[0].image}
+          src={stories[0]?.image || ''}
           alt="Couple's Fight"
           className="w-full h-full object-cover"
         />
         <div className="absolute bottom-8 left-8">
-          <h1 className="text-4xl font-bold">{stories[0].title}</h1>
-          <p className="text-sm mt-2">{stories[0].description}</p>
+          <h1 className="text-4xl font-bold">{stories[0]?.title || 'Story Title'}</h1>
+          <p className="text-sm mt-2">{stories[0]?.description || 'Story Description'}</p>
           <div className="flex gap-4 mt-4">
             <button
               className="bg-white text-black px-4 py-2 rounded font-semibold"
-              onClick={() => router.push(`/chat/${stories[0].id}`)}
+              onClick={() => router.push(`/chat/${stories[0]?.id}`)}
             >
               Play
             </button>
@@ -95,6 +96,17 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Create a Story Button */}
+      <div className="flex justify-center mt-8">
+  <button
+    className="bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 hover:from-purple-500 hover:via-pink-400 hover:to-red-400 text-white px-8 py-3 rounded-full font-semibold text-lg shadow-lg transform transition-transform hover:scale-105"
+    onClick={() => router.push('/creators')}
+  >
+    ✍️ Create Your Story
+  </button>
+</div>
+
 
       {/* Popular Genres Section */}
       <div className="p-6">
