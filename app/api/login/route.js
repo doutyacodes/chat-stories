@@ -1,7 +1,7 @@
 // app/api/login/route.js
 import { compare } from "bcryptjs";
-import { USER_DETAILS } from "@/utils/schema";
-import { db } from "@/utils";
+import { USERS } from "../../../utils/schema";
+import { db } from "../../../utils";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
@@ -10,13 +10,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
 export async function POST(req) {
   try {
-    const { username, password } = await req.json();
+    const { email , password } = await req.json();
 
     // Fetch user from the database by username
     const users = await db
       .select()
-      .from(USER_DETAILS)
-      .where(eq(USER_DETAILS.username, username))
+      .from(USERS)
+      .where(eq(USERS.email, email))
       .limit(1)
       .execute();
 
