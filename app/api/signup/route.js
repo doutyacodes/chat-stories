@@ -33,6 +33,7 @@ export async function POST(req) {
 
     // Create new user record in the database
     const newUser = await db.insert(USERS).values({
+      email,
       username: username,
       password: hashedPassword,
     });
