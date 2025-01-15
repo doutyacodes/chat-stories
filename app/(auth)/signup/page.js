@@ -14,6 +14,7 @@ const SignupPage = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
+  
   const [isMounted, setIsMounted] = useState(false); // Ensure client-side rendering
   const router = useRouter();
 

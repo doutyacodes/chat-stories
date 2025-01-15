@@ -1,33 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { redirect, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import GlobalApi from "../../_services/GlobalApi";
+import toast, { Toaster } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isMounted, setIsMounted] = useState(false); // Flag to check if the component is mounted
   const router = useRouter();
 
-  useEffect(() => {
-    setIsMounted(true); // Ensure client-side rendering
-  }, []);
-  
-  const handleLogin = async (data) => {
-    // const data = {
-    //     email: email,
-    //     password: password,
-    //   }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
+  const onSubmit = async (data) => {
     try {
       // Send login request
-      const response = await GlobalApi.LoginUser(data); // Adjust to your login API call
-      if(response.data.token) {
+      const response = await GlobalApi.LoginUser(data);
+
+      if (response.data.token) {
         localStorage.setItem('token', response.data.token); // Store token
-        router.replace("/"); // Redirect to home or another protected page
         toast.success("Logged in successfully!");
+        router.replace("/home"); // Redirect to home
       }
     } catch (error) {
       toast.error(
@@ -36,14 +33,12 @@ const LoginPage = () => {
     }
   };
 
-  // Ensure nothing is rendered until hydration is complete
-  if (!isMounted) return null;
-
   return (
     <div className="flex h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
+      <Toaster />
       <div className="bg-gray-800 bg-opacity-90 rounded-md shadow-lg p-8 w-full max-w-md">
         <h2 className="text-3xl font-bold text-white text-center mb-6">Sign In</h2>
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm text-gray-300 font-medium mb-2">
               Email
@@ -51,12 +46,13 @@ const LoginPage = () => {
             <input
               type="email"
               id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register('email', { required: "Email is required" })}
               className="w-full px-4 py-3 border-none rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
               placeholder="Enter your email"
-              required
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            )}
           </div>
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm text-gray-300 font-medium mb-2">
@@ -65,12 +61,13 @@ const LoginPage = () => {
             <input
               type="password"
               id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...register('password', { required: "Password is required" })}
               className="w-full px-4 py-3 border-none rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
               placeholder="Enter your password"
-              required
             />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+            )}
           </div>
           <button
             type="submit"
