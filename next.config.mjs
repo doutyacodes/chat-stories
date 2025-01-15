@@ -30,6 +30,10 @@ const nextConfig = {
     if (!isServer) {
       config.externals = [...(config.externals || []), 'ssh2'];
     }
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+    };
 
     return config;
   },
