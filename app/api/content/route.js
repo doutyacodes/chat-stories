@@ -48,17 +48,18 @@ export async function POST(request) {
       await Promise.all(messagePromises);
     } else {
       // Handle PDF upload
-      const pdfFile = formData.get('pdfFile');
-      if (!pdfFile) {
-        return NextResponse.json(
-          { error: 'PDF file is required' },
-          { status: 400 }
-        );
-      }
-
-      // Convert file to buffer for pdf-parse
-      const buffer = Buffer.from(await pdfFile.arrayBuffer());
+        const pdfFile = formData.get('pdfFile');
+        if (!pdfFile) {
+          return NextResponse.json(
+            { error: 'PDF file is required' },
+            { status: 400 }
+          );
+        }
+    // Convert file to buffer for pdf-parse
+      const arrayBuffer = await pdfFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
       const pdfData = await parsePDF(buffer);
+
       
       // Parse the PDF text content
       // Expected format: "CharacterName: Message"
