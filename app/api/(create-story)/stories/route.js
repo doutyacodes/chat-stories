@@ -36,7 +36,8 @@ export async function POST(request) {
       synopsis: storySynopsis,
       category_id: parseInt(category),
       story_type: 'chat',
-      user_id: userId
+      user_id: userId,
+      cover_img: fileName,
     });
 
     const storyId = storyRecord[0].insertId;
@@ -115,10 +116,10 @@ export async function POST(request) {
       await sftp.end();
 
       // Update story with cover image URL
-      await db
-        .update(STORIES)
-        .set({ cover_img: fileName })
-        .where(eq(STORIES.id, storyId));
+      // await db
+      //   .update(STORIES)
+      //   .set({ cover_img: fileName })
+      //   .where(eq(STORIES.id, storyId));
     }
 
     return NextResponse.json(
