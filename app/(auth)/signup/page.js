@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast, Toaster } from "react-hot-toast";
 import jwt from "jsonwebtoken";
 import GlobalApi from "../../_services/GlobalApi";
+import Link from 'next/link';
+
 
 const SignupPage = () => {
   const {
@@ -131,9 +133,9 @@ const SignupPage = () => {
         </form>
         <p className="text-gray-400 text-sm text-center mt-6">
           Already have an account?{" "}
-          <a href="/" className="text-red-500 hover:underline font-semibold">
+          <Link href="/" className="text-red-500 hover:underline font-semibold">
             Sign in now
-          </a>
+          </Link>
         </p>
       </div>
     </div>
