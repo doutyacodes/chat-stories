@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { STORIES, CHARACTERS, EPISODES } from '../../../../utils/schema';
-import SFTPClient from 'ssh2-sftp-client';
+// import SFTPClient from 'ssh2-sftp-client';
+import Client from 'ssh2-sftp-client';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -87,7 +88,8 @@ export async function POST(request) {
 
     // Handle image upload
     if (coverImage) {
-      const sftp = new SFTPClient();
+      // const sftp = new SFTPClient();
+      const sftp = new Client();
       await sftp.connect({
         host: '68.178.163.247',
         port: 22,
