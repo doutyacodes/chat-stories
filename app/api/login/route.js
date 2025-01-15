@@ -23,7 +23,7 @@ export async function POST(req) {
     const user = users[0];
     if (!user) {
       return NextResponse.json(
-        { message: "Invalid username or password." },
+        { message: "Invalid email or password." },
         { status: 401 }
       );
     }
@@ -41,7 +41,6 @@ export async function POST(req) {
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,
-    //   { expiresIn: '1h' }
     );
 
     return NextResponse.json(

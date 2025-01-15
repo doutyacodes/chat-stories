@@ -19,12 +19,61 @@ import {
 // UserDetails Table
 export const USERS = mysqlTable("users", {
   id: int("id").primaryKey().autoincrement(),
-  email: varchar("email", {lenght: 255}).notNull(),
-  // name: varchar("name", { length: 255 }).notNull(),
-  // username: varchar("username", { length: 255 }).notNull().unique(),
+  email: varchar("email", {lenght: 255}).notNull().unique(),
+  username: varchar("username", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
-  // mobile: varchar("mobile", { length: 15 }).notNull().unique(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
-  // is_active: boolean("is_active").default(true),
+});
+
+export const CATEGORIES = mysqlTable("categories", {
+  id: int("id").primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull().unique(),
+  description: text("description"),
+  image_url: varchar("image_url", { length: 255 }),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const STORIES = mysqlTable("stories", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 255 }).notNull(),
+  synopsis: text("synopsis"),
+  category_id: int("category_id").notNull().references(() => CATEGORIES.id),
+  cover_img: varchar("cover_img", { length: 255 }),
+  story_type: mysqlEnum("story_type", ["chat", "normal", "interactive"])
+    .notNull()
+    .default("chat"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const EPISODES = mysqlTable("episodes", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  synopsis: text("synopsis"),
+  episode_number: int("episode_number").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const CHARACTERS = mysqlTable("characters", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  image_url: varchar("image_url", { length: 255 }),
+  description: text("description"),
+  is_sender: boolean("is_sender").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const CHAT_MESSAGES = mysqlTable("chat_messages", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  episode_id: int("episode_id"),
+  character_id: int("character_id").notNull().references(() => CHARACTERS.id),
+  message: text("message").notNull(),
+  sequence: int("sequence").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
 });

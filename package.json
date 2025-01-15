@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "npx drizzle-kit push",
+    "db:studio": "npx drizzle-kit studio"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
@@ -37,7 +39,7 @@
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
     "date-fns": "^3.6.0",
-    "drizzle-orm": "^0.35.3",
+    "drizzle-orm": "^0.38.3",
     "eslint": "^9.17.0",
     "framer-motion": "^11.11.10",
     "html-to-image": "^1.11.11",
@@ -53,6 +55,7 @@
     "next-intl": "^3.24.0",
     "next-seo": "^6.6.0",
     "os": "^0.1.2",
+    "pdf-parse": "^1.1.1",
     "react": "^18.3.1",
     "react-datepicker": "^7.5.0",
     "react-day-picker": "^8.10.1",

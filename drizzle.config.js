@@ -8,3 +8,14 @@
 //         password: '###Wowfy123'
 //     }
 // };
+
+export default {
+    schema: "./utils/schema.js",
+    dialect: 'mysql',
+    dbCredentials: {
+        host: "localhost",
+        user: "root",
+        database: "chat_stories",
+        password: ''
+    }
+};

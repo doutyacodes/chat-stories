@@ -1,51 +1,49 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { redirect, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import GlobalApi from "../../_services/GlobalApi";
 
-const SignupPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [isMounted, setIsMounted] = useState(false); // Ensure client-side rendering
+const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isMounted, setIsMounted] = useState(false); // Flag to check if the component is mounted
   const router = useRouter();
 
   useEffect(() => {
-    setIsMounted(true);
+    setIsMounted(true); // Ensure client-side rendering
   }, []);
+  
+  const handleLogin = async (data) => {
+    // const data = {
+    //     email: email,
+    //     password: password,
+    //   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     try {
-      const response = await fetch("/api/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage(data.message);
-        router.push("/home"); // Redirect to home page after successful sign up
-      } else {
-        setMessage(data.message);
+      // Send login request
+      const response = await GlobalApi.LoginUser(data); // Adjust to your login API call
+      if(response.data.token) {
+        localStorage.setItem('token', response.data.token); // Store token
+        router.replace("/"); // Redirect to home or another protected page
+        toast.success("Logged in successfully!");
       }
     } catch (error) {
-      console.error("Signup Error:", error);
-      setMessage("An unexpected error occurred.");
+      toast.error(
+        error.response?.data?.message || "Login failed. Please try again."
+      );
     }
   };
 
+  // Ensure nothing is rendered until hydration is complete
   if (!isMounted) return null;
 
   return (
     <div className="flex h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
       <div className="bg-gray-800 bg-opacity-90 rounded-md shadow-lg p-8 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-white text-center mb-6">Sign Up</h2>
-        <form onSubmit={handleSubmit}>
+        <h2 className="text-3xl font-bold text-white text-center mb-6">Sign In</h2>
+        <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm text-gray-300 font-medium mb-2">
               Email
@@ -78,24 +76,18 @@ const SignupPage = () => {
             type="submit"
             className="w-full bg-red-600 text-white py-3 px-4 rounded font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            Sign Up
+            Sign In
           </button>
         </form>
-        {message && (
-          <p className="mt-4 text-center text-sm text-green-400">{message}</p>
-        )}
         <p className="text-gray-400 text-sm text-center mt-6">
-          Already have an account?{" "}
-          <a
-            href="/"
-            className="text-red-500 hover:underline font-semibold"
-          >
-            Sign in now
-          </a>
+          New to Fictional Chats?{' '}
+          <Link href="/signup" className="text-red-500 hover:underline font-semibold">
+            Sign up now
+          </Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default SignupPage;
+export default LoginPage;
