@@ -74,12 +74,6 @@ export async function GET(request, { params }) {
     .where(eq(CHAT_MESSAGES.story_id, storyId))
     .orderBy(CHAT_MESSAGES.created_at);
 
-      // Add is_character as true for all messages temporarily
-      // const messagesWithCharacterFlag = messages.map(message => ({
-      //   ...message,
-      //   is_character: true 
-      // }));
-
     // Prepare episodes array
     let episodesWithMessages = episodes.map(episode => ({
       ...episode,

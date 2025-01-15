@@ -7,6 +7,8 @@ const CreateStoryPage = () => {
   const router = useRouter();
   const [storyId, setStoryId] = useState(null); // State to store the storyId
   const [addedCharacters, setAddedCharacters] = useState(null)
+  const [addedEpisodes, setAddedEpisodes] = useState(null)
+
   const [currentStep, setCurrentStep] = useState("details");
   const [error, setError] = useState("");
 
@@ -22,6 +24,7 @@ const CreateStoryPage = () => {
     characterSenders: [true, false], // Add this new line - first character is default sender
   });
 
+  console.log("storyData", storyData)
   // Story Content State
   // const [contentData, setContentData] = useState({
   //   selectedEpisode: "",
@@ -142,6 +145,7 @@ const CreateStoryPage = () => {
        // Save the storyId to state
       setStoryId(data.storyId);
       setAddedCharacters(data.characters)
+      setAddedEpisodes(data.episodes)
 
       setCurrentStep("content");
     } catch (error) {
@@ -494,8 +498,8 @@ const handleRemoveCharacter = (index) => {
           className="w-full p-3 rounded bg-gray-800 mb-4"
         >
           <option value="">Select an episode</option>
-          {storyData.episodes.map((ep, index) => (
-            <option key={index} value={ep.name}>{ep.name}</option>
+          {addedEpisodes.map(({id, name}) => (
+            <option key={id} value={id}>{name}</option>
           ))}
         </select>
 
