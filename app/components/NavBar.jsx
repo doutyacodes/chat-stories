@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 
-const Navbar = () => {
+export default function NavBar() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -85,6 +85,3 @@ const Navbar = () => {
     </div>
   );
 };
-
-
-export default Navbar

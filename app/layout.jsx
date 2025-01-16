@@ -1,18 +1,25 @@
-import './globals.css';
-import Navbar from '@/components/NavBar'  // Move NavBar to components folder
+import './globals.css'; // Import global CSS
+import { Inter } from 'next/font/google'; 
+import NavBar from './components/NavBar'  // Make sure this matches your file name exactly
 
-export const metadata = {
-  title: 'Fictional Chats',
-};
+const inter = Inter({ subsets: ['latin'] }); 
 
-export default async function RootLayout({ children }) {
+
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
-          <Navbar />
+      <body className={inter.className}>
+        {/* Global layout elements like header, footer can go here */}
+        <header>
+          <nav>
+            {/* Navigation items */}
+            <NavBar />
+          </nav>
+        </header>
+        <main>
           {children}
+        </main>
       </body>
     </html>
   );
 }
-
