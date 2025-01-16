@@ -135,7 +135,7 @@ const HomePage = () => {
 
         <button
           className="bg-gradient-to-r from-blue-500 via-teal-400 to-green-500 hover:from-blue-400 hover:via-teal-300 hover:to-green-400 text-white px-8 py-3 rounded-full font-semibold text-lg shadow-lg transform transition-transform hover:scale-105"
-          onClick={() => router.push('/create-story')}
+          onClick={() => router.push('/search-story')}
         >
           ✨ Magic Box
         </button>
