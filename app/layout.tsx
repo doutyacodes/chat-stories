@@ -1,6 +1,6 @@
 import './globals.css';
 
-import Navbar from './_components/NavBar'
+import Navbar from './_components/NavBar';
 
 export const metadata = {
   title: 'Fictional Chats',
