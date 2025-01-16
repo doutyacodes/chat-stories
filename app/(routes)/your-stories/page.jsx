@@ -133,7 +133,7 @@ const YourStoriesPage = () => {
           <LoadingSpinner />
         ) : stories.length === 0 ? (
           <div className="text-center py-12">
-            <h2 className="text-xl text-gray-400 mb-4">You haven't created any stories yet</h2>
+            <h2 className="text-xl text-gray-400 mb-4">You haven&apos;t created any stories yet</h2>
             <button
               onClick={() => router.push('/create-story')}
               className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg 
