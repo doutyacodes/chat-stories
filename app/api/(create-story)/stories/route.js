@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { STORIES, CHARACTERS, EPISODES } from '../../../../utils/schema';
-// import SFTPClient from 'ssh2-sftp-client';
 import Client from 'ssh2-sftp-client';
 import fs from 'fs';
 import path from 'path';
@@ -24,9 +23,18 @@ export async function POST(request) {
     const storySynopsis = formData.get('storySynopsis');
     const category = formData.get('category');
     const coverImage = formData.get('coverImage');
-    const charactersList = JSON.parse(formData.get('characters'));
     const episodesList = JSON.parse(formData.get('episodes'));
-    
+    const storyType = formData.get('storyType');
+
+     // Only parse characters if it's a chat story
+     let charactersList = [];
+     if (storyType === 'chat') {
+       const charactersData = formData.get('characters');
+       if (charactersData) {
+         charactersList = JSON.parse(charactersData);
+       }
+     }
+
     // Generate unique filename for cover image
     const fileName = `${Date.now()}-${storyName.replace(/\s+/g, '-')}.png`;
 
@@ -35,24 +43,33 @@ export async function POST(request) {
       title: storyName,
       synopsis: storySynopsis,
       category_id: parseInt(category),
-      story_type: 'chat',
+      story_type: storyType,
       user_id: userId,
       cover_img: fileName,
+      is_published: false,
     });
 
     const storyId = storyRecord[0].insertId;
 
-    // Save characters
-    const characterPromises = charactersList
-      .filter(char => char.name.trim()) // Filter out any entries with empty names
-      .map(char => 
-        db.insert(CHARACTERS).values({
-          story_id: storyId,
-          name: char.name.trim(), // Insert the name
-          is_sender: char.is_sender, // Insert the is_sender value
-        })
-      );
-    await Promise.all(characterPromises);
+    // Save characters only for chat stories
+    let savedCharacters = [];
+      if (storyType === 'chat' && charactersList.length > 0) {
+        const characterPromises = charactersList
+          .filter(char => char.name.trim()) // Filter out any entries with empty names
+          .map(char => 
+            db.insert(CHARACTERS).values({
+              story_id: storyId,
+              name: char.name.trim(),
+              is_sender: char.is_sender,
+            })
+          );
+        await Promise.all(characterPromises);
+      // Fetch saved characters with IDs only for chat stories
+      savedCharacters = await db
+      .select({ id: CHARACTERS.id, name: CHARACTERS.name })
+      .from(CHARACTERS)
+      .where(eq(CHARACTERS.story_id, storyId));
+  }
 
     // Save episodes if provided
     let savedEpisodes = [];
@@ -80,12 +97,6 @@ export async function POST(request) {
         .from(EPISODES)
         .where(eq(EPISODES.story_id, storyId));
     }
-  
-    // Fetch saved characters with IDs
-    const savedCharacters = await db
-    .select({ id: CHARACTERS.id, name: CHARACTERS.name })
-    .from(CHARACTERS)
-    .where(eq(CHARACTERS.story_id, storyId));
 
     // Handle image upload
     if (coverImage) {
@@ -114,19 +125,13 @@ export async function POST(request) {
 
       fs.unlinkSync(localFilePath);
       await sftp.end();
-
-      // Update story with cover image URL
-      // await db
-      //   .update(STORIES)
-      //   .set({ cover_img: fileName })
-      //   .where(eq(STORIES.id, storyId));
     }
 
     return NextResponse.json(
       {
         message: 'Story created successfully',
         storyId,
-        characters: savedCharacters,
+        ...(storyType === 'chat' && { characters: savedCharacters }), // Only include characters for chat stories
         episodes: savedEpisodes,
       },
       { status: 200 }

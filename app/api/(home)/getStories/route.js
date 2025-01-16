@@ -18,10 +18,12 @@ export async function GET(request) {
         description: STORIES.synopsis,
         image: STORIES.cover_img,
         category_id: STORIES.category_id,
-        category_name: CATEGORIES.name
+        category_name: CATEGORIES.name,
+        story_type: STORIES.story_type
       })
       .from(STORIES)
       .leftJoin(CATEGORIES, eq(STORIES.category_id, CATEGORIES.id))
+      .where(eq(STORIES.is_published, true))
 
     return NextResponse.json(stories);
   } catch (error) {

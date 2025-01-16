@@ -41,9 +41,8 @@ export const STORIES = mysqlTable("stories", {
   synopsis: text("synopsis"),
   category_id: int("category_id").notNull().references(() => CATEGORIES.id),
   cover_img: varchar("cover_img", { length: 255 }),
-  story_type: mysqlEnum("story_type", ["chat", "normal", "interactive"])
-    .notNull()
-    .default("chat"),
+  story_type: varchar("story_type", { length: 50 }).notNull(),
+  is_published: boolean("is_published").notNull().default(false), // New field for visibility
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
@@ -76,4 +75,13 @@ export const CHAT_MESSAGES = mysqlTable("chat_messages", {
   message: text("message").notNull(),
   sequence: int("sequence").notNull(),
   created_at: timestamp("created_at").defaultNow(),
+});
+
+export const STORY_CONTENT = mysqlTable("story_content", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  episode_id: int("episode_id"),
+  content: text("content").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });

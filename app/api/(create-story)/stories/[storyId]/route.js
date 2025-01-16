@@ -39,6 +39,8 @@ export async function GET(request, { params }) {
       );
     }
 
+    console.log("log 2");
+
     // Fetch episodes for the story
     const episodes = await db
       .select({
@@ -50,6 +52,8 @@ export async function GET(request, { params }) {
       .where(eq(EPISODES.story_id, storyId))
       .orderBy(EPISODES.episode_number);
 
+      console.log("log episodes", episodes);
+
     // Fetch characters for the story
     const characters = await db
       .select({
@@ -58,6 +62,8 @@ export async function GET(request, { params }) {
       })
       .from(CHARACTERS)
       .where(eq(CHARACTERS.story_id, storyId));
+
+
 
     // Fetch messages for all episodes with character names
     const messages = await db
@@ -74,11 +80,17 @@ export async function GET(request, { params }) {
     .where(eq(CHAT_MESSAGES.story_id, storyId))
     .orderBy(CHAT_MESSAGES.created_at);
 
+
+    console.log("log messages", messages);
+
+
     // Prepare episodes array
     let episodesWithMessages = episodes.map(episode => ({
       ...episode,
       messages: messages.filter(message => message.episode_id === episode.id)
     }));
+    
+    console.log("log episodesWithMessages", episodesWithMessages);
 
   // Handle case where there are no episodes
     if (episodesWithMessages.length === 0) {
