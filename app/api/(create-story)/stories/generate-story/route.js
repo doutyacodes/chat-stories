@@ -4,40 +4,42 @@ import axios from "axios";
 
 export async function POST(req) {
     try {
-      const { courseName, language, ageRange, type = "story" } = await req.json();
+      const { courseName, language, ageRange, type = "story", genre } = await req.json();
   
-      // Input validation
-      if (!courseName || !language || !ageRange) {
+      if (!courseName || !language || !ageRange || !genre) {
         return NextResponse.json(
-          { error: "Missing required fields" },
+          { error: 'Missing required fields' },
           { status: 400 }
         );
       }
   
       const prompt = `
-      Create a JSON object for a story on the topic of "${courseName}" in "${language}" for the age range of "${ageRange}".
-      The story should be engaging and age-appropriate.
-      
-      Structure:
-      {
-        "courseName": "${courseName}",
-        "language": "${language}",
-        "ageRange": "${ageRange}",
-        "type": "${type}",
-        "title": "Story Title",
-        "introduction": {
-          "content": "Introduction to set the scene or introduce main characters."
-        },
-        "body": [
-          {
-            "content": "Each main paragraph of the story in sequence."
+        Think like a storyteller.
+
+        Create a JSON object for a story on the topic of "${courseName}" in "${language}" for the age range of "${ageRange}" and the genre "${genre}". 
+        The story should be engaging and age-appropriate.
+        
+        Structure:
+        {
+          "courseName": "${courseName}",
+          "language": "${language}",
+          "ageRange": "${ageRange}",
+          "type": "${type}",
+          "genre": "${genre}",
+          "title": "Story Title",
+          "introduction": {
+            "content": "Introduction to set the scene or introduce main characters."
+          },
+          "body": [
+            {
+              "content": "Each main paragraph of the story in sequence."
+            }
+          ],
+          "conclusion": {
+            "content": "Ending or moral of the story."
           }
-        ],
-        "conclusion": {
-          "content": "Ending or moral of the story."
         }
-      }
-    `;
+      `;
   
       // Make request to OpenAI
       const response = await axios.post(

@@ -125,7 +125,7 @@ const HomePage = () => {
       </div>
 
       {/* Create a Story Button */}
-      <div className="flex justify-center mt-8 space-x-4">
+      <div className="flex justify-center mt-8 space-x-4 sm:flex hidden">
         <button
           className="bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 hover:from-purple-500 hover:via-pink-400 hover:to-red-400 text-white px-8 py-3 rounded-full font-semibold text-lg shadow-lg transform transition-transform hover:scale-105"
           onClick={() => router.push('/create-story')}
