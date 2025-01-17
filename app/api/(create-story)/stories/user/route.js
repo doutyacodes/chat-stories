@@ -3,7 +3,8 @@ import {
   STORIES,
   CATEGORIES,
   EPISODES,
-  CHARACTERS
+  CHARACTERS,
+  USERS
 } from '../../../../../utils/schema';
 import { authenticate } from '../../../../../lib/jwtMiddleware';
 import { db } from '../../../../../utils';
@@ -14,6 +15,9 @@ export async function GET(request) {
   if (!authResult.authenticated) {
     return authResult.response;
   }
+
+  const userData = authResult.decoded_Data;
+  const userId = userData.id;
 
   try {
     // Fetch all stories with category and other details
@@ -30,7 +34,8 @@ export async function GET(request) {
         updatedAt: STORIES.updated_at,
       })
       .from(STORIES)
-      .leftJoin(CATEGORIES, eq(STORIES.category_id, CATEGORIES.id));
+      .leftJoin(CATEGORIES, eq(STORIES.category_id, CATEGORIES.id))
+      .where(eq(STORIES.user_id, userId));  
 
     // For each story, fetch episode count and character count
     const storiesWithDetails = await Promise.all(

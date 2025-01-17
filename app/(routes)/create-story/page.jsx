@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 // LoadingSpinner Component
@@ -34,6 +34,10 @@ const CreateStoryForm = () => {
   });
 
   useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
+      if(!token) {
+        redirect("/login");
+      }
     fetchCategories();
   }, []);
 
@@ -188,6 +192,9 @@ const CreateStoryForm = () => {
       }
 
       const response = await fetch('/api/stories', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         method: 'POST',
         body: formData,
       });

@@ -5,10 +5,10 @@ import { db } from '../../../../utils';
 import { eq } from 'drizzle-orm';
 
 export async function GET(request) {
-  const authResult = await authenticate(request);
-  if (!authResult.authenticated) {
-    return authResult.response;
-  }
+  // const authResult = await authenticate(request);
+  // if (!authResult.authenticated) {
+  //   return authResult.response;
+  // }
 
   try {
     const stories = await db

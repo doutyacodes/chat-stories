@@ -56,9 +56,9 @@ export async function POST(request) {
     const selectedEpisode = formData.get('selectedEpisode');
     const inputType = formData.get('inputType');
 
-    if (!storyId || !selectedEpisode) {
+    if (!storyId) {
       return NextResponse.json(
-        { error: 'Story ID and episode are required' },
+        { error: 'Story ID is required' },
         { status: 400 }
       );
     }
@@ -139,7 +139,7 @@ export async function POST(request) {
     const messagePromises = linesToInsert.map((line, index) => 
       db.insert(CHAT_MESSAGES).values({
         story_id: storyId,
-        episode_id: selectedEpisode,
+        episode_id: selectedEpisode || null,
         character_id: line.characterId,
         message: line.message,
         sequence: index + 1

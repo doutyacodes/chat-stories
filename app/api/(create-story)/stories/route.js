@@ -14,7 +14,6 @@ export async function POST(request) {
     return authResult.response;
   }
   const userId = authResult.decoded_Data.id;
-
   const localTempDir = os.tmpdir();
 
   try {

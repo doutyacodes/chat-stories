@@ -46,7 +46,7 @@ export async function POST(req) {
           model: "gpt-4o-mini",
           messages: [{ role: "user", content: prompt }],
           max_tokens: 5000,
-          temperature: 0.7, // Add some creativity while maintaining coherence
+          // temperature: 0.7, // Add some creativity while maintaining coherence
         },
         {
           headers: {

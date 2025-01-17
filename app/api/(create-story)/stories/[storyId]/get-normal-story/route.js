@@ -5,10 +5,10 @@ import { EPISODES, STORIES, STORY_CONTENT } from '@/utils/schema';
 import { authenticate } from '@/lib/jwtMiddleware';
 
 export async function GET(request, { params }) {
-  const authResult = await authenticate(request);
-  if (!authResult.authenticated) {
-    return authResult.response;
-  }
+  // const authResult = await authenticate(request);
+  // if (!authResult.authenticated) {
+  //   return authResult.response;
+  // }
   
   const { storyId } = params; // Get the storyId from the request params
 

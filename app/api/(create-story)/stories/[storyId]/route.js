@@ -11,10 +11,10 @@ import { db } from '../../../../../utils';
 import { eq, and } from 'drizzle-orm';
 
 export async function GET(request, { params }) {
-  const authResult = await authenticate(request);
-  if (!authResult.authenticated) {
-    return authResult.response;
-  }
+  // const authResult = await authenticate(request);
+  // if (!authResult.authenticated) {
+  //   return authResult.response;
+  // }
   const { storyId } = await params
     console.log("log", storyId);
 

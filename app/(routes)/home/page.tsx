@@ -14,10 +14,10 @@ const HomePage = () => {
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
-    if(!token) {
-      redirect("/login");
-    }
+    // const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
+    // if(!token) {
+    //   redirect("/login");
+    // }
     
     // Fetch both stories and genres when component mounts
     const fetchData = async () => {
@@ -38,9 +38,9 @@ const HomePage = () => {
   const fetchStories = async () => {
     try {
       const response = await fetch('/api/getStories', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        // headers: {
+        //   'Authorization': `Bearer ${localStorage.getItem('token')}`
+        // }
       });
       
       if (!response.ok) throw new Error('Failed to fetch stories');
@@ -56,9 +56,9 @@ const HomePage = () => {
   const fetchGenres = async () => {
     try {
       const response = await fetch('/api/categories', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        // headers: {
+        //   'Authorization': `Bearer ${localStorage.getItem('token')}`
+        // }
       });
       
       if (!response.ok) throw new Error('Failed to fetch genres');

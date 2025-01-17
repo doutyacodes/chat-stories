@@ -39,6 +39,7 @@ export const STORIES = mysqlTable("stories", {
   id: int("id").primaryKey().autoincrement(),
   title: varchar("title", { length: 255 }).notNull(),
   synopsis: text("synopsis"),
+  user_id: int("user_id").notNull().references(() => USERS.id), // New field referencing USERS
   category_id: int("category_id").notNull().references(() => CATEGORIES.id),
   cover_img: varchar("cover_img", { length: 255 }),
   story_type: varchar("story_type", { length: 50 }).notNull(),

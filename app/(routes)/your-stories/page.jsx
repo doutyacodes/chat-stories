@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { Loader2, PlusCircle, BookOpen, MessageSquare, Folder } from "lucide-react";
 import {
   AlertDialog,
@@ -29,7 +29,12 @@ const YourStoriesPage = () => {
   const [selectedStory, setSelectedStory] = useState(null);
 
   useEffect(() => {
-    fetchStories();
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
+    if(!token) {
+      redirect("/login");
+    }
+  fetchStories();
   }, []);
 
   const fetchStories = async () => {

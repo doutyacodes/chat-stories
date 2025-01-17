@@ -16,9 +16,9 @@ const StoryDisplayPage = () => {
     const fetchStoryData = async () => {
       try {
         const response = await fetch(`/api/stories/${id}/get-normal-story`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+          // headers: {
+          //   'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // }
         });
 
         if (!response.ok) {

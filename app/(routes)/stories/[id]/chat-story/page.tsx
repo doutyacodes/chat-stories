@@ -34,9 +34,9 @@ useEffect(() => {
     const fetchStoryData = async () => {
       try {
         const response = await fetch(`/api/stories/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+          // headers: {
+          //   'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // }
         });
 
         if (!response.ok) {
