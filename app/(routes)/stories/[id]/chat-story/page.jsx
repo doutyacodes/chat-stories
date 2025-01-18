@@ -23,12 +23,12 @@ const ChatPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-useEffect(() => {
-  // If there's only a general chat episode, show it automatically
-  if (story && story.episodes.length === 1 && story.episodes[0].id === null) {
-    setCurrentEpisodeId(0); // Using 0 for general chat
-  }
-}, [story]);
+  useEffect(() => {
+    // If there's only a general chat episode, show it automatically
+    if (story && story.episodes.length === 1 && story.episodes[0].id === null) {
+      setCurrentEpisodeId(0); // Using 0 for general chat
+    }
+  }, [story]);
 
   useEffect(() => {
     const fetchStoryData = async () => {
@@ -45,6 +45,13 @@ useEffect(() => {
 
         const data = await response.json();
         setStory(data);
+
+        // Wait for 5 seconds after the story data is loaded to track the view
+        setTimeout(() => {
+          trackStoryView(id); // Function to call the API to store the view
+        }, 5000); // 5 seconds delay
+
+
       } catch (err) {
         console.error('Error fetching story:', err);
         setError(err.message);
@@ -57,6 +64,56 @@ useEffect(() => {
       fetchStoryData();
     }
   }, [id]);
+
+  const trackStoryView = async (storyId) => {
+    let sessionId = null;
+  
+    // Check if token exists in localStorage (indicating the user is logged in)
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // If no token exists, generate a session ID (you could generate it or get it from sessionStorage)
+      sessionId = sessionStorage.getItem('session_id');
+      if (!sessionId) {
+        // Generate a new session ID if none exists
+        sessionId = generateSessionId(); // Assume `generateSessionId` is a function to generate a unique session ID
+        sessionStorage.setItem('session_id', sessionId);
+      }
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add Authorization header only if token exists
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  
+    try {
+      const response = await fetch('/api/analytics/story-views', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          story_id: storyId,
+          session_id: sessionId, // Send sessionId if not logged in
+        }),
+      });
+  
+      if (response.ok) {
+        console.log('Story view recorded');
+      } else {
+        console.error('Failed to record story view');
+      }
+    } catch (error) {
+      console.error('Error recording view:', error);
+    }
+  };
+  
+  // Helper function to generate a session ID (for non-logged-in users)
+  const generateSessionId = () => {
+    return 'sess_' + Math.random().toString(36).substring(2, 15); // Simple random string for session ID
+  };
+  
 
   const handleEpisodeSelect = (episodeId) => {
     setCurrentEpisodeId(episodeId);

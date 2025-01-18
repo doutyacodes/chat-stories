@@ -35,6 +35,16 @@ export const CATEGORIES = mysqlTable("categories", {
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
 
+export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  position: int("position").notNull().default(1),  // Order of appearance in the carousel
+  start_date: timestamp("start_date").notNull(),
+  end_date: timestamp("end_date"),  // Optional end date
+  is_visible: boolean("is_visible").notNull().default(true),  // Show or hide story (default visible)
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 export const STORIES = mysqlTable("stories", {
   id: int("id").primaryKey().autoincrement(),
   title: varchar("title", { length: 255 }).notNull(),
@@ -85,4 +95,13 @@ export const STORY_CONTENT = mysqlTable("story_content", {
   content: text("content").notNull(),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const STORY_VIEWS = mysqlTable("story_views", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  user_id: int("user_id", { mode: 'nullable' }).references(() => USERS.id), // Correctly defining as nullable
+  session_id: varchar("session_id", { length: 255 }),  // Unique session ID for non-logged-in users
+  viewed_at: timestamp("viewed_at").defaultNow(),
+  last_viewed_at: timestamp("last_viewed_at").defaultNow(),
 });
