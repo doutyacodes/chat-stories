@@ -188,6 +188,7 @@ export async function GET(request) {
     for (const category of categoriesData) {
       const categoryStories = await db
         .select({
+          story_id: STORIES.id,
           title: STORIES.title,
           story_type: STORIES.story_type,
           cover_img: STORIES.cover_img,
