@@ -10,6 +10,11 @@ import { authenticate } from '../../../../../lib/jwtMiddleware';
 import { db } from '../../../../../utils';
 import { eq, count } from 'drizzle-orm';
 
+
+export const maxDuration = 300; // This function can run for a maximum of 5 seconds
+export const dynamic = 'force-dynamic';
+
+
 export async function GET(request) {
   const authResult = await authenticate(request);
   if (!authResult.authenticated) {
