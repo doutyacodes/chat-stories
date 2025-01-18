@@ -138,11 +138,12 @@ const ImageCarousel = () => {
                     <div 
                     className="relative h-full w-full"
                     onClick={() =>
-                        router.push(
-                            carouselStories[currentIndex]?.story_type === 'chat'
-                            ? `/stories/${carouselStories[currentIndex]?.story_id}/chat-story`
-                            : `/stories/${carouselStories[currentIndex]?.story_id}/normal-story`
-                        )
+                        // router.push(
+                        //     carouselStories[currentIndex]?.story_type === 'chat'
+                        //     ? `/stories/${carouselStories[currentIndex]?.story_id}/chat-story`
+                        //     : `/stories/${carouselStories[currentIndex]?.story_id}/normal-story`
+                        // )
+                        router.push(`/stories/${carouselStories[currentIndex]?.story_id}/story-overview`)
                       }
                     >
                     <img

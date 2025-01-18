@@ -117,7 +117,7 @@ const StoryOverview = () => {
             <div className="flex items-center gap-3 my-4 text-white">
               <div className="w-10 h-10 rounded-full overflow-hidden">
                 <img 
-                  src='./user.png'
+                  src='https://chat-stories.vercel.app/user.png'
                   alt="Profile" 
                   className="w-full h-full object-cover"
                 />
