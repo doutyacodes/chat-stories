@@ -90,11 +90,12 @@ const ImageCarousel = () => {
 
   const StoryCard = ({ story, size = "large" }) => {
     const handleClick = () => {
-      router.push(
-        story.story_type === 'chat'
-          ? `/stories/${story.story_id}/chat-story`
-          : `/stories/${story.story_id}/normal-story`
-      );
+      // router.push(
+      //   story.story_type === 'chat'
+      //     ? `/stories/${story.story_id}/chat-story`
+      //     : `/stories/${story.story_id}/normal-story`
+      // );
+      router.push(`/stories/${story.story_id}/story-overview`);
     };
 
     const sizeClasses = {
