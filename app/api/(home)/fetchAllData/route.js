@@ -111,7 +111,7 @@ import {
   CATEGORIES,
 } from '../../../../utils/schema';
 import { db } from '../../../../utils';
-import { eq, gte, and, or, isNull, lt, sql } from 'drizzle-orm';
+import { eq, gte, and, or, isNull, lt, sql, desc } from 'drizzle-orm';
 
 export async function GET(request) {
   try {
@@ -170,7 +170,7 @@ export async function GET(request) {
       })
       .from(STORIES)
       .where(eq(STORIES.is_published, true))
-      .orderBy(STORIES.created_at, 'desc') // Newest first
+      .orderBy(desc(STORIES.created_at)) // Get the most // Newest first
       .limit(10);
 
     // Fetch Categories and Stories

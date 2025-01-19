@@ -54,7 +54,7 @@ const StoryOverview = () => {
       if (isEpisode) {
         router.push(
           story.story_type === 'chat'
-            ? `/stories/${id}/chat-story`
+            ? `/stories/${storyData.id}/${id}/chat-story`
             : `/stories/${id}/normal-story`
         );
       } else {

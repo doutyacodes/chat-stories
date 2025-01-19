@@ -26,7 +26,7 @@
       "**/*.jsx",
       "app/layout.jsx",
       "app/(routes)/bckuphome/page.jsx",
-      "app/(routes)/stories/[id]/chat-story/page.jsx"
+      "app/(routes)/stories/[id]/[storyId]/chat-story/page.jsx"
     ],
     "exclude": [
       "node_modules"
