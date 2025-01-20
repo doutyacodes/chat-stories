@@ -96,80 +96,77 @@ const StoryOverview = () => {
   return (
     <div className="min-h-screen bg-black pb-16">
       <div className="w-full max-w-[1920px] mx-auto md:px-8">
-        <div className='p-7 sm:p-0 md:mb-10'>
-          {/* Cover Image */}
-          <div className="relative mx-auto h-[250px] md:h-[600px] overflow-hidden rounded-3xl mb-4">
-            <div className="relative h-full w-full">
-              <img
-                src={`${BASE_IMAGE_URL}${story?.cover_img}`}
-                alt={story?.title}
+        {/* Cover Image */}
+        <div className="relative mx-auto h-[250px] md:h-[600px] overflow-hidden md:rounded-3xl mb-4">
+          <div className="relative h-full w-full">
+            <img
+              src={`${BASE_IMAGE_URL}${story?.cover_img}`}
+              alt={story?.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+        <div className="md:max-w-4xl md:mx-8 p-7 sm:p-0 pt-0 md:mb-10">
+          <h2 className="text-white text-2xl md:text-5xl font-extrabold mb-2">
+            {story?.title}
+          </h2>
+
+          {/* User Info Section */}
+          <div className="flex items-center gap-3 my-4 text-white">
+            <div className="w-10 h-10 rounded-full overflow-hidden">
+              <img 
+                src='https://chat-stories.vercel.app/user.png'
+                alt="Profile" 
                 className="w-full h-full object-cover"
               />
             </div>
+            <div className="flex-grow">
+              <h2 className="text-xs font-semibold">{capitalizeFirstLetter(story?.author)}</h2>
+              <p className="text-[8px] text-gray-400">3,258 Subscribers</p>
+            </div>
+            <button className="bg-red-600 text-white px-4 py-1 rounded-full text-sm">
+              SUBSCRIBE
+            </button>
           </div>
-          
-          <div className="md:max-w-4xl md:mx-8">
-            <h2 className="text-white text-2xl md:text-5xl font-extrabold mb-2">
-              {story?.title}
-            </h2>
 
-            {/* User Info Section */}
-            <div className="flex items-center gap-3 my-4 text-white">
-              <div className="w-10 h-10 rounded-full overflow-hidden">
-                <img 
-                  src='https://chat-stories.vercel.app/user.png'
-                  alt="Profile" 
-                  className="w-full h-full object-cover"
-                />
+          {/* Action Icons */}
+          <div className="flex justify-between items-center my-4 text-white">
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
+                <span className="text-sm">6</span>
               </div>
-              <div className="flex-grow">
-                <h2 className="text-xs font-semibold">{capitalizeFirstLetter(story?.author)}</h2>
-                <p className="text-[8px] text-gray-400">3,258 Subscribers</p>
-              </div>
-              <button className="bg-red-600 text-white px-4 py-1 rounded-full text-sm">
-                SUBSCRIBE
-              </button>
+              <span className="text-[8px]">Age & Above</span>
             </div>
 
-            {/* Action Icons */}
-            <div className="flex justify-between items-center my-4 text-white">
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
-                  <span className="text-sm">6</span>
-                </div>
-                <span className="text-[8px]">Age & Above</span>
+            <div className="flex flex-col items-center gap-1">
+              <div className="w-8 h-8 flex items-center justify-center">
+                <span className="text-2xl font-bold">EN</span>
               </div>
-
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-8 h-8 flex items-center justify-center">
-                  <span className="text-2xl font-bold">EN</span>
-                </div>
-                <span className="text-[8px]">Language</span>
-              </div>
-
-              <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setIsLiked(!isLiked)}>
-                <Heart className={`w-8 h-8 ${isLiked ? 'fill-current text-red-500' : ''}`} />
-                <span className="text-[8px]">Like</span>
-              </div>
-
-              <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setIsSaved(!isSaved)}>
-                <Bookmark className={`w-8 h-8 ${isSaved ? 'fill-current' : ''}`} />
-                <span className="text-[8px]">Save</span>
-              </div>
-
-              <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={handleShare}>
-                <Share2 className="w-8 h-8" />
-                <span className="text-[8px]">Share</span>
-              </div>
+              <span className="text-[8px]">Language</span>
             </div>
 
-            {/* Synopsis Section */}
-            <div className="text-white text-justify">
-              <h3 className="text-xl font-bold mb-3">Synopsis</h3>
-              <p className="text-gray-300 text-xs leading-relaxed">
-                {story?.synopsis}
-              </p>
+            <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setIsLiked(!isLiked)}>
+              <Heart className={`w-8 h-8 ${isLiked ? 'fill-current text-red-500' : ''}`} />
+              <span className="text-[8px]">Like</span>
             </div>
+
+            <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setIsSaved(!isSaved)}>
+              <Bookmark className={`w-8 h-8 ${isSaved ? 'fill-current' : ''}`} />
+              <span className="text-[8px]">Save</span>
+            </div>
+
+            <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={handleShare}>
+              <Share2 className="w-8 h-8" />
+              <span className="text-[8px]">Share</span>
+            </div>
+          </div>
+
+          {/* Synopsis Section */}
+          <div className="text-white text-justify">
+            <h3 className="text-xl font-bold mb-3">Synopsis</h3>
+            <p className="text-gray-300 text-xs leading-relaxed">
+              {story?.synopsis}
+            </p>
           </div>
         </div>
 

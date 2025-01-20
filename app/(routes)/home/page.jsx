@@ -128,58 +128,57 @@ const ImageCarousel = () => {
   return (
     <div className="min-h-screen bg-black pb-16">
       <div className="w-full max-w-[1920px] mx-auto md:px-8">
-        <div className='p-7 sm:p-0'>
-           {/* Main Carousel */}
-            <div className="relative mx-auto h-[300px] md:h-[600px] overflow-hidden rounded-3xl mb-8"
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}>
-                {carouselStories.length > 0 && (
-                    <div 
-                    className="relative h-full w-full"
-                    onClick={() =>
-                        // router.push(
-                        //     carouselStories[currentIndex]?.story_type === 'chat'
-                        //     ? `/stories/${carouselStories[currentIndex]?.story_id}/chat-story`
-                        //     : `/stories/${carouselStories[currentIndex]?.story_id}/normal-story`
-                        // )
-                        router.push(`/stories/${carouselStories[currentIndex]?.story_id}/story-overview`)
-                      }
-                    >
-                    <img
-                        src={`${BASE_IMAGE_URL}${carouselStories[currentIndex].cover_img}`}
-                        alt={carouselStories[currentIndex].title}
-                        className="w-full h-full object-cover"
+          {/* Main Carousel */}
+          <div className="relative mx-auto h-[300px] md:h-[600px] overflow-hidden md:rounded-3xl mb-8"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}>
+            {carouselStories.length > 0 && (
+                <div 
+                className="relative h-full w-full"
+                onClick={() =>
+                    // router.push(
+                    //     carouselStories[currentIndex]?.story_type === 'chat'
+                    //     ? `/stories/${carouselStories[currentIndex]?.story_id}/chat-story`
+                    //     : `/stories/${carouselStories[currentIndex]?.story_id}/normal-story`
+                    // )
+                    router.push(`/stories/${carouselStories[currentIndex]?.story_id}/story-overview`)
+                  }
+                >
+                <img
+                    src={`${BASE_IMAGE_URL}${carouselStories[currentIndex].cover_img}`}
+                    alt={carouselStories[currentIndex].title}
+                    className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+                    <h2 className="text-white text-2xl md:text-5xl font-bold mb-2">
+                    {carouselStories[currentIndex].title}
+                    </h2>
+                    <p className="text-white/90 text-sm md:text-xl max-w-3xl">
+                    {carouselStories[currentIndex].synopsis}
+                    </p>
+                </div>
+                
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                    {carouselStories.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => {
+                        setCurrentIndex(index);
+                        setIsAutoPlaying(false);
+                        }}
+                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        currentIndex === index ? 'bg-white scale-125' : 'bg-white/50'
+                        }`}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    
-                    <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
-                        <h2 className="text-white text-2xl md:text-5xl font-bold mb-2">
-                        {carouselStories[currentIndex].title}
-                        </h2>
-                        <p className="text-white/90 text-sm md:text-xl max-w-3xl">
-                        {carouselStories[currentIndex].synopsis}
-                        </p>
-                    </div>
-                    
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-                        {carouselStories.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => {
-                            setCurrentIndex(index);
-                            setIsAutoPlaying(false);
-                            }}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                            currentIndex === index ? 'bg-white scale-125' : 'bg-white/50'
-                            }`}
-                        />
-                        ))}
-                    </div>
-                    </div>
-                )}
-            </div>
-
+                    ))}
+                </div>
+                </div>
+            )}
+        </div>
+        <div className='p-7 pt-0 sm:p-0'>
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto my-8">
                 <div className="relative">
