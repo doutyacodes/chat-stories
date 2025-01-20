@@ -105,3 +105,24 @@ export const STORY_VIEWS = mysqlTable("story_views", {
   viewed_at: timestamp("viewed_at").defaultNow(),
   last_viewed_at: timestamp("last_viewed_at").defaultNow(),
 });
+
+export const STORY_LIKES = mysqlTable("story_likes", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  user_id: int("user_id").notNull().references(() => USERS.id),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const STORY_SUBSCRIPTIONS = mysqlTable("story_subscriptions", {
+  id: int("id").primaryKey().autoincrement(),
+  subscriber_id: int("subscriber_id").notNull().references(() => USERS.id), // User subscribing
+  author_id: int("author_id").notNull().references(() => USERS.id), // Author being subscribed to
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const STORY_SAVED = mysqlTable("story_saved", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id), // Story saved
+  user_id: int("user_id").notNull().references(() => USERS.id), // User saving the story
+  created_at: timestamp("created_at").defaultNow(),
+});

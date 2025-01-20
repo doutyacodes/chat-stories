@@ -100,8 +100,15 @@ export default function NavBar() {
       <div className="bg-black text-white p-4 shadow-md">
         <div className="container mx-auto">
           <div className="flex justify-center md:justify-between items-center">
-            {/* Logo or App Title */}
-            <h1 className="text-2xl font-bold">StoryFlix</h1>
+             {/* Logo */}
+              <div className="flex items-center">
+                <img 
+                  src="/pingtaleslogo.png" 
+                  alt="Ping Tales Logo" 
+                  className="max-w-[140px] max-h-[65px] object-contain md:max-w-[220px] md:max-h-[80px]"
+
+                />
+              </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:block">

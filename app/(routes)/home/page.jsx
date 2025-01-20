@@ -201,7 +201,7 @@ const ImageCarousel = () => {
         </div>
 
         {/* Categories */}
-        <div className="space-y-8">
+        {/* <div className="space-y-8">
           {categories.map((category) => (
             <div key={category.id} className="mb-8">
               <h2 className="text-base md:text-2xl text-white font-medium mb-4 px-4">
@@ -213,6 +213,43 @@ const ImageCarousel = () => {
                     key={idx} 
                     story={story} 
                     // size={category.id === "trending" || category.id === "latest" ? "large" : "small"}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div> */}
+
+        {/* Categories */}
+        <div className="space-y-8">
+          {categories.map((category) => (
+            <div key={category.id} className="mb-8">
+              <div className="flex items-center justify-between mb-4 px-4">
+                <h2 className="text-base md:text-2xl text-white font-medium">
+                  {category.title}
+                </h2>
+                <button
+                  onClick={() => {
+                    // If category.id is 'trending' or 'latest', use that in the URL
+                    // Otherwise, use the numeric ID
+                    const path = typeof category.id === 'string' && 
+                      (category.id === 'trending' || category.id === 'latest')
+                      ? `/view-all/${category.id}`
+                      : `/view-all/${Number(category.id)}`;
+                    router.push(path);
+                  }}
+                  className="text-white/70 hover:text-white text-sm md:text-base 
+                    font-medium transition-colors duration-200 flex items-center gap-1"
+                >
+                  View All
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex overflow-x-auto scrollbar-hide px-4 space-x-4 pb-4">
+                {category.data.map((story, idx) => (
+                  <StoryCard 
+                    key={idx} 
+                    story={story} 
                   />
                 ))}
               </div>

@@ -50,7 +50,10 @@ export async function GET(request, { params }) {
 
     // Fetch author details
     const authorDetails = await db
-      .select({ username: USERS.username })
+      .select({
+         authorId: USERS.id, 
+         username: USERS.username 
+        })
       .from(USERS)
       .where(eq(USERS.id, story.authorId));
 
@@ -94,6 +97,7 @@ export async function GET(request, { params }) {
         cover_img: story.coverImg,
         story_type: story.storyType,
         author,
+        authorId: authorDetails[0]?.authorId
       },
       episodes,
       similarStories: similarStoriesData,

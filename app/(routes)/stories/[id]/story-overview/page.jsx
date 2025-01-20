@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Bookmark, Share2, Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import StoryUserActions from '../../_components/StoryUserActions';
 
 const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 
@@ -11,8 +12,7 @@ const StoryOverview = () => {
   const [episodes, setEpisodes] = useState([]);
   const [similarStories, setSimilarStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -35,19 +35,6 @@ const StoryOverview = () => {
     if (id) fetchStoryData();
   }, [id]);
 
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: story?.title,
-        text: story?.synopsis,
-        url: window.location.href,
-      });
-    }
-  };
 
   const StoryCard = ({ storyData, isEpisode = false }) => {
     const handleClick = () => {
@@ -96,6 +83,29 @@ const StoryOverview = () => {
   return (
     <div className="min-h-screen bg-black pb-16">
       <div className="w-full max-w-[1920px] mx-auto md:px-8">
+         {/* Back Button */}
+        <div className="md:px-7 pt-4 md:pt-8">
+          <button 
+            onClick={() => window.history.back()} 
+            className="text-white flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="24" 
+              height="24" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            <span className="text-sm font-medium">Back</span>
+          </button>
+        </div>
+
         {/* Cover Image */}
         <div className="relative mx-auto h-[250px] md:h-[600px] overflow-hidden md:rounded-3xl mb-4">
           <div className="relative h-full w-full">
@@ -111,55 +121,7 @@ const StoryOverview = () => {
             {story?.title}
           </h2>
 
-          {/* User Info Section */}
-          <div className="flex items-center gap-3 my-4 text-white">
-            <div className="w-10 h-10 rounded-full overflow-hidden">
-              <img 
-                src='https://chat-stories.vercel.app/user.png'
-                alt="Profile" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-grow">
-              <h2 className="text-xs font-semibold">{capitalizeFirstLetter(story?.author)}</h2>
-              <p className="text-[8px] text-gray-400">3,258 Subscribers</p>
-            </div>
-            <button className="bg-red-600 text-white px-4 py-1 rounded-full text-sm">
-              SUBSCRIBE
-            </button>
-          </div>
-
-          {/* Action Icons */}
-          <div className="flex justify-between items-center my-4 text-white">
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
-                <span className="text-sm">6</span>
-              </div>
-              <span className="text-[8px]">Age & Above</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 flex items-center justify-center">
-                <span className="text-2xl font-bold">EN</span>
-              </div>
-              <span className="text-[8px]">Language</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setIsLiked(!isLiked)}>
-              <Heart className={`w-8 h-8 ${isLiked ? 'fill-current text-red-500' : ''}`} />
-              <span className="text-[8px]">Like</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={() => setIsSaved(!isSaved)}>
-              <Bookmark className={`w-8 h-8 ${isSaved ? 'fill-current' : ''}`} />
-              <span className="text-[8px]">Save</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={handleShare}>
-              <Share2 className="w-8 h-8" />
-              <span className="text-[8px]">Share</span>
-            </div>
-          </div>
+          <StoryUserActions story={story} />
 
           {/* Synopsis Section */}
           <div className="text-white text-justify">
