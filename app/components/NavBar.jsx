@@ -97,7 +97,7 @@ export default function NavBar() {
     // </>
     <>
       {/* Desktop and Mobile Top Navigation */}
-      <div className="bg-black text-white p-4 shadow-md">
+      <div className="bg-black text-white p-4 shadow-md border-b border-white/50">
         <div className="container mx-auto">
           <div className="flex justify-center md:justify-between items-center">
              {/* Logo */}
@@ -136,8 +136,6 @@ export default function NavBar() {
           </div>
         </div>
       </div>
-      <div className="border-b border-white/30 bg-black" />
-      <div className="h-6 bg-black" />
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden bg-black fixed bottom-0 left-0 right-0 z-[100] text-white shadow-lg border-t border-purple-500">
