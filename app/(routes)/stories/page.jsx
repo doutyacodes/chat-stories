@@ -21,6 +21,8 @@ const ViewAllPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
   const searchRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
@@ -121,120 +123,216 @@ const ViewAllPage = () => {
   };
 
   return (
+    // <div className="min-h-screen bg-black pb-16">
+    //   <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
+    //     {/* Search Bar */}
+    //     <div className="max-w-2xl mx-auto md:mb-8 py-8" ref={searchRef}>
+    //       <div className="relative">
+    //         <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
+    //         <input
+    //           type="text"
+    //           value={searchQuery}
+    //           onChange={(e) => handleSearch(e.target.value)}
+    //           placeholder="Search Stories..."
+    //           className="w-full bg-transparent text-white/90 border-b border-white/30 focus:border-white/70 
+    //             py-2 pl-8 pr-4 outline-none transition-colors placeholder:text-white/50 
+    //             text-base font-light"
+    //         />
+    //         {showSuggestions && searchSuggestions.length > 0 && (
+    //           <div className="absolute w-full bg-gray-900 mt-2 rounded-lg shadow-lg z-50">
+    //             {searchSuggestions.map((suggestion, index) => (
+    //               <div
+    //                 key={index}
+    //                 className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-white/90"
+    //                 onClick={() => applySuggestion(suggestion)}
+    //               >
+    //                 {suggestion}
+    //               </div>
+    //             ))}
+    //           </div>
+    //         )}
+    //       </div>
+    //     </div>
+
+    //    {/* Categories and Sort Section */}
+    //     <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+    //     {/* Categories */}
+    //         <div className="relative w-full" >
+    //             <div
+    //                 ref={scrollContainerRef}
+    //                 className="flex overflow-x-auto gap-3 w-full pb-3 no-scrollbar touch-pan-x cursor-grab active:cursor-grabbing"
+    //                 style={{
+    //                 WebkitOverflowScrolling: 'touch',
+    //                 scrollbarWidth: 'none',
+    //                 msOverflowStyle: 'none'
+    //                 }}
+    //                 onMouseDown={handleMouseDown}
+    //             >
+    //                 <div className="flex gap-3 px-1">
+    //                 <button
+    //                     onClick={() => setSelectedCategory('all')}
+    //                     className={`whitespace-nowrap px-6 py-3 rounded-full font-medium transition-all flex-shrink-0
+    //                     ${selectedCategory === 'all' 
+    //                     ? 'bg-white text-gray-900' 
+    //                     : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+    //                 >
+    //                     All Stories
+    //                 </button>
+    //                 {categories.map((category) => (
+    //                     <button
+    //                     key={category.id}
+    //                     onClick={() => setSelectedCategory(category.id)}
+    //                     className={`whitespace-nowrap px-6 py-3 rounded-full font-medium transition-all flex-shrink-0
+    //                         ${selectedCategory === category.id 
+    //                         ? 'bg-white text-gray-900' 
+    //                         : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+    //                     >
+    //                     {category.name}
+    //                     </button>
+    //                 ))}
+    //                 </div>
+    //             </div>
+    //         </div>
+    //         {/* Sort Options */}
+    //         <div className="relative min-w-[150px] self-end">
+    //             <select
+    //                 value={sortBy}
+    //                 onChange={(e) => setSortBy(e.target.value)}
+    //                 className="appearance-none bg-gray-800 text-white w-full px-6 py-3 rounded-full focus:outline-none pr-10"
+    //                 >
+    //                 <option value={SortOptions.LATEST}>Latest</option>
+    //                 <option value={SortOptions.MOST_VIEWED}>Most Viewed</option>
+    //                 <option value={SortOptions.MOST_LIKED}>Most Liked</option>
+    //             </select>
+    //             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4">
+    //                 <svg className="h-4 w-4 fill-current text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+    //                     <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+    //                 </svg>
+    //             </div>
+    //         </div>
+    //     </div>
+
+
+    //     {/* Stories Grid */}
+    //     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    //       {stories.map((story) => (
+    //         <StoryCard key={story.story_id} storyData={story} />
+    //       ))}
+    //     </div>
+
+    //     {/* Loading State */}
+    //     {loading && (
+    //       <div className="flex justify-center items-center py-20">
+    //         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white" />
+    //       </div>
+    //     )}
+
+    //     {/* No Results */}
+    //     {!loading && stories.length === 0 && (
+    //       <div className="text-center py-20">
+    //         <p className="text-white text-lg">No stories found.</p>
+    //       </div>
+    //     )}
+    //   </div>
+    // </div>
+
     <div className="min-h-screen bg-black pb-16">
       <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto md:mb-8 py-8" ref={searchRef}>
-          <div className="relative">
-            <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search Stories..."
-              className="w-full bg-transparent text-white/90 border-b border-white/30 focus:border-white/70 
-                py-2 pl-8 pr-4 outline-none transition-colors placeholder:text-white/50 
-                text-base font-light"
-            />
-            {showSuggestions && searchSuggestions.length > 0 && (
-              <div className="absolute w-full bg-gray-900 mt-2 rounded-lg shadow-lg z-50">
-                {searchSuggestions.map((suggestion, index) => (
-                  <div
-                    key={index}
-                    className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-white/90"
-                    onClick={() => applySuggestion(suggestion)}
+        {/* Categories and Sort Section */}
+        <div className={`flex flex-col md:flex-row justify-between items-center gap-4 pt-4 ${!showSearch ? 'mb-8' : ''}`}>          {/* Categories */}
+          <div className="relative w-full">
+            <div
+              ref={scrollContainerRef}
+              className="flex overflow-x-auto gap-2 w-full no-scrollbar touch-pan-x cursor-grab active:cursor-grabbing"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+              onMouseDown={handleMouseDown}
+            >
+              <div className="flex gap-2 px-1">
+                <button
+                  onClick={() => {
+                    setShowSearch(!showSearch);
+                    setSearchQuery('');
+                    setSearchSuggestions([])
+                  }}
+                  className={`whitespace-nowrap px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full font-medium transition-all flex-shrink-0
+                    ${showSearch ? 'bg-white text-gray-900' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                >
+                  Search
+                </button>
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`whitespace-nowrap px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full font-medium transition-all flex-shrink-0
+                    ${selectedCategory === 'all' ? 'bg-white text-gray-900' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                >
+                  All Stories
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`whitespace-nowrap px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full font-medium transition-all flex-shrink-0
+                      ${selectedCategory === category.id ? 'bg-white text-gray-900' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
                   >
-                    {suggestion}
-                  </div>
+                    {category.name}
+                  </button>
                 ))}
               </div>
-            )}
+            </div>
+          </div>
+          
+          {/* Sort Options */}
+          <div className="relative min-w-[150px] self-end">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none bg-gray-800 text-white w-full px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full focus:outline-none pr-10"
+            >
+              <option value={SortOptions.LATEST}>Latest</option>
+              <option value={SortOptions.MOST_VIEWED}>Most Viewed</option>
+              <option value={SortOptions.MOST_LIKED}>Most Liked</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4">
+              <svg className="h-4 w-4 fill-current text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+              </svg>
+            </div>
           </div>
         </div>
 
-       {/* Categories and Sort Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
-        {/* Categories */}
-        {/* <div className="flex flex-wrap gap-3 w-full">
-            <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-6 py-3 rounded-full font-medium transition-all
-                ${selectedCategory === 'all' 
-                ? 'bg-white text-gray-900' 
-                : 'bg-gray-800 text-white hover:bg-gray-700'}`}
-            >
-            All Stories
-            </button>
-            {categories.map((category) => (
-            <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-3 rounded-full font-medium transition-all
-                ${selectedCategory === category.id 
-                    ? 'bg-white text-gray-900' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'}`}
-            >
-                {category.name}
-            </button>
-            ))}
-        </div> */}
-
-            <div className="relative w-full" >
-                <div
-                    ref={scrollContainerRef}
-                    className="flex overflow-x-auto gap-3 w-full pb-3 no-scrollbar touch-pan-x cursor-grab active:cursor-grabbing"
-                    style={{
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none'
-                    }}
-                    onMouseDown={handleMouseDown}
-                >
-                    <div className="flex gap-3 px-1">
-                    <button
-                        onClick={() => setSelectedCategory('all')}
-                        className={`whitespace-nowrap px-6 py-3 rounded-full font-medium transition-all flex-shrink-0
-                        ${selectedCategory === 'all' 
-                        ? 'bg-white text-gray-900' 
-                        : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+        {/* Search Bar - Only shown when search is active */}
+        {showSearch && (
+          <div className="max-w-2xl mx-auto mb-8 py-4" ref={searchRef}>
+            <div className="relative">
+              <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search Stories..."
+                className="w-full bg-transparent text-white/90 border-b border-white/30 focus:border-white/70 
+                  py-2 pl-8 pr-4 outline-none transition-colors placeholder:text-white/50 
+                  text-base font-light"
+              />
+              {showSuggestions && searchSuggestions.length > 0 && (
+                <div className="absolute w-full bg-gray-900 mt-2 rounded-lg shadow-lg z-50">
+                  {searchSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-white/90"
+                      onClick={() => applySuggestion(suggestion)}
                     >
-                        All Stories
-                    </button>
-                    {categories.map((category) => (
-                        <button
-                        key={category.id}
-                        onClick={() => setSelectedCategory(category.id)}
-                        className={`whitespace-nowrap px-6 py-3 rounded-full font-medium transition-all flex-shrink-0
-                            ${selectedCategory === category.id 
-                            ? 'bg-white text-gray-900' 
-                            : 'bg-gray-800 text-white hover:bg-gray-700'}`}
-                        >
-                        {category.name}
-                        </button>
-                    ))}
+                      {suggestion}
                     </div>
+                  ))}
                 </div>
+              )}
             </div>
-
-            {/* Sort Options */}
-            <div className="relative min-w-[150px] self-end">
-                <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none bg-gray-800 text-white w-full px-6 py-3 rounded-full focus:outline-none pr-10"
-                    >
-                    <option value={SortOptions.LATEST}>Latest</option>
-                    <option value={SortOptions.MOST_VIEWED}>Most Viewed</option>
-                    <option value={SortOptions.MOST_LIKED}>Most Liked</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4">
-                    <svg className="h-4 w-4 fill-current text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                    </svg>
-                </div>
-            </div>
-        </div>
-
+          </div>
+        )}
 
         {/* Stories Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

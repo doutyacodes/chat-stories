@@ -349,200 +349,170 @@ const Search = () => {
     //   </div>
     // </div>
 
-    <div className="w-full text-white bg-black min-h-screen">
-      <Toaster />
+  <div className="w-full text-white bg-black min-h-screen">
+    <Toaster />
 
-      {!story && (
-        <>
-          {/* Old header commented */}
-          {/* <header className="text-center mb-8 mt-2">
-            <h1 className="text-3xl font-bold text-[#7C3AED] roboto-bold">
-              Magic Box
-            </h1>
-            <p className="mt-2 text-xs text-[#D1D5DB]">
-              Imagine. Create Your Own Story.
-            </p>
-          </header> */}
+    {!story && (
+      <>
+        <header className="text-center mb-8 pt-4">
+          <h1 className="text-3xl font-bold text-gray-300 roboto-bold">
+            Make your own story with A.I
+          </h1>
+        </header>
 
-          {/* New simplified header */}
-          <header className="text-center mb-8 pt-4">
-            <h1 className="text-3xl font-bold text-[#7C3AED]  roboto-bold">
-              Make your own story with A.I
-            </h1>
-          </header>
+        <div className="w-full flex justify-center items-center max-md:p-3 max-md:px-10">
+          <div className="text-center w-full max-w-4xl p-1 py-4">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="w-full text-center mb-4">
+                <Input
+                  type="text"
+                  placeholder="Type the topic name here"
+                  value={courseName}
+                  maxLength="150"
+                  onChange={(e) => setCourseName(e.target.value)}
+                  className="w-full p-2 py-12 text-xl placeholder:text-lg border-gray-600 rounded-xl placeholder:text-center md:mb-16 bg-[#1F2937] text-white"
+                />
+              </div>
 
-          <div className="w-full flex justify-center items-center max-md:p-3 max-md:px-10">
-            <div className="text-center w-full max-w-4xl p-1 py-4">
-              <form onSubmit={handleSearch} className="w-full">
+              <div className="grid gap-2 md:gap-8 grid-cols-1">
                 <div className="w-full text-center mb-4">
-                  {/* Commenting out story type selection */}
-                  {/* <h2 className="text-xl font-semibold max-md:w-full mb-8 items-center justify-center flex flex-wrap gap-3">
-                    <div className="text-white">I want</div>
-                    <Select
-                      onValueChange={(value) => setType(value)}
-                      value={type}
-                      className="bg-[#1F2937] border-[rgb(4,188,100)]"
-                    >
-                      <SelectTrigger className="w-fit text-4xl uppercase rounded-full p-2 bg-[#1F2937] border-[rgb(4,188,100)] text-white [&>svg]:w-8 [&>svg]:h-24">
-                        <SelectValue placeholder="Story" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1F2937] text-white">
-                        <SelectGroup>
-                          <SelectItem value="story">a Story</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    <div className="text-white">about</div>
-                  </h2> */}
-
-                  <Input
-                    type="text"
-                    placeholder="Type the topic name here"
-                    value={courseName}
-                    maxLength="150"
-                    onChange={(e) => setCourseName(e.target.value)}
-                    className="w-full p-2 py-12 text-xl placeholder:text-lg border-[#7C3AED] rounded-xl  placeholder:text-center md:mb-16 bg-[#1F2937] text-white"
-                  />
+                  <h2 className="text-lg font-semibold mb-2 text-white">Age Range</h2>
+                  <Select onValueChange={setAgeRange} value={ageRange}>
+                    <SelectTrigger className="w-full border text-center bg-[#1F2937] border-gray-600 rounded-xl p-2 text-white">
+                      <SelectValue placeholder="Select age range" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1F2937] text-white">
+                      <SelectGroup>
+                        <SelectItem value="3-5">3 - 5 years</SelectItem>
+                        <SelectItem value="6-8">6 - 8 years</SelectItem>
+                        <SelectItem value="9-11">9 - 11 years</SelectItem>
+                        <SelectItem value="12-17">12 - 17 years</SelectItem>
+                        <SelectItem value="18+">18+ years</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="grid gap-2 md:gap-8 grid-cols-1">
-                  <div className="w-full text-center mb-4">
-                    <h2 className="text-lg font-semibold mb-2 text-white">Age Range</h2>
-                    <Select onValueChange={setAgeRange} value={ageRange}>
-                      <SelectTrigger className="w-full border text-center bg-[#1F2937] border-[#7C3AED] rounded-xl p-2 text-white">
-                        <SelectValue placeholder="Select age range" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1F2937] text-white">
-                        <SelectGroup>
-                          <SelectItem value="3-5">3 - 5 years</SelectItem>
-                          <SelectItem value="6-8">6 - 8 years</SelectItem>
-                          <SelectItem value="9-11">9 - 11 years</SelectItem>
-                          <SelectItem value="12-17">12 - 17 years</SelectItem>
-                          <SelectItem value="18+">18+ years</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="w-full text-center mb-4">
-                    <h2 className="text-lg font-semibold mb-2 text-white">Genre</h2>
-                    <Select 
-                      onValueChange={setGenre} 
-                      value={genre}
-                      disabled={!ageRange}
-                    >
-                      <SelectTrigger 
-                        className={`w-full border text-center bg-[#1F2937] border-[#7C3AED] rounded-xl p-2 text-white ${!ageRange ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      >
-                        <SelectValue placeholder="Select a genre" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1F2937] text-white max-h-[300px]">
-                        <SelectGroup>
-                          {ageRange && genreOptions[ageRange]?.map((genre) => (
-                            <SelectItem 
-                              key={genre.value} 
-                              value={genre.value}
-                              className="cursor-pointer hover:bg-[#374151]"
-                            >
-                              <div className="py-1">
-                                <div className="font-medium">{genre.value}</div>
-                                <div className="text-sm text-gray-300">{genre.description}</div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="w-full text-center mb-4">
-                    <h2 className="text-lg font-semibold mb-2 text-white">Language</h2>
-                    <Select onValueChange={setLanguage} value={language}>
-                      <SelectTrigger className="w-full border text-center bg-[#1F2937] border-[#7C3AED] rounded-xl p-2 text-white">
-                        <SelectValue placeholder="English" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#1F2937] text-white">
-                        <SelectGroup>
-                          <SelectItem value="english">English</SelectItem>
-                          <SelectItem value="spanish">Spanish</SelectItem>
-                          <SelectItem value="french">French</SelectItem>
-                          <SelectItem value="german">German</SelectItem>
-                          <SelectItem value="italian">Italian</SelectItem>
-                          <SelectItem value="portuguese">Portuguese</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="w-full flex justify-center items-center mt-5">
-                  <button
-                    type="submit"
-                    className="bg-[rgb(4,188,100)] text-white rounded-full uppercase font-semibold py-4 md:py-2 text-lg px-4 transition-all max-md:w-full md:min-w-60 hover:bg-[#15803d]"
+                <div className="w-full text-center mb-4">
+                  <h2 className="text-lg font-semibold mb-2 text-white">Genre</h2>
+                  <Select 
+                    onValueChange={setGenre} 
+                    value={genre}
+                    disabled={!ageRange}
                   >
-                    Generate Story
-                  </button>
+                    <SelectTrigger 
+                      className={`w-full border text-left bg-[#1F2937] border-gray-600 rounded-xl p-2 text-white ${!ageRange ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <SelectValue placeholder="Select a genre" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1F2937] text-white max-h-[300px]">
+                      <SelectGroup>
+                        {ageRange && genreOptions[ageRange]?.map((genre) => (
+                          <SelectItem 
+                            key={genre.value} 
+                            value={genre.value}
+                            className="cursor-pointer hover:bg-[#374151]"
+                          >
+                            <div className="py-1">
+                              <div className="font-medium">{genre.value}</div>
+                              <div className="text-sm text-gray-300">{genre.description}</div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </form>
+
+                <div className="w-full text-center mb-4">
+                  <h2 className="text-lg font-semibold mb-2 text-white">Language</h2>
+                  <Select onValueChange={setLanguage} value={language}>
+                    <SelectTrigger className="w-full border text-center bg-[#1F2937] border-gray-600 rounded-xl p-2 text-white">
+                      <SelectValue placeholder="English" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1F2937] text-white">
+                      <SelectGroup>
+                        <SelectItem value="english">English</SelectItem>
+                        <SelectItem value="spanish">Spanish</SelectItem>
+                        <SelectItem value="french">French</SelectItem>
+                        <SelectItem value="german">German</SelectItem>
+                        <SelectItem value="italian">Italian</SelectItem>
+                        <SelectItem value="portuguese">Portuguese</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="w-full flex justify-center items-center mt-5">
+                <button
+                  type="submit"
+                  className="bg-[rgb(4,188,100)] text-white rounded-full uppercase font-semibold py-4 md:py-2 text-lg px-4 transition-all max-md:w-full md:min-w-60 hover:bg-[#15803d]"
+                >
+                  Generate Story
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </>
+    )}
+
+    {/* Story display section */}
+    <div className="w-full h-full p-3 space-y-4 pb-20 md:pb-3">
+      {story && (
+        <>
+          <div className="flex items-start justify-between bg-[#1F2937] rounded-lg w-full shadow-md p-2 relative font-bold text-xl mt-4 pb-6">
+            <div
+              onClick={() => setStory(null)}
+              className="bg-[rgb(4,188,100)] p-2 rounded-full cursor-pointer"
+            >
+              <ChevronLeft className="text-white" />
+            </div>
+            <div className="flex flex-col gap-1 items-center">
+              <div className="uppercase underline text-xl text-white">
+                {story?.courseName}
+              </div>
+              <div className="uppercase text-base font-semibold text-[#D1D5DB]">
+                {story?.type}
+              </div>
+              <div className="flex gap-7 items-center text-[#D1D5DB]">
+                <div className="uppercase text-sm font-normal">
+                  Age Range: {ageRange}
+                </div>
+                <div className="uppercase text-sm font-normal">
+                  Language: {language}
+                </div>
+              </div>
+            </div>
+            <div />
+          </div>
+
+          <div className="w-full md:flex md:justify-center gap-7 text-justify md:pt-3">
+            <div className="flex flex-col items-center space-y-4 bg-[#1F2937] shadow-lg rounded-xl w-full max-w-4xl p-3 py-6 relative">
+              <div className="mt-2 w-full text-justify">
+                <h2 className="text-3xl font-bold mb-6 text-center text-white">
+                  {story.title}
+                </h2>
+                <div className="text-[#D1D5DB] mb-8">
+                  {story.introduction?.content}
+                </div>
+                {story.body?.map((paragraph, index) => (
+                  <div key={index} className="text-[#D1D5DB] mb-4">
+                    {paragraph.content}
+                  </div>
+                ))}
+                <div className="text-[#D1D5DB]">
+                  {story.conclusion?.content || "Conclusion data is unavailable."}
+                </div>
+              </div>
             </div>
           </div>
         </>
       )}
-
-      {/* Story display section with mobile bottom nav spacing */}
-      <div className="w-full h-full p-3 space-y-4 pb-20 md:pb-3"> {/* Added pb-20 for mobile */}
-        {story && (
-          <>
-            <div className="flex items-start justify-between bg-[#1F2937] rounded-lg w-full shadow-md p-2 relative font-bold text-xl mt-4 pb-6">
-              <div
-                onClick={() => setStory(null)}
-                className="bg-[rgb(4,188,100)] p-2 rounded-full cursor-pointer"
-              >
-                <ChevronLeft className="text-white" />
-              </div>
-              <div className="flex flex-col gap-1 items-center">
-                <div className="uppercase underline text-xl text-white">
-                  {story?.courseName}
-                </div>
-                <div className="uppercase text-base font-semibold text-[#D1D5DB]">
-                  {story?.type}
-                </div>
-                <div className="flex gap-7 items-center text-[#D1D5DB]">
-                  <div className="uppercase text-sm font-normal">
-                    Age Range: {ageRange}
-                  </div>
-                  <div className="uppercase text-sm font-normal">
-                    Language: {language}
-                  </div>
-                </div>
-              </div>
-              <div />
-            </div>
-
-            <div className="w-full md:flex md:justify-center gap-7 text-justify md:pt-3">
-              <div className="flex flex-col items-center space-y-4 bg-[#1F2937] shadow-lg rounded-xl w-full max-w-4xl p-3 py-6 relative">
-                <div className="mt-2 w-full text-justify">
-                  <h2 className="text-3xl font-bold mb-6 text-center text-white">
-                    {story.title}
-                  </h2>
-                  <div className="text-[#D1D5DB] mb-8">
-                    {story.introduction?.content}
-                  </div>
-                  {story.body?.map((paragraph, index) => (
-                    <div key={index} className="text-[#D1D5DB] mb-4">
-                      {paragraph.content}
-                    </div>
-                  ))}
-                  <div className="text-[#D1D5DB]">
-                    {story.conclusion?.content || "Conclusion data is unavailable."}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
     </div>
+  </div>
+
   );
 };
 
