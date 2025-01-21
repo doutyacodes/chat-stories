@@ -120,13 +120,13 @@ const StoryCardsSlider = () => {
   const cards = [
     {
       title: "Make Your\nOwn Stories\n with A.I",
-      bgImage: "https://plus.unsplash.com/premium_photo-1675490808234-453b817d9a72?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      bgImage: "/ai-story.png",
       url: "/search-story"
 
     },
     {
       title: "Creator's\nCorner",
-      bgImage: "https://images.unsplash.com/photo-1636956040469-fec02ed01ab5?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      bgImage: "/be-a-creator.png",
       url: "/create-story"
     }
   ];
@@ -177,12 +177,6 @@ const StoryCardsSlider = () => {
                 alt={card.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-300" />
-            </div>
-            <div className="relative py-2 px-4 h-full">
-              <h3 className="text-3xl font-extrabold text-black-700 whitespace-pre-line leading-tight">
-                {card.title}
-              </h3>
             </div>
           </div>
         ))}
@@ -212,12 +206,6 @@ const StoryCardsSlider = () => {
                     alt={card.title}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/40" />
-                </div>
-                <div className="relative h-full p-4">
-                  <h3 className="text-xl font-extrabold text-zinc-900 whitespace-pre-line leading-tight">
-                    {card.title}
-                  </h3>
                 </div>
               </div>
             ))}
