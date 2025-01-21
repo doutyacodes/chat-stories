@@ -144,7 +144,7 @@ export default function NavBar() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden bg-black fixed bottom-0 left-0 right-0 z-[100] text-white shadow-lg border-t border-purple-500">
+      <div className="md:hidden bg-black fixed bottom-0 left-0 right-0 z-[100] text-white shadow-lg border-t border-[rgb(4,188,100)]">
         <div className="flex justify-around items-center h-16 px-4">
           <button
             onClick={() => navigateTo('/')}
@@ -164,7 +164,7 @@ export default function NavBar() {
             onClick={() => navigateTo('/search-story')}
             className="flex flex-col items-center space-y-1 text-sm"
           >
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-full shadow-lg">
+            <div className="bg-gradient-to-r from-[rgb(4,188,100)] to-[rgb(4,188,100)] p-3 rounded-full shadow-lg">
               <Plus size={24} />
             </div>
           </button>

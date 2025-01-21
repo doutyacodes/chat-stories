@@ -22,6 +22,7 @@ const ViewAllPage = () => {
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
   console.log("searchSuggestions", searchSuggestions)
   console.log("searchQuery", searchQuery)
@@ -90,6 +91,28 @@ const ViewAllPage = () => {
     }
   };
 
+  const handleMouseDown = (e) => {
+    const ele = scrollContainerRef.current;
+    if (!ele) return;
+    
+    const startX = e.pageX - ele.offsetLeft;
+    const scrollLeft = ele.scrollLeft;
+    
+    const handleMouseMove = (e) => {
+      const x = e.pageX - ele.offsetLeft;
+      const walk = (x - startX);
+      ele.scrollLeft = scrollLeft - walk;
+    };
+    
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   const applySuggestion = (suggestion) => {
     console.log("suggetion from apply", suggestion)
     setSearchQuery(suggestion);
@@ -101,7 +124,7 @@ const ViewAllPage = () => {
     <div className="min-h-screen bg-black pb-16">
       <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
         {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-8 py-8" ref={searchRef}>
+        <div className="max-w-2xl mx-auto md:mb-8 py-8" ref={searchRef}>
           <div className="relative">
             <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
             <input
@@ -132,7 +155,7 @@ const ViewAllPage = () => {
        {/* Categories and Sort Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
         {/* Categories */}
-        <div className="flex flex-wrap gap-3 w-full">
+        {/* <div className="flex flex-wrap gap-3 w-full">
             <button
             onClick={() => setSelectedCategory('all')}
             className={`px-6 py-3 rounded-full font-medium transition-all
@@ -154,7 +177,44 @@ const ViewAllPage = () => {
                 {category.name}
             </button>
             ))}
-        </div>
+        </div> */}
+
+            <div className="relative w-full" >
+                <div
+                    ref={scrollContainerRef}
+                    className="flex overflow-x-auto gap-3 w-full pb-3 no-scrollbar touch-pan-x cursor-grab active:cursor-grabbing"
+                    style={{
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
+                    }}
+                    onMouseDown={handleMouseDown}
+                >
+                    <div className="flex gap-3 px-1">
+                    <button
+                        onClick={() => setSelectedCategory('all')}
+                        className={`whitespace-nowrap px-6 py-3 rounded-full font-medium transition-all flex-shrink-0
+                        ${selectedCategory === 'all' 
+                        ? 'bg-white text-gray-900' 
+                        : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                    >
+                        All Stories
+                    </button>
+                    {categories.map((category) => (
+                        <button
+                        key={category.id}
+                        onClick={() => setSelectedCategory(category.id)}
+                        className={`whitespace-nowrap px-6 py-3 rounded-full font-medium transition-all flex-shrink-0
+                            ${selectedCategory === category.id 
+                            ? 'bg-white text-gray-900' 
+                            : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                        >
+                        {category.name}
+                        </button>
+                    ))}
+                    </div>
+                </div>
+            </div>
 
             {/* Sort Options */}
             <div className="relative min-w-[150px] self-end">
