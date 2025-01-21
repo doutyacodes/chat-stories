@@ -180,7 +180,7 @@ const ImageCarousel = () => {
         </div>
         <div className='p-7 pt-0 sm:p-0'>
             {/* Search Bar */}
-            <div className="max-w-2xl mx-auto my-8">
+            {/* <div className="max-w-2xl mx-auto my-8">
                 <div className="relative">
                     <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
                     <input
@@ -191,7 +191,7 @@ const ImageCarousel = () => {
                         text-base font-light"
                     />
                 </div>
-            </div>
+            </div> */}
 
             {/* AI Story Creation Cards */}
             <div className="space-y-2 my-8">
