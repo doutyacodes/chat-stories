@@ -75,18 +75,23 @@ const ViewAllPage = () => {
         </div>
 
         {/* Sort Options */}
-        <div className="flex items-center justify-end px-4 mb-6">
+        <div className="relative flex items-center justify-end px-4 mb-6">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none"
+            className="appearance-none bg-gray-800 text-white px-6 py-3 rounded-full focus:outline-none pr-10"
           >
             <option value={SortOptions.LATEST}>Latest</option>
             <option value={SortOptions.MOST_VIEWED}>Most Viewed</option>
             <option value={SortOptions.MOST_LIKED}>Most Liked</option>
           </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4">
+                <svg className="h-4 w-4 fill-current text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                </svg>
+            </div>
         </div>
-
+ 
         {/* Stories Grid */}
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-4">
           {stories.map((story) => (

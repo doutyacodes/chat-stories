@@ -18,10 +18,27 @@ const ImageCarousel = () => {
   const router = useRouter();
 
   const fetchStories = async () => {
+    let sessionId = null;
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      sessionId = sessionStorage.getItem('session_id');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
+        sessionStorage.setItem('session_id', sessionId);
+      }
+    }
+
     try {
       setIsLoading(true);
-      const response = await fetch('/api/fetchAllData');
-      
+
+      const response = await fetch(`/api/fetchAllData?session_id=${sessionId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        }
+      });
+
       if (!response.ok) {
         throw new Error('Failed to fetch stories');
       }
@@ -233,22 +250,25 @@ const ImageCarousel = () => {
                 <h2 className="text-base md:text-2xl text-white font-medium">
                   {category.title}
                 </h2>
-                <button
-                  onClick={() => {
-                    // If category.id is 'trending' or 'latest', use that in the URL
-                    // Otherwise, use the numeric ID
-                    const path = typeof category.id === 'string' && 
-                      (category.id === 'trending' || category.id === 'latest')
-                      ? `/view-all/${category.id}`
-                      : `/view-all/${Number(category.id)}`;
-                    router.push(path);
-                  }}
-                  className="text-white/70 hover:text-white text-sm md:text-base 
-                    font-medium transition-colors duration-200 flex items-center gap-1"
-                >
-                  View All
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+                
+                {category.id !== 'continue-reading' && (
+                  <button
+                    onClick={() => {
+                      // If category.id is 'trending' or 'latest', use that in the URL
+                      // Otherwise, use the numeric ID
+                      const path = typeof category.id === 'string' && 
+                        (category.id === 'trending' || category.id === 'latest')
+                        ? `/view-all/${category.id}`
+                        : `/view-all/${Number(category.id)}`;
+                      router.push(path);
+                    }}
+                    className="text-white/70 hover:text-white text-sm md:text-base 
+                      font-medium transition-colors duration-200 flex items-center gap-1"
+                  >
+                    View All
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               <div className="flex overflow-x-auto scrollbar-hide px-4 space-x-4 pb-4">
                 {category.data.map((story, idx) => (

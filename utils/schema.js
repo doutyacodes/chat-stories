@@ -126,3 +126,11 @@ export const STORY_SAVED = mysqlTable("story_saved", {
   user_id: int("user_id").notNull().references(() => USERS.id), // User saving the story
   created_at: timestamp("created_at").defaultNow(),
 });
+
+export const USER_LAST_READ = mysqlTable("user_last_read", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull().references(() => USERS.id),
+  session_id: varchar("session_id", { length: 255 }),  // Unique session ID for non-logged-in users
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  last_read_at: timestamp("last_read_at").defaultNow(), // Timestamp for sorting
+});

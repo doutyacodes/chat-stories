@@ -242,7 +242,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { FaVideo, FaPhone, FaEllipsisV } from 'react-icons/fa';
 import { useParams } from 'next/navigation';
 
@@ -281,6 +280,9 @@ const ChatPage = () => {
         setTimeout(() => {
           trackStoryView(storyId);
         }, 5000);
+
+        // Track user read immediately
+        trackUserRead(storyId);
 
       } catch (err) {
         console.error('Error fetching episode:', err);
@@ -325,6 +327,39 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error('Error recording view:', error);
+    }
+  };
+
+  const trackUserRead = async (storyId) => {
+    let sessionId = null;
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      sessionId = sessionStorage.getItem('session_id');
+      if (!sessionId) {
+        sessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
+        sessionStorage.setItem('session_id', sessionId);
+      }
+    }
+
+    try {
+      const response = await fetch('/api/analytics/user-reads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+        body: JSON.stringify({
+          story_id: storyId,
+          session_id: sessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to record user read');
+      }
+    } catch (error) {
+      console.error('Error recording user read:', error);
     }
   };
 

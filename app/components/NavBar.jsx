@@ -121,6 +121,12 @@ export default function NavBar() {
                 </li>
                 <li
                   className="hover:text-gray-300 cursor-pointer"
+                  onClick={() => navigateTo('/stories')}
+                >
+                  All Stories
+                </li>
+                <li
+                  className="hover:text-gray-300 cursor-pointer"
                   onClick={() => navigateTo('/your-stories')}
                 >
                   Your Stories
@@ -147,12 +153,12 @@ export default function NavBar() {
             <Home size={20} />
           </button>
           
-          {/* <button
-            onClick={() => navigateTo('/your-stories')}
+          <button
+            onClick={() => navigateTo('/stories')}
             className="flex flex-col items-center space-y-1 text-sm"
           >
             <Book size={20} />
-          </button> */}
+          </button>
           
           <button
             onClick={() => navigateTo('/search-story')}
@@ -169,6 +175,10 @@ export default function NavBar() {
           >
             <Sparkles size={20} />
           </button> */}
+
+          <div className="flex flex-col items-center space-y-1 text-sm invisible">
+            <Sparkles size={20} />
+          </div>
           
           <button
             onClick={() => navigateTo('/profile')}
