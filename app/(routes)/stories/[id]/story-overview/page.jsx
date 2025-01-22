@@ -82,9 +82,9 @@ const StoryOverview = () => {
 
   return (
     <div className="min-h-screen bg-black pb-16">
-      <div className="w-full max-w-[1920px] mx-auto md:px-8">
+      <div className="w-full max-w-[1920px] mx-auto">
          {/* Back Button */}
-        <div className="md:px-7 pt-4 md:pt-8">
+        {/* <div className="md:px-7 pt-4 md:pt-8">
           <button 
             onClick={() => window.history.back()} 
             className="text-white flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -104,10 +104,12 @@ const StoryOverview = () => {
             </svg>
             <span className="text-sm font-medium">Back</span>
           </button>
-        </div>
+        </div> */}
 
         {/* Cover Image */}
-        <div className="relative mx-auto h-[250px] md:h-[600px] overflow-hidden md:rounded-3xl mb-4">
+        {/* <div className="relative mx-auto h-[250px] md:h-[600px] overflow-hidden md:rounded-3xl mb-4"> */}
+        {/* <div className="relative mx-auto h-[300px] md:h-[95vh] overflow-hidden">
+
           <div className="relative h-full w-full">
             <img
               src={`${BASE_IMAGE_URL}${story?.cover_img}`}
@@ -115,11 +117,32 @@ const StoryOverview = () => {
               className="w-full h-full object-cover"
             />
           </div>
-        </div>
+        </div> */}
+
+{/*  */}
+            <div className="relative mx-auto h-[300px] md:h-[95vh] overflow-hidden">
+              <div className="relative h-full w-full"> 
+                <img
+                      src={`${BASE_IMAGE_URL}${story?.cover_img}`}
+                      alt={story?.title}
+                      className="w-full h-full object-cover"
+                  />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+                  <h2 className="text-white text-2xl md:text-5xl font-bold mb-2">
+                  {story?.title}
+                  </h2>
+                  <p className="text-white/90 text-sm md:text-xl max-w-3xl">
+                  {story?.synopsis}
+                  </p>
+              </div>
+            </div>
+
         <div className="md:max-w-4xl md:mx-8 p-7 sm:p-0 pt-0 md:mb-10">
-          <h2 className="text-white text-2xl md:text-5xl font-extrabold mb-2">
+          {/* <h2 className="text-white text-2xl md:text-5xl font-extrabold mb-2">
             {story?.title}
-          </h2>
+          </h2> */}
 
           <StoryUserActions story={story} />
 

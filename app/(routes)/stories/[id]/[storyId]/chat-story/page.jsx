@@ -380,7 +380,7 @@ const ChatPage = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-900 text-white flex flex-col sm:flex-row">
+    <div className="h-screen bg-gray-900 text-white flex flex-col sm:flex-row md:pt-28">
       {/* Story Info Sidebar - Only shown in desktop view */}
       {!isMobileView && (
         <div className="w-1/4 bg-gray-800 p-4 border-r border-gray-700">

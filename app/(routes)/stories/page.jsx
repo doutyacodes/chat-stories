@@ -236,7 +236,7 @@ const ViewAllPage = () => {
     //   </div>
     // </div>
 
-    <div className="min-h-screen bg-black pb-16">
+    <div className="min-h-screen bg-black pb-16 md:pt-28">
       <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
         {/* Categories and Sort Section */}
         <div className={`flex flex-col md:flex-row justify-between items-center gap-4 pt-4 ${!showSearch ? 'mb-8' : ''}`}>          {/* Categories */}

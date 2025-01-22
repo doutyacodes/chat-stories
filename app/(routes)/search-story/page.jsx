@@ -349,7 +349,7 @@ const Search = () => {
     //   </div>
     // </div>
 
-  <div className="w-full text-white bg-black min-h-screen">
+  <div className="w-full text-white bg-black min-h-screen md:pt-28">
     <Toaster />
 
     {!story && (

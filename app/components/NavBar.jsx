@@ -1,62 +1,125 @@
 'use client';
 import React, { useState } from 'react'
-import { useRouter } from 'next/navigation';
-import { Menu, X, Home, Book, User, Plus, Sparkles, Gamepad2 } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, Home, Book, User, Plus, Sparkles, Gamepad2, Info, Mail } from 'lucide-react';
+import Link from 'next/link';
 
 export default function NavBar() {
+  const pathname = usePathname();
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+
+ 
+  // Check if the current path should have a transparent navbar
+  const shouldBeTransparent = () => {
+    if (pathname === '/' || pathname === '/home') return true;
+    // Check for story-overview pages with dynamic IDs
+    if (pathname.match(/^\/stories\/\d+\/story-overview$/)) return true;
+    return false;
+  };
+
+  const isTransparent = shouldBeTransparent();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navigateTo = (path) => {
     router.push(path);
-    setIsMenuOpen(false); // Close menu after navigation
+    setIsMenuOpen(false);
   };
-
+  
   return (
     <>
-      {/* Desktop and Mobile Top Navigation */}
-      <div className="bg-black text-white p-4 shadow-md border-b border-white/50">
-        <div className="container mx-auto">
-          <div className="flex justify-center md:justify-between items-center">
-            {/* Logo */}
-            <div className="flex items-center">
-              <img 
-                src="/pingtaleslogo.png" 
-                alt="Ping Tales Logo" 
-                // className="max-w-[140px] max-h-[65px] object-contain md:max-w-[220px] md:max-h-[80px]"
-                className="max-w-[196px] max-h-[91px] object-contain md:max-w-[220px] md:max-h-[80px]"
-              />
-            </div>
+     {/* Desktop and Mobile Top Navigation */}
+     <div className="relative">
+        <div className={`
+          md:absolute md:top-0 md:left-0 md:right-0 md:z-50 
+          ${isTransparent ? 'md:bg-black/85' : 'bg-black'}
+          ${!isTransparent ? 'bg-black' : 'bg-black md:bg-black/85'}
+        `}>
+          <div className={`${isTransparent ? 'md:h-24' : ''} md:py-4`}>
+            <div className="container mx-auto">
+              <div className="flex md:justify-between justify-center items-center">
+                {/* Logo - centered on mobile, left-aligned on desktop */}
+                <div className="flex items-center">
+                  <img 
+                    src="/Transparentlogo.png" 
+                    alt="Ping Tales Logo" 
+                    className="max-w-[167px] max-h-[77px] object-contain md:max-w-[220px] md:max-h-[80px]"
+                  />
+                </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:block">
-              <ul className="flex gap-6 text-base">
-                <li
-                  className="hover:text-gray-300 cursor-pointer"
-                  onClick={() => navigateTo('/')}
-                >
-                  Home
-                </li>
-                <li
-                  className="hover:text-gray-300 cursor-pointer"
-                  onClick={() => navigateTo('/stories')}
-                >
-                  All Stories
-                </li>
-                {/* <li
-                  className="hover:text-gray-300 cursor-pointer"
-                  onClick={() => navigateTo('/your-stories')}
-                >
-                  Your Stories
-                </li> */}
-                <li
-                  className="hover:text-gray-300 cursor-pointer"
-                  onClick={() => navigateTo('/profile')}
-                >
-                  Profile
-                </li>
-              </ul>
-            </nav>
+                {/* Desktop Navigation */}
+                <nav className="hidden md:block">
+                  <ul className="flex gap-6 text-lg font-medium">
+                    <li 
+                      className="text-white hover:text-gray-300 cursor-pointer transition-colors"
+                      onClick={() => router.push('/')}
+                    >
+                      Home
+                    </li>
+                    <li 
+                      className="text-white hover:text-gray-300 cursor-pointer transition-colors"
+                      onClick={() => router.push('/stories')}
+                    >
+                      Stories
+                    </li>
+
+                    <li 
+                      className="text-white hover:text-gray-300 cursor-pointer transition-colors"
+                      // onClick={() => router.push('/stories')}
+                    >
+                      Games
+                    </li>
+
+                    <li 
+                      className="text-white hover:text-gray-300 cursor-pointer transition-colors"
+                      onClick={() => router.push('/search-story')}
+                    >
+                      Create
+                    </li>
+
+                    <li 
+                      className="text-white hover:text-gray-300 cursor-pointer transition-colors"
+                      onClick={() => router.push('/profile')}
+                    >
+                      Profile
+                    </li>
+
+                    <li className='relative'>
+                      <div onClick={() => setIsOpen(!isOpen)}>
+                        <Menu 
+                          className={`text-white hover:text-gray-300 cursor-pointer transition-colors ${
+                            isOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </div>
+                      {isOpen && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 z-[999] transform opacity-100 scale-100 transition-all duration-200 origin-top-right ring-1 ring-black ring-opacity-5">
+                          <div className="absolute right-3 -top-2 w-4 h-4 bg-white transform rotate-45 border-l border-t border-black/5" />
+                          
+                          <div className="relative bg-white rounded-lg">
+                            <Link
+                              href="/"
+                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            >
+                              <Info className="w-4 h-4" />
+                              <span className="font-medium">Our Story</span>
+                            </Link>
+                            
+                            <Link 
+                              href="/"
+                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            >
+                              <Mail className="w-4 h-4" />
+                              <span className="font-medium">Contact Us</span>
+                            </Link>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
           </div>
         </div>
       </div>
