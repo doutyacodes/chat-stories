@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 // LoadingSpinner Component
@@ -9,26 +9,16 @@ const LoadingSpinner = () => (
   <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
     <div className="bg-gray-800 p-8 rounded-lg shadow-xl flex flex-col items-center">
       <Loader2 className="h-12 w-12 text-purple-600 animate-spin" />
-      <p className="mt-4 text-white text-lg">
-        {/* Dynamic loading text */}
-      </p>
+      <p className="mt-4 text-white text-lg">Creating your story...</p>
     </div>
   </div>
 );
 
 const CreateStoryForm = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const storyId = searchParams.get('storyId');
-  const isEditMode = !!storyId;
-
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(isEditMode);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState([]);
-
-  const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
-
 
   // Story Details State
   const [storyData, setStoryData] = useState({
@@ -38,7 +28,6 @@ const CreateStoryForm = () => {
     storyType: "chat", // Default to chat story
     coverImage: null,
     coverImagePreview: null,
-    oldCoverImageUrl: null, // To display existing image in edit mode
     episodes: [],
     characters: ["", ""],
     characterSenders: [true, false],
@@ -46,16 +35,10 @@ const CreateStoryForm = () => {
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
-    if(!token) {
-      redirect("/login");
-    }
-    
+      if(!token) {
+        redirect("/login");
+      }
     fetchCategories();
-
-    // If in edit mode, fetch story details
-    if (isEditMode) {
-      fetchStoryDetails();
-    }
   }, []);
 
   const fetchCategories = async () => {
@@ -67,47 +50,6 @@ const CreateStoryForm = () => {
     } catch (error) {
       setError("Failed to load categories. Please try again later.");
       console.error("Error fetching categories:", error);
-    }
-  };
-
-  const fetchStoryDetails = async () => {
-    try {
-      const response = await fetch(`/api/stories/${storyId}/get-edit-storyData`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch story details');
-      
-      const storyDetails = await response.json();
-      
-      // Prepare story data for edit mode
-      setStoryData({
-        storyName: storyDetails.name,
-        storySynopsis: storyDetails.synopsis,
-        category: storyDetails.category_id,
-        storyType: storyDetails.story_type,
-        coverImage: null,
-        coverImagePreview: null,
-        oldCoverImageUrl: storyDetails.cover_image,
-        episodes: storyDetails.episodes.map(episode => ({
-          id: episode.id, // Preserve existing episode IDs
-          name: episode.name,
-          synopsis: episode.synopsis
-        })),
-        characters: storyDetails.story_type === 'chat' 
-          ? storyDetails.characters.map(char => char.name)
-          : ["", ""],
-        characterSenders: storyDetails.story_type === 'chat'
-          ? storyDetails.characters.map(char => char.is_sender)
-          : [true, false]
-      });
-    } catch (error) {
-      setError("Failed to load story details. Please try again.");
-      console.error("Error fetching story details:", error);
-    } finally {
-      setIsInitialLoading(false);
     }
   };
 
@@ -139,13 +81,11 @@ const CreateStoryForm = () => {
   };
 
   const handleAddCharacter = () => {
-    if (storyData.storyType === 'chat') {
-      setStoryData(prev => ({
-        ...prev,
-        characters: [...prev.characters, ""],
-        characterSenders: [...prev.characterSenders, false]
-      }));
-    }
+    setStoryData(prev => ({
+      ...prev,
+      characters: [...prev.characters, ""],
+      characterSenders: [...prev.characterSenders, false]
+    }));
   };
 
   const handleSenderToggle = (index) => {
@@ -155,41 +95,24 @@ const CreateStoryForm = () => {
     }));
   };
 
-  // In edit mode, existing characters cannot be removed
   const handleRemoveCharacter = (index) => {
-    // Only allow removal for characters added during edit, not original characters
-    if (storyData.storyType === 'chat' && index >= (isEditMode ? storyData.characters.length : 2)) {
-      const newCharacters = storyData.characters.filter((_, i) => i !== index);
-      const newSenders = storyData.characterSenders.filter((_, i) => i !== index);
-      
-      if (storyData.characterSenders[index]) {
-        newSenders[0] = true;
-      }
-      
-      setStoryData(prev => ({
-        ...prev,
-        characters: newCharacters,
-        characterSenders: newSenders
-      }));
-    } else if (!isEditMode) {
-      if (storyData.characters.length <= 2) {
-        setError("Minimum two characters are required");
-        return;
-      }
-      
-      const newCharacters = storyData.characters.filter((_, i) => i !== index);
-      const newSenders = storyData.characterSenders.filter((_, i) => i !== index);
-      
-      if (storyData.characterSenders[index]) {
-        newSenders[0] = true;
-      }
-      
-      setStoryData(prev => ({
-        ...prev,
-        characters: newCharacters,
-        characterSenders: newSenders
-      }));
+    if (storyData.characters.length <= 2) {
+      setError("Minimum two characters are required");
+      return;
     }
+    
+    const newCharacters = storyData.characters.filter((_, i) => i !== index);
+    const newSenders = storyData.characterSenders.filter((_, i) => i !== index);
+    
+    if (storyData.characterSenders[index]) {
+      newSenders[0] = true;
+    }
+    
+    setStoryData(prev => ({
+      ...prev,
+      characters: newCharacters,
+      characterSenders: newSenders
+    }));
   };
 
   // Episode Handlers
@@ -206,6 +129,13 @@ const CreateStoryForm = () => {
     }));
   };
 
+  const handleRemoveEpisode = (index) => {
+    setStoryData(prev => ({
+      ...prev,
+      episodes: prev.episodes.filter((_, i) => i !== index)
+    }));
+  };
+
   const validateForm = () => {
     if (!storyData.storyName.trim()) {
       setError("Story name is required");
@@ -219,9 +149,7 @@ const CreateStoryForm = () => {
       setError("Please select a category");
       return false;
     }
-    
-    // For create mode, require cover image
-    if (!isEditMode && !storyData.coverImage) {
+    if (!storyData.coverImage) {
       setError("Please upload a cover image");
       return false;
     }
@@ -238,6 +166,7 @@ const CreateStoryForm = () => {
     return true;
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -249,17 +178,8 @@ const CreateStoryForm = () => {
       formData.append('storyName', storyData.storyName);
       formData.append('storySynopsis', storyData.storySynopsis);
       formData.append('category', storyData.category);
-      
-      // In edit mode, don't allow changing story type
-      if (!isEditMode) {
-        formData.append('storyType', storyData.storyType);
-      }
-
-      // Handle cover image: only append if new image is uploaded
-      if (storyData.coverImage) {
-        formData.append('coverImage', storyData.coverImage);
-      }
-
+      formData.append('storyType', storyData.storyType);
+      formData.append('coverImage', storyData.coverImage);
       formData.append('episodes', JSON.stringify(storyData.episodes));
 
       // Only include characters data for chat stories
@@ -271,42 +191,32 @@ const CreateStoryForm = () => {
         formData.append('characters', JSON.stringify(charactersWithSender));
       }
 
-      const url = isEditMode ? `/api/stories/${storyId}/update-story` : '/api/stories';
-      const method = isEditMode ? 'PATCH' : 'POST';
-
-      const response = await fetch(url, {
+      const response = await fetch('/api/stories', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        method: method,
+        method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Failed to save story');
+      if (!response.ok) throw new Error('Failed to create story');
 
       await response.json();
       router.push("/your-stories");
     } catch (error) {
-      setError("Failed to save story. Please try again.");
-      console.error("Error saving story:", error);
+      setError("Failed to create story. Please try again.");
+      console.error("Error creating story:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Conditional rendering for loading and initial setup
-  if (isInitialLoading) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
       {isLoading && <LoadingSpinner />}
       
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">
-          {isEditMode ? "Edit Your Story" : "Create Your Story"}
-        </h1>
+        <h1 className="text-3xl font-bold mb-8">Create Your Story</h1>
         
         {error && (
           <div className="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-lg mb-6">
@@ -315,36 +225,34 @@ const CreateStoryForm = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Story Type Selection - Only for create mode */}
-          {!isEditMode && (
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">Story Type</h2>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setStoryData(prev => ({ ...prev, storyType: "chat" }))}
-                  className={`px-6 py-3 rounded-lg transition ${
-                    storyData.storyType === "chat"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  Chat Story
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStoryData(prev => ({ ...prev, storyType: "normal" }))}
-                  className={`px-6 py-3 rounded-lg transition ${
-                    storyData.storyType === "normal"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  Normal Story
-                </button>
-              </div>
+          {/* Story Type Selection */}
+          <div className="bg-gray-800 p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">Story Type</h2>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setStoryData(prev => ({ ...prev, storyType: "chat" }))}
+                className={`px-6 py-3 rounded-lg transition ${
+                  storyData.storyType === "chat"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-700 text-gray-300"
+                }`}
+              >
+                Chat Story
+              </button>
+              <button
+                type="button"
+                onClick={() => setStoryData(prev => ({ ...prev, storyType: "normal" }))}
+                className={`px-6 py-3 rounded-lg transition ${
+                  storyData.storyType === "normal"
+                    ? "bg-purple-600 text-white"
+                    : "bg-gray-700 text-gray-300"
+                }`}
+              >
+                Normal Story
+              </button>
             </div>
-          )}
+          </div>
 
           {/* Basic Details */}
           <div className="bg-gray-800 p-6 rounded-lg space-y-4">
@@ -400,11 +308,10 @@ const CreateStoryForm = () => {
                 />
                 <p className="text-sm text-gray-400 mt-2">Maximum file size: 5MB</p>
               </div>
-              {(storyData.coverImagePreview || storyData.oldCoverImageUrl) && (
+              {storyData.coverImagePreview && (
                 <div className="w-32 h-32">
                   <img
-                    // src={storyData.coverImagePreview || storyData.oldCoverImageUrl}
-                    src={`${BASE_IMAGE_URL}${storyData.coverImagePreview}` || `${BASE_IMAGE_URL}${storyData.oldCoverImageUrl}`}
+                    src={storyData.coverImagePreview}
                     alt="Cover Preview"
                     className="w-full h-full object-cover rounded-lg"
                   />
@@ -431,16 +338,13 @@ const CreateStoryForm = () => {
                 <div key={index} className="bg-gray-700 p-4 rounded-lg">
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="font-medium">Episode {index + 1}</h3>
-                    {/* In edit mode, prevent removing existing episodes */}
-                    {(index >= (isEditMode ? storyData.episodes.length : 0)) && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveEpisode(index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        Remove
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveEpisode(index)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      Remove
+                    </button>
                   </div>
                   
                   <div className="space-y-3">
@@ -463,7 +367,8 @@ const CreateStoryForm = () => {
             </div>
           </div>
 
-          {/* Characters Section - Only for chat stories */}
+          {/* Characters Section */}
+          {/* Characters Section - Only show for chat stories */}
           {storyData.storyType === "chat" && (
             <div className="bg-gray-800 p-6 rounded-lg">
               <div className="flex justify-between items-center mb-4">
@@ -498,8 +403,7 @@ const CreateStoryForm = () => {
                     >
                       Sender
                     </button>
-                    {/* In edit mode, prevent removing original characters */}
-                    {(index >= (isEditMode ? storyData.characters.length : 2)) && (
+                    {index >= 2 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveCharacter(index)}
@@ -525,10 +429,10 @@ const CreateStoryForm = () => {
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" />
-                {isEditMode ? 'Updating Story...' : 'Creating Story...'}
+                Creating Story...
               </span>
             ) : (
-              isEditMode ? 'Update Story' : 'Create Story'
+              "Create Story"
             )}
           </button>
         </form>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { redirect, useRouter } from "next/navigation";
-import { Loader2, PlusCircle, BookOpen, MessageSquare, Folder } from "lucide-react";
+import { Loader2, PlusCircle, BookOpen, MessageSquare, Folder, Edit } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -191,41 +191,53 @@ const YourStoriesPage = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between mt-4">
-                    <button
-                      onClick={() => navigateToContent(story)}
-                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg 
-                        flex items-center gap-2 text-sm"
-                    >
-                      {story.type === 'chat' ? (
-                        <>
-                          <MessageSquare className="h-4 w-4" />
-                          Add Chat Content
-                        </>
-                      ) : (
-                        <>
-                          <BookOpen className="h-4 w-4" />
-                          Add Story Content
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => navigateToContent(story)}
+                          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-2xl
+                            flex items-center gap-2 text-xs"
+                        >
+                          {story.type === 'chat' ? (
+                            <>
+                              <MessageSquare className="h-4 w-4" />
+                              Add Chat
+                            </>
+                          ) : (
+                            <>
+                              <BookOpen className="h-4 w-4" />
+                              Add Story
+                            </>
+                          )}
+                        </button>
 
-                    <label className="inline-flex items-center cursor-pointer">
-                      <span className="mr-3 text-sm font-medium">
-                        {story.isPublished ? "Published" : "Draft"}
-                      </span>
-                      <div
-                        onClick={() => handlePublishToggle(story)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 
-                          ${story.isPublished ? 'bg-green-600' : 'bg-gray-600'}`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200
-                            ${story.isPublished ? 'translate-x-6' : 'translate-x-1'}`}
-                        />
+                        {/* New Edit Story Button */}
+                        <button
+                          onClick={() => router.push(`/create-story?storyId=${story.id}`)}
+                          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-2xl 
+                            flex items-center gap-2 text-xs me-4"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </button>
                       </div>
-                    </label>
-                  </div>
+
+                      <label className="inline-flex items-center cursor-pointer">
+                        <span className="mr-3 text-sm font-medium">
+                          {story.isPublished ? "Published" : "Draft"}
+                        </span>
+                        <div
+                          onClick={() => handlePublishToggle(story)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 
+                            ${story.isPublished ? 'bg-green-600' : 'bg-gray-600'}`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200
+                              ${story.isPublished ? 'translate-x-6' : 'translate-x-1'}`}
+                          />
+                        </div>
+                      </label>
+                    </div>
                 </div>
               </div>
             ))}
