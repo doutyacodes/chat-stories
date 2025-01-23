@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Upload, X, Plus, Image, Video } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 
 // LoadingSpinner Component (same as before)
 const LoadingSpinner = () => (
@@ -26,8 +26,7 @@ const StoryContentForm = ({ params }) => {
     selectedEpisode: "",
     inputType: "manual",
     storyLines: [{ character: "", line: "" }],
-    pdfFile: null,
-    episodeDetails: [] // New state for episode details
+    pdfFile: null
   });
 
   useEffect(() => {
@@ -93,124 +92,16 @@ const StoryContentForm = ({ params }) => {
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-  //   setError("");
-
-  //   try {
-  //     // Only validate episode selection if episodes exist
-  //     if (episodes.length > 0 && !contentData.selectedEpisode) {
-  //       setError("Please select an episode");
-  //       return;
-  //     }
-
-  //     const formData = new FormData();
-  //     formData.append('storyId', storyId);
-  //     formData.append('selectedEpisode', contentData.selectedEpisode);
-  //     formData.append('inputType', contentData.inputType);
-
-  //     if (contentData.inputType === "manual") {
-  //       // Validate that at least one line has both character and content
-  //       const hasValidLine = contentData.storyLines.some(
-  //         line => line.character && line.line.trim()
-  //       );
-  //       if (!hasValidLine) {
-  //         setError("Please add at least one complete story line");
-  //         return;
-  //       }
-  //       formData.append('storyLines', JSON.stringify(contentData.storyLines));
-  //     } else {
-  //       if (!contentData.pdfFile) {
-  //         setError("Please upload a PDF file");
-  //         return;
-  //       }
-  //       formData.append('pdfFile', contentData.pdfFile);
-  //     }
-
-  //     const response = await fetch('/api/stories/chat-content', {
-  //       method: 'POST',
-  //       body: formData,
-  //     });
-
-  //     if (!response.ok) throw new Error('Failed to save story content');
-
-  //     await response.json();
-  //     router.push("/your-stories");
-  //   } catch (error) {
-  //     setError("Failed to save story content. Please try again.");
-  //     console.error("Error saving story content:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  const handleAddEpisodeDetail = () => {
-    setContentData(prev => ({
-      ...prev,
-      episodeDetails: [
-        ...prev.episodeDetails,
-        {
-          mediaType: "image", // Default to image
-          mediaFile: null,
-          description: "",
-          order: prev.episodeDetails.length + 1
-        }
-      ]
-    }));
-  };
-
-  const handleRemoveEpisodeDetail = (index) => {
-    setContentData(prev => ({
-      ...prev,
-      episodeDetails: prev.episodeDetails.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleEpisodeDetailChange = (index, field, value) => {
-    const updatedDetails = [...contentData.episodeDetails];
-    updatedDetails[index][field] = value;
-    setContentData(prev => ({ ...prev, episodeDetails: updatedDetails }));
-  };
-
-  const handleMediaUpload = (index, file) => {
-    if (!file) return;
-
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File size should be less than 10MB");
-      return;
-    }
-
-    // Validate file type
-    const fileType = file.type.split('/')[0];
-    if (fileType !== 'image' && fileType !== 'video') {
-      setError("Please upload an image or video file");
-      return;
-    }
-
-    const updatedDetails = [...contentData.episodeDetails];
-    updatedDetails[index].mediaFile = file;
-    updatedDetails[index].mediaType = fileType;
-    setContentData(prev => ({ ...prev, episodeDetails: updatedDetails }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      // Validate episode details if any exist
-      if (contentData.episodeDetails.length > 0) {
-        const hasIncompleteDetail = contentData.episodeDetails.some(
-          detail => !detail.mediaFile || !detail.description.trim()
-        );
-        if (hasIncompleteDetail) {
-          setError("Please complete all episode details with both media and description");
-          setIsLoading(false);
-          return;
-        }
+      // Only validate episode selection if episodes exist
+      if (episodes.length > 0 && !contentData.selectedEpisode) {
+        setError("Please select an episode");
+        return;
       }
 
       const formData = new FormData();
@@ -218,28 +109,23 @@ const StoryContentForm = ({ params }) => {
       formData.append('selectedEpisode', contentData.selectedEpisode);
       formData.append('inputType', contentData.inputType);
 
-      // Add story lines or PDF based on input type
       if (contentData.inputType === "manual") {
+        // Validate that at least one line has both character and content
+        const hasValidLine = contentData.storyLines.some(
+          line => line.character && line.line.trim()
+        );
+        if (!hasValidLine) {
+          setError("Please add at least one complete story line");
+          return;
+        }
         formData.append('storyLines', JSON.stringify(contentData.storyLines));
       } else {
+        if (!contentData.pdfFile) {
+          setError("Please upload a PDF file");
+          return;
+        }
         formData.append('pdfFile', contentData.pdfFile);
       }
-
-      // Add episode details
-      formData.append('episodeDetails', JSON.stringify(
-        contentData.episodeDetails.map(detail => ({
-          mediaType: detail.mediaType,
-          description: detail.description,
-          order: detail.order
-        }))
-      ));
-
-      // Append media files separately
-      contentData.episodeDetails.forEach((detail, index) => {
-        if (detail.mediaFile) {
-          formData.append(`mediaFile${index}`, detail.mediaFile);
-        }
-      });
 
       const response = await fetch('/api/stories/chat-content', {
         method: 'POST',
@@ -315,80 +201,6 @@ const StoryContentForm = ({ params }) => {
               >
                 Upload PDF
               </button>
-            </div>
-          </div>
-
-          {/* Episode Details Section */}
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Episode Details</h2>
-              <button
-                type="button"
-                onClick={handleAddEpisodeDetail}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm"
-              >
-                <Plus className="h-4 w-4" />
-                Add Detail
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {contentData.episodeDetails.map((detail, index) => (
-                <div key={index} className="bg-gray-700 p-4 rounded-lg space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium">Detail {index + 1}</h3>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveEpisodeDetail(index)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Media Upload */}
-                    <div className="border-2 border-dashed border-gray-600 rounded-lg p-4">
-                      <input
-                        type="file"
-                        accept="image/*,video/*"
-                        onChange={(e) => handleMediaUpload(index, e.target.files[0])}
-                        className="hidden"
-                        id={`mediaUpload${index}`}
-                      />
-                      <label
-                        htmlFor={`mediaUpload${index}`}
-                        className="cursor-pointer block text-center"
-                      >
-                        {detail.mediaFile ? (
-                          <div className="flex items-center justify-center gap-2 text-green-500">
-                            {detail.mediaType === 'image' ? (
-                              <Image className="h-6 w-6" />
-                            ) : (
-                              <Video className="h-6 w-6" />
-                            )}
-                            <span>{detail.mediaFile.name}</span>
-                          </div>
-                        ) : (
-                          <div className="text-gray-400">
-                            <Upload className="mx-auto h-8 w-8 mb-2" />
-                            <p>Click to upload image or video</p>
-                            <p className="text-sm">Maximum file size: 10MB</p>
-                          </div>
-                        )}
-                      </label>
-                    </div>
-
-                    {/* Description */}
-                    <textarea
-                      value={detail.description}
-                      onChange={(e) => handleEpisodeDetailChange(index, "description", e.target.value)}
-                      placeholder="Enter description for this scene..."
-                      className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
-                    />
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 

@@ -1,253 +1,15 @@
-// 'use client';
-
-// import { useState, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { FaVideo, FaPhone, FaEllipsisV } from 'react-icons/fa';
-// import { useParams } from 'next/navigation';
-
-// const ChatPage = () => {
-//   const { id, storyId } = useParams();
-  
-//   const [story, setStory] = useState(null);
-//   const [currentEpisodeId, setCurrentEpisodeId] = useState(null);
-//   const [isMobileView, setIsMobileView] = useState(false);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   useEffect(() => {
-//     const handleResize = () => {
-//       setIsMobileView(window.innerWidth < 640);
-//     };
-
-//     handleResize();
-//     window.addEventListener('resize', handleResize);
-//     return () => window.removeEventListener('resize', handleResize);
-//   }, []);
-
-//   useEffect(() => {
-//     // If there's only a general chat episode, show it automatically
-//     if (story && story.episodes.length === 1 && story.episodes[0].id === null) {
-//       setCurrentEpisodeId(0); // Using 0 for general chat
-//     }
-//   }, [story]);
-
-//   useEffect(() => {
-//     const fetchStoryData = async () => {
-//       try {
-//         const response = await fetch(`/api/episodes/${id}`, {
-//           // headers: {
-//           //   'Authorization': `Bearer ${localStorage.getItem('token')}`
-//           // }
-//         });
-
-//         if (!response.ok) {
-//           throw new Error('Failed to fetch story data');
-//         }
-
-//         const data = await response.json();
-//         setStory(data);
-
-//         // Wait for 5 seconds after the story data is loaded to track the view
-//         setTimeout(() => {
-//           trackStoryView(id); // Function to call the API to store the view
-//         }, 5000); // 5 seconds delay
-
-
-//       } catch (err) {
-//         console.error('Error fetching story:', err);
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     if (id) {
-//       fetchStoryData();
-//     }
-//   }, [id]);
-
-//   const trackStoryView = async (storyId) => {
-//     let sessionId = null;
-  
-//     // Check if token exists in localStorage (indicating the user is logged in)
-//     const token = localStorage.getItem('token');
-//     if (!token) {
-//       // If no token exists, generate a session ID (you could generate it or get it from sessionStorage)
-//       sessionId = sessionStorage.getItem('session_id');
-//       if (!sessionId) {
-//         // Generate a new session ID if none exists
-//         sessionId = generateSessionId(); // Assume `generateSessionId` is a function to generate a unique session ID
-//         sessionStorage.setItem('session_id', sessionId);
-//       }
-//     }
-
-//     const headers = {
-//       'Content-Type': 'application/json',
-//     };
-
-//     // Add Authorization header only if token exists
-//     if (token) {
-//       headers['Authorization'] = `Bearer ${token}`;
-//     }
-  
-//     try {
-//       const response = await fetch('/api/analytics/story-views', {
-//         method: 'POST',
-//         headers: headers,
-//         body: JSON.stringify({
-//           story_id: storyId,
-//           session_id: sessionId, // Send sessionId if not logged in
-//         }),
-//       });
-  
-//       if (response.ok) {
-//         console.log('Story view recorded');
-//       } else {
-//         console.error('Failed to record story view');
-//       }
-//     } catch (error) {
-//       console.error('Error recording view:', error);
-//     }
-//   };
-  
-//   // Helper function to generate a session ID (for non-logged-in users)
-//   const generateSessionId = () => {
-//     return 'sess_' + Math.random().toString(36).substring(2, 15); // Simple random string for session ID
-//   };
-  
-
-//   const handleEpisodeSelect = (episodeId) => {
-//     setCurrentEpisodeId(episodeId);
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="h-screen bg-gray-900 text-white flex items-center justify-center">
-//         <p>Loading...</p>
-//       </div>
-//     );
-//   }
-
-//   if (error || !story) {
-//     return (
-//       <div className="h-screen bg-gray-900 text-white flex items-center justify-center">
-//         <p>Error loading story: {error}</p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="h-screen bg-gray-900 text-white flex flex-col sm:flex-row">
-//       {/* Sidebar */}
-//       {(currentEpisodeId === null || !isMobileView) && (
-//         <div className="sm:w-1/4 w-full bg-gray-800 p-4 border-r border-gray-700">
-//           <h2 className="text-lg font-bold mb-4">{story.title}</h2>
-//           <div className="ml-4 mt-2">
-//             {story.episodes[0].id === null ? (
-//               <div
-//                 className="p-2 bg-gray-600 text-white rounded mb-2"
-//               >
-//                 General Chat
-//               </div>
-//             ) : (
-//               story.episodes.map((episode) => (
-//                 <div
-//                   key={episode.id}
-//                   onClick={() => handleEpisodeSelect(episode.id)}
-//                   className="p-2 bg-gray-600 hover:bg-gray-500 text-white cursor-pointer rounded mb-2"
-//                 >
-//                   Episode {episode.episode_number}
-//                 </div>
-//               ))
-//             )}
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Chat Window */}
-//       {(currentEpisodeId !== null || !isMobileView) && (
-//         <div className="flex flex-col w-full sm:w-3/4">
-//           {/* Navbar */}
-//           {currentEpisodeId && (
-//             <div className="bg-gray-800 p-4 flex items-center justify-between">
-//               <div className="flex items-center">
-//                 <img
-//                   src={`https://wowfy.in/testusr/images/${story.image}`}
-//                   alt="Profile"
-//                   className="w-10 h-10 rounded-full mr-2"
-//                 />
-//                 <div>
-//                   <h2 className="text-lg font-bold">{story.title}</h2>
-//                   <p className="text-sm text-gray-400">Online</p>
-//                 </div>
-//               </div>
-//               <div className="flex items-center space-x-4 text-gray-300">
-//                 <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
-//                 <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
-//                 <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
-//               </div>
-//             </div>
-//           )}
-
-//           {/* Chat Messages */}
-//           <div className="flex-1 bg-gray-900 p-6 overflow-y-auto">
-//             {story.episodes[0].id === null ? (
-//               // For general chat
-//               <div className="flex flex-col space-y-4">
-//                 {story.episodes[0].messages.map((message, index) => (
-//                   <div
-//                     key={message.id}
-//                     className={`relative p-3 rounded-lg max-w-xs ${
-//                       message.is_sender
-//                         ? 'bg-green-700 text-white self-end'
-//                         : 'bg-gray-800 text-gray-300 self-start'
-//                     }`}
-//                   >
-//                     <strong>{message.sender_name}: </strong>
-//                     <p>{message.content}</p>
-//                   </div>
-//                 ))}
-//               </div>
-//             ) : currentEpisodeId ? (
-//               // For regular episodes
-//               <div className="flex flex-col space-y-4">
-//                 {story.episodes
-//                   .find(ep => ep.id === parseInt(currentEpisodeId))
-//                   ?.messages.map((message, index) => (
-//                     <div
-//                       key={message.id}
-//                       className={`relative p-3 rounded-lg max-w-xs ${
-//                         message.is_sender
-//                           ? 'bg-green-700 text-white self-end'
-//                           : 'bg-gray-800 text-gray-300 self-start'
-//                       }`}
-//                     >
-//                       <strong>{message.sender_name}: </strong>
-//                       <p>{message.content}</p>
-//                     </div>
-//                   ))}
-//               </div>
-//             ) : (
-//               <p className="text-gray-400 text-center mt-6">Select an episode to view messages.</p>
-//             )}
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default ChatPage;
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaVideo, FaPhone, FaEllipsisV } from 'react-icons/fa';
-import { useParams } from 'next/navigation';
+import { FaVideo, FaPhone, FaEllipsisV, FaArrowLeft, FaArrowRight, FaArrowCircleRight } from 'react-icons/fa';
+import { useParams, useRouter } from 'next/navigation';
 
 const ChatPage = () => {
-  const { id, storyId } = useParams(); // id is now episodeId, storyId for analytics
+  const router = useRouter();
+  const { id, storyId } = useParams();
   const [episode, setEpisode] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [currentDetailIndex, setCurrentDetailIndex] = useState(0);
   const [isMobileView, setIsMobileView] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -363,6 +125,26 @@ const ChatPage = () => {
     }
   };
 
+  const handleNextDetail = () => {
+    if (currentDetailIndex < episode.details.length - 1) {
+      setCurrentDetailIndex(prev => prev + 1);
+    } else {
+      setShowChat(true);
+    }
+  };
+
+  const handlePrevDetail = () => {
+    if (currentDetailIndex > 0) {
+      setCurrentDetailIndex(prev => prev - 1);
+    }
+  };
+
+  const handleNextEpisode = () => {
+    if (episode.nextEpisode) {
+      router.push(`/stories/${episode.nextEpisode.id}/${storyId}/chat-story`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen bg-gray-900 text-white flex items-center justify-center">
@@ -379,11 +161,265 @@ const ChatPage = () => {
     );
   }
 
+  // const CurrentDetail = () => {
+  //   if (!episode.details?.length) return null;
+    
+  //   const detail = episode.details[currentDetailIndex];
+    
+  //   return (
+  //     <div className="flex-1 bg-gray-900 p-6 overflow-y-auto">
+  //       <div className="max-w-2xl mx-auto">
+  //         <div className="relative bg-gray-800 rounded-lg p-4">
+  //           {/* Navigation Arrows */}
+  //           <div className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-4 z-10">
+  //             {currentDetailIndex > 0 && (
+  //               <button
+  //                 onClick={handlePrevDetail}
+  //                 className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+  //               >
+  //                 <FaArrowLeft className="text-white" />
+  //               </button>
+  //             )}
+  //             {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
+  //               <button
+  //                 onClick={handleNextDetail}
+  //                 className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors ml-auto"
+  //               >
+  //                 <FaArrowRight className="text-white" />
+  //               </button>
+  //             )}
+  //           </div>
+
+  //           {/* Media Content */}
+  //           <div className="mb-4">
+  //             {detail.media_type === 'video' ? (
+  //               <video
+  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
+  //                 controls
+  //                 className="w-full rounded-lg"
+  //               />
+  //             ) : (
+  //               <img
+  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
+  //                 alt="Episode detail"
+  //                 className="w-full rounded-lg"
+  //               />
+  //             )}
+  //           </div>
+
+  //           {/* Description */}
+  //           <p className="text-white text-lg">{detail.description}</p>
+
+  //           {/* Progress Indicators */}
+  //           <div className="flex justify-center mt-4 gap-2">
+  //             {episode.details.map((_, index) => (
+  //               <div
+  //                 key={index}
+  //                 className={`h-2 w-2 rounded-full ${
+  //                   index === currentDetailIndex ? 'bg-purple-600' : 'bg-gray-600'
+  //                 }`}
+  //               />
+  //             ))}
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  // const CurrentDetail = () => {
+  //   if (!episode.details?.length) return null;
+    
+  //   const detail = episode.details[currentDetailIndex];
+  //   const isMobileView = window.innerWidth < 640;
+    
+  //   return (
+  //     <div className="flex-1 bg-gray-900 p-6 overflow-y-auto">
+  //       <div className="max-w-4xl mx-auto h-[70vh] flex flex-col">
+  //         <div className="relative bg-gray-800 rounded-lg p-4 flex-1">
+  //           {/* Media Content */}
+  //           <div className={`mb-4 ${isMobileView ? 'h-[60vh]' : 'h-full'}`}>
+  //             {detail.media_type === 'video' ? (
+  //               <video
+  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
+  //                 controls
+  //                 className="w-full h-full object-contain rounded-lg"
+  //               />
+  //             ) : (
+  //               <img
+  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
+  //                 alt="Episode detail"
+  //                 className="w-full h-full object-contain rounded-lg"
+  //               />
+  //             )}
+  //           </div>
+  
+  //           {/* Navigation Arrows */}
+  //           <div className="absolute bottom-4 w-full flex justify-between px-4 z-10 left-0">
+  //             {/* Left Arrow */}
+  //             <div className="w-1/2 flex justify-start">
+  //               {currentDetailIndex > 0 && (
+  //                 <button
+  //                   onClick={handlePrevDetail}
+  //                   className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+  //                 >
+  //                   <FaArrowLeft className="text-white" />
+  //                 </button>
+  //               )}
+  //             </div>
+              
+  //             {/* Right Arrow */}
+  //             <div className="w-1/2 flex justify-end">
+  //               {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
+  //                 <button
+  //                   onClick={handleNextDetail}
+  //                   className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+  //                 >
+  //                   <FaArrowRight className="text-white" />
+  //                 </button>
+  //               )}
+  //             </div>
+  //           </div>
+
+  
+  //           {/* Progress Indicators */}
+  //           <div className="flex justify-center mt-4 gap-2">
+  //             {episode.details.map((_, index) => (
+  //               <div
+  //                 key={index}
+  //                 className={`h-2 w-2 rounded-full ${
+  //                   index === currentDetailIndex ? 'bg-purple-600' : 'bg-gray-600'
+  //                 }`}
+  //               />
+  //             ))}
+  //           </div>
+  //         </div>
+  
+  //         {/* Description */}
+  //         <div className="mt-4 bg-gray-800 rounded-lg p-4">
+  //           <p className="text-white text-lg">{detail.description}</p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  const CurrentDetail = () => {
+    if (!episode.details?.length) return null;
+    
+    const detail = episode.details[currentDetailIndex];
+    const isMobileView = window.innerWidth < 640;
+    
+    return (
+      <div className="flex-1 bg-gray-900 overflow-y-auto md:pt-28">
+        <div className="relative h-full flex flex-col">
+          {/* Header */}
+          <div className="bg-gray-800 p-4">
+            <h1 className="text-xl font-bold text-center">{episode.story.title}</h1>
+            <p className="text-sm text-gray-400 text-center">Episode {episode.episode_number}</p>
+          </div>
+  
+          {/* Media Section */}
+          <div className="relative flex-1">
+            <div className="relative h-[70vh]">
+              {detail.media_type === 'video' ? (
+                <video
+                  src={`${BASE_IMAGE_URL}${detail.media_url}`}
+                  controls
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="relative h-[70vh]">
+                  <img
+                    src={`${BASE_IMAGE_URL}${detail.media_url}`}
+                    alt="Episode detail"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
+                    <p className="text-white text-lg">{detail.description}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Navigation Arrows */}
+            <div className="w-full flex justify-between px-4 mt-5">
+              {/* Left Arrow */}
+                  <div className="w-1/2 flex justify-start">
+                          {currentDetailIndex > 0 && (
+                              <button
+                              onClick={handlePrevDetail}
+                              className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
+                            >
+                              <FaArrowLeft className="text-white" />
+                            </button>
+                              )}
+                  </div>
+            {/* Right Arrow */}
+  <div className="w-1/2 flex justify-end">
+  {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
+                <button
+                  onClick={handleNextDetail}
+                  className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
+                >
+                <FaArrowRight className="text-white" />
+              </button>
+              )}
+  </div>
+              
+            </div>
+        </div>
+      </div>
+    );
+  };
+  
+  const ChatView = () => (
+    <div className="flex-1 bg-gray-900 flex flex-col">
+      {/* Navbar */}
+      <div className="bg-gray-800 p-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <img
+            src={`${BASE_IMAGE_URL}${episode.story.image_url}`}
+            alt="Profile"
+            className="w-10 h-10 rounded-full mr-2"
+          />
+          <div>
+            <h2 className="text-lg font-bold">{episode.story.title}</h2>
+            <p className="text-sm text-gray-400">Episode {episode.episode_number}</p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-4 text-gray-300">
+          <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
+          <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
+          <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
+        </div>
+      </div>
+      {/* Chat Messages */}
+      <div className="flex-1 p-4 overflow-y-auto">
+        <div className="flex flex-col space-y-4">
+          {episode.messages.map((message) => (
+            <div
+              key={message.id}
+              className={`relative p-3 rounded-lg max-w-xs ${
+                message.is_sender
+                  ? 'bg-green-700 text-white self-end'
+                  : 'bg-gray-800 text-gray-300 self-start'
+              }`}
+            >
+              <p>{message.content}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+  
   return (
-    <div className="h-screen bg-gray-900 text-white flex flex-col sm:flex-row md:pt-28">
-      {/* Story Info Sidebar - Only shown in desktop view */}
+    <div className={`h-screen bg-gray-900 text-white flex flex-col sm:flex-row ${ showChat && 'md:pt-28'}`}>
+      {/* Story Info Sidebar - Desktop only */}
       {!isMobileView && (
-        <div className="w-1/4 bg-gray-800 p-4 border-r border-gray-700">
+        <div className="w-1/4 min-w-[250px] bg-gray-800 p-4 border-r border-gray-700">
           <img
             src={`${BASE_IMAGE_URL}${episode.story.image_url}`}
             alt={episode.story.title}
@@ -394,46 +430,26 @@ const ChatPage = () => {
         </div>
       )}
 
-      {/* Chat Window */}
-      <div className="flex flex-col flex-1">
-        {/* Navbar */}
-        <div className="bg-gray-800 p-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <img
-              src={`${BASE_IMAGE_URL}${episode.story.image_url}`}
-              alt="Profile"
-              className="w-10 h-10 rounded-full mr-2"
-            />
-            <div>
-              <h2 className="text-lg font-bold">{episode.story.title}</h2>
-              <p className="text-sm text-gray-400">Episode {episode.episode_number}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4 text-gray-300">
-            <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
-            <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
-            <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
-          </div>
-        </div>
-
-        {/* Chat Messages */}
-        <div className="flex-1 bg-gray-900 p-6 overflow-y-auto">
-          <div className="flex flex-col space-y-4">
-            {episode.messages.map((message) => (
-              <div
-                key={message.id}
-                className={`relative p-3 rounded-lg max-w-xs ${
-                  message.is_sender
-                    ? 'bg-green-700 text-white self-end'
-                    : 'bg-gray-800 text-gray-300 self-start'
-                }`}
-              >
-                <strong>{message.sender_name}: </strong>
-                <p>{message.content}</p>
+      {/* Main Content Area */}
+      <div className="flex-1 relative">
+        {!showChat ? <CurrentDetail /> : 
+        <>
+          <ChatView />
+            {/* Next Episode Button */}
+            {episode.nextEpisode && (
+              <div className="absolute w-full bottom-0 mb-20 md:mb-0 px-4 flex justify-end bg-gray-700">
+                <button
+                  onClick={handleNextEpisode}
+                  className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+                >
+                  <FaArrowCircleRight className="text-xl text-white" />
+                </button>
               </div>
-            ))}
-          </div>
-        </div>
+            )}
+        </>
+
+        }
+
       </div>
     </div>
   );

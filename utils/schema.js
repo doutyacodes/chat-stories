@@ -68,6 +68,17 @@ export const STORIES = mysqlTable("stories", {
     updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
   });
 
+  export const EPISODE_DETAILS = mysqlTable("episode_details", {
+    id: int("id").primaryKey().autoincrement(),
+    episode_id: int("episode_id").notNull().references(() => EPISODES.id),
+    media_type: varchar("media_type", { length: 50 }).notNull(), // "image" or "video"
+    media_url: varchar("media_url", { length: 255 }).notNull(), // URL for the image or video
+    description: text("description"), // Details about the scene
+    order: int("order").notNull().default(1), // Order for display
+    created_at: timestamp("created_at").defaultNow(),
+    updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+  });
+
   export const CHARACTERS = mysqlTable("characters", {
     id: int("id").primaryKey().autoincrement(),
     story_id: int("story_id").notNull().references(() => STORIES.id),
