@@ -29,15 +29,18 @@ const ChatPage = () => {
   useEffect(() => {
     const fetchEpisodeData = async () => {
       try {
-        const response = await fetch(`/api/episodes/${id}`);
+        console.log("episode data");
         
+        const response = await fetch(`/api/episodes/${id}`);
+        console.log("episode data res", response);
+
         if (!response.ok) {
           throw new Error('Failed to fetch episode data');
         }
 
         const data = await response.json();
         setEpisode(data);
-
+        console.log("episode data res", data);
         // Track story view after 5 seconds
         setTimeout(() => {
           trackStoryView(storyId);
@@ -305,7 +308,7 @@ const ChatPage = () => {
   // };
 
   const CurrentDetail = () => {
-    if (!episode.details?.length) return null;
+    // if (!episode.details?.length) return null;
     
     const detail = episode.details[currentDetailIndex];
     const isMobileView = window.innerWidth < 640;
@@ -344,31 +347,30 @@ const ChatPage = () => {
           </div>
 
           {/* Navigation Arrows */}
-            <div className="w-full flex justify-between px-4 mt-5">
-              {/* Left Arrow */}
-                  <div className="w-1/2 flex justify-start">
-                          {currentDetailIndex > 0 && (
-                              <button
-                              onClick={handlePrevDetail}
-                              className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
-                            >
-                              <FaArrowLeft className="text-white" />
-                            </button>
-                              )}
-                  </div>
-            {/* Right Arrow */}
-  <div className="w-1/2 flex justify-end">
-  {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
-                <button
-                  onClick={handleNextDetail}
-                  className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
-                >
-                <FaArrowRight className="text-white" />
-              </button>
-              )}
-  </div>
-              
-            </div>
+          <div className="w-full flex justify-between px-4 mt-5">
+            {/* Left Arrow */}
+                <div className="w-1/2 flex justify-start">
+                    {currentDetailIndex > 0 && (
+                        <button
+                        onClick={handlePrevDetail}
+                        className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
+                      >
+                        <FaArrowLeft className="text-white" />
+                      </button>
+                        )}
+                </div>
+                {/* Right Arrow */}
+                <div className="w-1/2 flex justify-end">
+                  {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
+                    <button
+                      onClick={handleNextDetail}
+                      className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
+                    >
+                    <FaArrowRight className="text-white" />
+                  </button>
+                  )}
+                </div>   
+          </div>
         </div>
       </div>
     );
@@ -396,7 +398,7 @@ const ChatPage = () => {
         </div>
       </div>
       {/* Chat Messages */}
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 max-h-[90vh] p-4 overflow-y-auto">
         <div className="flex flex-col space-y-4">
           {episode.messages.map((message) => (
             <div
@@ -432,7 +434,7 @@ const ChatPage = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 relative">
-        {!showChat ? <CurrentDetail /> : 
+        {!showChat && episode.details?.length ? <CurrentDetail /> : 
         <>
           <ChatView />
             {/* Next Episode Button */}

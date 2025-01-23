@@ -92,7 +92,7 @@ import { db } from '../../../../../utils';
 import { eq, and, asc } from 'drizzle-orm';
 
 export async function GET(request, { params }) {
-  const { id: episodeId } = params; // Extract `episodeId` from the route parameter
+  const { id: episodeId } = await params; // Extract `episodeId` from the route parameter
 
   try {
     // Fetch episode details

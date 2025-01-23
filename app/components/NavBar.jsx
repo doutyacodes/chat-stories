@@ -173,7 +173,8 @@ export default function NavBar() {
             className="flex flex-col items-center space-y-1 text-xs"
           >
             <img
-              src="./user.png"
+              // src="./user.png"
+              src="https://www.pingtales.com/user.png"
               alt="Profile"
               className="w-7 h-7 rounded-full object-cover"
             />
