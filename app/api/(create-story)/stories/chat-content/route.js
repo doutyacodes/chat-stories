@@ -172,6 +172,9 @@ import path from 'path';
 import fs from 'fs';
 import os from 'os';
 
+export const maxDuration = 300; // This function can run for a maximum of 5 seconds
+export const dynamic = 'force-dynamic';
+
 // Constants for file upload
 const CPANEL_CONFIG = {
   host: '68.178.163.247',
