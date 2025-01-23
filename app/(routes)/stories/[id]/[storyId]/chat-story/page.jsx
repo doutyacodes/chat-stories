@@ -377,7 +377,7 @@ const ChatPage = () => {
   };
   
   const ChatView = () => (
-    <div className="flex-1 bg-gray-900 flex flex-col">
+    <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
       {/* Navbar */}
       <div className="bg-gray-800 p-4 flex items-center justify-between">
         <div className="flex items-center">
@@ -398,7 +398,7 @@ const ChatPage = () => {
         </div>
       </div>
       {/* Chat Messages */}
-      <div className="flex-1 max-h-[90vh] p-4 overflow-y-auto">
+      <div className="flex-1 max-h-[80vh] p-4 overflow-y-auto">
         <div className="flex flex-col space-y-4">
           {episode.messages.map((message) => (
             <div
@@ -418,10 +418,10 @@ const ChatPage = () => {
   );
   
   return (
-    <div className={`h-screen bg-gray-900 text-white flex flex-col sm:flex-row ${ showChat && 'md:pt-28'}`}>
+    <div className={`h-screen bg-gray-900 text-white flex flex-col sm:flex-row`}>
       {/* Story Info Sidebar - Desktop only */}
       {!isMobileView && (
-        <div className="w-1/4 min-w-[250px] bg-gray-800 p-4 border-r border-gray-700">
+        <div className="w-1/4 min-w-[250px] bg-gray-800 p-4 border-r border-gray-700 md:pt-32">
           <img
             src={`${BASE_IMAGE_URL}${episode.story.image_url}`}
             alt={episode.story.title}

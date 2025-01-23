@@ -366,6 +366,7 @@ export async function POST(request) {
 
       // Handle episode details if provided
       const episodeDetailsRaw = formData.get('episodeDetails');
+      console.log("episode detals", episodeDetailsRaw)
       if (episodeDetailsRaw && selectedEpisode) {
         console.log("logg 1");
         
