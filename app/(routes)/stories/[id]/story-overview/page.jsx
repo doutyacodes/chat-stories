@@ -36,7 +36,7 @@ const StoryOverview = () => {
   }, [id]);
 
 
-  const StoryCard = ({ storyData, isEpisode = false }) => {
+  const StoryCard = ({ storyData, isEpisode = false, hasEpisode }) => {
     const handleClick = () => {
       if (isEpisode) {
         router.push(
@@ -56,7 +56,10 @@ const StoryOverview = () => {
       >
         {isEpisode ? (
           <div className="w-full h-28 md:h-44 bg-gray-800 rounded-2xl border-[6px] border-white mb-2 flex items-center justify-center">
-            <span className="text-white text-xl">Episode {storyData.episodeNumber}</span>
+            <span className="text-white text-xl"> 
+              { hasEpisode ? `Episode ${storyData.episodeNumber}`
+              : 'Full Story'}
+            </span>
           </div>
         ) : (
           <img 
@@ -118,8 +121,6 @@ const StoryOverview = () => {
             />
           </div>
         </div> */}
-
-{/*  */}
             <div className="relative mx-auto h-[300px] md:h-[95vh] overflow-hidden">
               <div className="relative h-full w-full"> 
                 <img
@@ -160,7 +161,7 @@ const StoryOverview = () => {
           {/* Episodes Section */}
           <div className="mb-8">
             <h2 className="text-base md:text-2xl text-white font-medium mb-4 px-4">
-              Episodes
+            {story?.has_episodes ? 'Episodes' : 'Full Story'}
             </h2>
             <div className="flex overflow-x-auto scrollbar-hide px-4 space-x-4 pb-4">
               {episodes.map((episode) => (
@@ -168,6 +169,7 @@ const StoryOverview = () => {
                   key={episode.id} 
                   storyData={episode}
                   isEpisode={true}
+                  hasEpisode={story?.has_episodes}
                 />
               ))}
             </div>

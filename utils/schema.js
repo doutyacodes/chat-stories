@@ -45,18 +45,19 @@ export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-export const STORIES = mysqlTable("stories", {
-  id: int("id").primaryKey().autoincrement(),
-  title: varchar("title", { length: 255 }).notNull(),
-  synopsis: text("synopsis"),
-  user_id: int("user_id").notNull().references(() => USERS.id), // New field referencing USERS
-  category_id: int("category_id").notNull().references(() => CATEGORIES.id),
-  cover_img: varchar("cover_img", { length: 255 }),
-  story_type: varchar("story_type", { length: 50 }).notNull(),
-  is_published: boolean("is_published").notNull().default(false), // New field for visibility
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
-});
+  export const STORIES = mysqlTable("stories", {
+    id: int("id").primaryKey().autoincrement(),
+    title: varchar("title", { length: 255 }).notNull(),
+    synopsis: text("synopsis"),
+    user_id: int("user_id").notNull().references(() => USERS.id), // New field referencing USERS
+    category_id: int("category_id").notNull().references(() => CATEGORIES.id),
+    cover_img: varchar("cover_img", { length: 255 }),
+    story_type: varchar("story_type", { length: 50 }).notNull(),
+    has_episodes: boolean("has_episodes").notNull().default(false), // New field
+    is_published: boolean("is_published").notNull().default(false), // New field for visibility
+    created_at: timestamp("created_at").defaultNow(),
+    updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+  });
 
   export const EPISODES = mysqlTable("episodes", {
     id: int("id").primaryKey().autoincrement(),
@@ -64,6 +65,7 @@ export const STORIES = mysqlTable("stories", {
     name: varchar("name", { length: 255 }).notNull(),
     synopsis: text("synopsis"),
     episode_number: int("episode_number").notNull(),
+    // has_choices: boolean("has_choices").notNull().default(false),
     created_at: timestamp("created_at").defaultNow(),
     updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
   });
@@ -75,6 +77,7 @@ export const STORIES = mysqlTable("stories", {
     media_url: varchar("media_url", { length: 255 }).notNull(), // URL for the image or video
     description: text("description"), // Details about the scene
     order: int("order").notNull().default(1), // Order for display
+    position: mysqlEnum('position', ['before', 'after']).notNull().default("before"),
     created_at: timestamp("created_at").defaultNow(),
     updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
   });
@@ -89,15 +92,15 @@ export const STORIES = mysqlTable("stories", {
     created_at: timestamp("created_at").defaultNow(),
   });
 
-  export const CHAT_MESSAGES = mysqlTable("chat_messages", {
-    id: int("id").primaryKey().autoincrement(),
-    story_id: int("story_id").notNull().references(() => STORIES.id),
-    episode_id: int("episode_id"),
-    character_id: int("character_id").notNull().references(() => CHARACTERS.id),
-    message: text("message").notNull(),
-    sequence: int("sequence").notNull(),
-    created_at: timestamp("created_at").defaultNow(),
-  });
+// export const CHAT_MESSAGES = mysqlTable("chat_messages", {
+//   id: int("id").primaryKey().autoincrement(),
+//   story_id: int("story_id").notNull().references(() => STORIES.id),
+//   episode_id: int("episode_id").notNull().references(() => EPISODES.id), // Now mandatory
+//   character_id: int("character_id").notNull().references(() => CHARACTERS.id),
+//   message: text("message").notNull(),
+//   sequence: int("sequence").notNull(),
+//   created_at: timestamp("created_at").defaultNow(),
+// });
 
 export const STORY_CONTENT = mysqlTable("story_content", {
   id: int("id").primaryKey().autoincrement(),
@@ -146,3 +149,85 @@ export const USER_LAST_READ = mysqlTable("user_last_read", {
   story_id: int("story_id").notNull().references(() => STORIES.id),
   last_read_at: timestamp("last_read_at").defaultNow(), // Timestamp for sorting
 });
+
+
+/* ---------------------------------------------------------- */
+
+export const CHAT_MESSAGES = mysqlTable("chat_messages", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  episode_id: int("episode_id").notNull().references(() => EPISODES.id),
+  character_id: int("character_id").notNull().references(() => CHARACTERS.id),
+  message: text("message").notNull(),
+  sequence: int("sequence").notNull(),
+  has_puzzle: boolean("has_puzzle").default(false), // New field
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const SLIDES = mysqlTable("slides", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  episode_id: int("episode_id").references(() => EPISODES.id), // Optional for slide-based episodes
+  slide_type: mysqlEnum("slide_type", ["image", "chat", "quiz"]).notNull(),
+  position: int("position").notNull(), // Order of the slide
+  is_locked: boolean("is_locked").notNull().default(false), // Determines if a slide is gated by a quiz
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const SLIDE_CONTENT = mysqlTable("slide_content", {
+  id: int("id").primaryKey().autoincrement(),
+  slide_id: int("slide_id").notNull().references(() => SLIDES.id),
+  media_type: mysqlEnum("media_type", ["image", "video"]).notNull(), // For slides with images/videos
+  media_url: varchar("media_url", { length: 255 }),
+  description: text("description"),
+  chat_story_id: int("chat_story_id").references(() => CHAT_MESSAGES.id), // For slides showing chat messages
+  quiz_id: int("quiz_id").references(() => QUIZZES.id), // For slides gated by a quiz
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const QUIZZES = mysqlTable("quizzes", {
+  id: int("id").primaryKey().autoincrement(),
+  slide_id: int("slide_id").notNull().references(() => SLIDES.id),
+  question: text("question").notNull(),
+  answer_type: mysqlEnum("answer_type", ["text", "multiple_choice"]).notNull(), // Determines input type
+  correct_answer: text("correct_answer").notNull(), // For text-based answers
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+// export const QUIZ_OPTIONS = mysqlTable("quiz_options", {
+//   id: int("id").primaryKey().autoincrement(),
+//   quiz_id: int("quiz_id").notNull().references(() => QUIZZES.id),
+//   option_text: text("option_text").notNull(),
+//   is_correct: boolean("is_correct").default(false),
+//   created_at: timestamp("created_at").defaultNow(),
+// });
+
+// export const EPISODE_BRANCHES = mysqlTable("episode_branches", {
+//   id: int("id").primaryKey().autoincrement(),
+//   current_episode_id: int("current_episode_id").notNull().references(() => EPISODES.id),
+//   choice_text: text("choice_text").notNull(), // What the user chooses
+//   next_episode_id: int("next_episode_id").notNull().references(() => EPISODES.id),
+//   created_at: timestamp("created_at").defaultNow(),
+// });
+
+// export const CHAT_PUZZLES = mysqlTable("chat_puzzles", {
+//   id: int("id").primaryKey().autoincrement(),
+//   chat_message_id: int("chat_message_id").notNull().references(() => CHAT_MESSAGES.id),
+//   question: text("question").notNull(),
+//   correct_answer: text("correct_answer").notNull(),
+//   options: text("options"), // JSON array for multiple-choice questions, if applicable
+//   hint: text("hint"), // Optional hint for the user
+//   created_at: timestamp("created_at").defaultNow(),
+// });
+
+// export const USER_PROGRESS = mysqlTable("user_progress", {
+//   id: int("id").primaryKey().autoincrement(),
+//   user_id: int("user_id").notNull().references(() => USERS.id),
+//   story_id: int("story_id").notNull().references(() => STORIES.id),
+//   chat_message_id: int("chat_message_id").notNull(),
+//   is_completed: boolean("is_completed").default(false),
+//   completed_at: timestamp("completed_at"),
+// });

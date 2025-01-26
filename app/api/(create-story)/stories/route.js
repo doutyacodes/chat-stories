@@ -18,21 +18,11 @@ export async function POST(request) {
 
   try {
     const formData = await request.formData();
-    const storyName = formData.get('storyName');
-    const storySynopsis = formData.get('storySynopsis');
+    const storyName = formData.get('name');
+    const storySynopsis = formData.get('synopsis');
     const category = formData.get('category');
     const coverImage = formData.get('coverImage');
-    const episodesList = JSON.parse(formData.get('episodes'));
-    const storyType = formData.get('storyType');
-
-     // Only parse characters if it's a chat story
-     let charactersList = [];
-     if (storyType === 'chat') {
-       const charactersData = formData.get('characters');
-       if (charactersData) {
-         charactersList = JSON.parse(charactersData);
-       }
-     }
+    const storyType = 'chat'
 
     // Generate unique filename for cover image
     const fileName = `${Date.now()}-${storyName.replace(/\s+/g, '-')}.png`;
@@ -42,60 +32,13 @@ export async function POST(request) {
       title: storyName,
       synopsis: storySynopsis,
       category_id: parseInt(category),
-      story_type: storyType,
+      story_type: storyType, // Supports 'chat', 'normal', and now 'interactive'
       user_id: userId,
       cover_img: fileName,
       is_published: false,
     });
 
     const storyId = storyRecord[0].insertId;
-
-    // Save characters only for chat stories
-    let savedCharacters = [];
-      if (storyType === 'chat' && charactersList.length > 0) {
-        const characterPromises = charactersList
-          .filter(char => char.name.trim()) // Filter out any entries with empty names
-          .map(char => 
-            db.insert(CHARACTERS).values({
-              story_id: storyId,
-              name: char.name.trim(),
-              is_sender: char.is_sender,
-            })
-          );
-        await Promise.all(characterPromises);
-      // Fetch saved characters with IDs only for chat stories
-      savedCharacters = await db
-      .select({ id: CHARACTERS.id, name: CHARACTERS.name })
-      .from(CHARACTERS)
-      .where(eq(CHARACTERS.story_id, storyId));
-  }
-
-    // Save episodes if provided
-    let savedEpisodes = [];
-    if (episodesList && episodesList.length > 0) {
-      const episodePromises = episodesList
-        .filter((episode) => episode.name.trim()) // Ensure non-empty episode names
-        .map((episode) =>
-          db.insert(EPISODES).values({
-            story_id: storyId,
-            name: episode.name.trim(),
-            synopsis: episode.synopsis ? episode.synopsis.trim() : null,
-            episode_number: episodesList.indexOf(episode) + 1, // Generate episode number
-          })
-        );
-      await Promise.all(episodePromises);
-
-      // Fetch saved episodes with IDs
-      savedEpisodes = await db
-        .select({
-          id: EPISODES.id,
-          name: EPISODES.name,
-          synopsis: EPISODES.synopsis,
-          episode_number: EPISODES.episode_number,
-        })
-        .from(EPISODES)
-        .where(eq(EPISODES.story_id, storyId));
-    }
 
     // Handle image upload
     if (coverImage) {
@@ -130,8 +73,6 @@ export async function POST(request) {
       {
         message: 'Story created successfully',
         storyId,
-        ...(storyType === 'chat' && { characters: savedCharacters }), // Only include characters for chat stories
-        episodes: savedEpisodes,
       },
       { status: 200 }
     );

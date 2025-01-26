@@ -1,61 +1,21 @@
-'use client';
-
 import React, { useState, useEffect } from "react";
-import { redirect, useRouter, useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Upload, X } from "lucide-react";
 
-// LoadingSpinner Component
-const LoadingSpinner = () => (
-  <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-gray-800 p-8 rounded-lg shadow-xl flex flex-col items-center">
-      <Loader2 className="h-12 w-12 text-purple-600 animate-spin" />
-      <p className="mt-4 text-white text-lg">
-        {/* Dynamic loading text */}
-      </p>
-    </div>
-  </div>
-);
-
-const CreateStoryForm = () => {
+const CreateStoryBasics = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const storyId = searchParams.get('storyId');
-  const isEditMode = !!storyId;
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(isEditMode);
-  const [error, setError] = useState("");
   const [categories, setCategories] = useState([]);
-
-  const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
-
-
-  // Story Details State
+  const [error, setError] = useState("");
   const [storyData, setStoryData] = useState({
-    storyName: "",
-    storySynopsis: "",
+    name: "",
+    synopsis: "",
     category: "",
-    storyType: "chat", // Default to chat story
     coverImage: null,
-    coverImagePreview: null,
-    oldCoverImageUrl: null, // To display existing image in edit mode
-    episodes: [],
-    characters: ["", ""],
-    characterSenders: [true, false],
+    coverImagePreview: null
   });
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
-    if(!token) {
-      redirect("/login");
-    }
-    
     fetchCategories();
-
-    // If in edit mode, fetch story details
-    if (isEditMode) {
-      fetchStoryDetails();
-    }
   }, []);
 
   const fetchCategories = async () => {
@@ -65,49 +25,8 @@ const CreateStoryForm = () => {
       const data = await response.json();
       setCategories(data);
     } catch (error) {
-      setError("Failed to load categories. Please try again later.");
-      console.error("Error fetching categories:", error);
-    }
-  };
-
-  const fetchStoryDetails = async () => {
-    try {
-      const response = await fetch(`/api/stories/${storyId}/get-edit-storyData`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch story details');
-      
-      const storyDetails = await response.json();
-      
-      // Prepare story data for edit mode
-      setStoryData({
-        storyName: storyDetails.name,
-        storySynopsis: storyDetails.synopsis,
-        category: storyDetails.category_id,
-        storyType: storyDetails.story_type,
-        coverImage: null,
-        coverImagePreview: null,
-        oldCoverImageUrl: storyDetails.cover_image,
-        episodes: storyDetails.episodes.map(episode => ({
-          id: episode.id, // Preserve existing episode IDs
-          name: episode.name,
-          synopsis: episode.synopsis
-        })),
-        characters: storyDetails.story_type === 'chat' 
-          ? storyDetails.characters.map(char => char.name)
-          : ["", ""],
-        characterSenders: storyDetails.story_type === 'chat'
-          ? storyDetails.characters.map(char => char.is_sender)
-          : [true, false]
-      });
-    } catch (error) {
-      setError("Failed to load story details. Please try again.");
-      console.error("Error fetching story details:", error);
-    } finally {
-      setIsInitialLoading(false);
+      setError("Failed to load categories");
+      console.error(error);
     }
   };
 
@@ -131,405 +50,155 @@ const CreateStoryForm = () => {
     }
   };
 
-  // Character Handlers
-  const handleCharacterChange = (index, value) => {
-    const updatedCharacters = [...storyData.characters];
-    updatedCharacters[index] = value;
-    setStoryData(prev => ({ ...prev, characters: updatedCharacters }));
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  const handleAddCharacter = () => {
-    if (storyData.storyType === 'chat') {
-      setStoryData(prev => ({
-        ...prev,
-        characters: [...prev.characters, ""],
-        characterSenders: [...prev.characterSenders, false]
-      }));
-    }
-  };
-
-  const handleSenderToggle = (index) => {
-    setStoryData(prev => ({
-      ...prev,
-      characterSenders: prev.characterSenders.map((isSender, i) => i === index ? true : false)
-    }));
-  };
-
-  // In edit mode, existing characters cannot be removed
-  const handleRemoveCharacter = (index) => {
-    // Only allow removal for characters added during edit, not original characters
-    if (storyData.storyType === 'chat' && index >= (isEditMode ? storyData.characters.length : 2)) {
-      const newCharacters = storyData.characters.filter((_, i) => i !== index);
-      const newSenders = storyData.characterSenders.filter((_, i) => i !== index);
-      
-      if (storyData.characterSenders[index]) {
-        newSenders[0] = true;
-      }
-      
-      setStoryData(prev => ({
-        ...prev,
-        characters: newCharacters,
-        characterSenders: newSenders
-      }));
-    } else if (!isEditMode) {
-      if (storyData.characters.length <= 2) {
-        setError("Minimum two characters are required");
-        return;
-      }
-      
-      const newCharacters = storyData.characters.filter((_, i) => i !== index);
-      const newSenders = storyData.characterSenders.filter((_, i) => i !== index);
-      
-      if (storyData.characterSenders[index]) {
-        newSenders[0] = true;
-      }
-      
-      setStoryData(prev => ({
-        ...prev,
-        characters: newCharacters,
-        characterSenders: newSenders
-      }));
-    }
-  };
-
-  // Episode Handlers
-  const handleEpisodeChange = (index, field, value) => {
-    const updatedEpisodes = [...storyData.episodes];
-    updatedEpisodes[index][field] = value;
-    setStoryData(prev => ({ ...prev, episodes: updatedEpisodes }));
-  };
-
-  const handleAddEpisode = () => {
-    setStoryData(prev => ({
-      ...prev,
-      episodes: [...prev.episodes, { name: "", synopsis: "" }]
-    }));
-  };
-
-  const validateForm = () => {
-    if (!storyData.storyName.trim()) {
+    // Validation
+    if (!storyData.name.trim()) {
       setError("Story name is required");
-      return false;
+      return;
     }
-    if (!storyData.storySynopsis.trim()) {
+    if (!storyData.synopsis.trim()) {
       setError("Story synopsis is required");
-      return false;
+      return;
     }
     if (!storyData.category) {
       setError("Please select a category");
-      return false;
+      return;
     }
-    
-    // For create mode, require cover image
-    if (!isEditMode && !storyData.coverImage) {
+    if (!storyData.coverImage) {
       setError("Please upload a cover image");
-      return false;
+      return;
     }
-
-    // Only validate characters for chat stories
-    if (storyData.storyType === "chat") {
-      const validCharacters = storyData.characters.filter(char => char.trim());
-      if (validCharacters.length < 2) {
-        setError("Please add at least two characters with names");
-        return false;
-      }
-    }
-    
-    return true;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setIsLoading(true);
-    setError("");
 
     try {
       const formData = new FormData();
-      formData.append('storyName', storyData.storyName);
-      formData.append('storySynopsis', storyData.storySynopsis);
+      formData.append('name', storyData.name);
+      formData.append('synopsis', storyData.synopsis);
       formData.append('category', storyData.category);
-      
-      // In edit mode, don't allow changing story type
-      if (!isEditMode) {
-        formData.append('storyType', storyData.storyType);
-      }
+      formData.append('coverImage', storyData.coverImage);
 
-      // Handle cover image: only append if new image is uploaded
-      if (storyData.coverImage) {
-        formData.append('coverImage', storyData.coverImage);
-      }
-
-      formData.append('episodes', JSON.stringify(storyData.episodes));
-
-      // Only include characters data for chat stories
-      if (storyData.storyType === "chat") {
-        const charactersWithSender = storyData.characters.map((char, index) => ({
-          name: char,
-          is_sender: storyData.characterSenders[index]
-        }));
-        formData.append('characters', JSON.stringify(charactersWithSender));
-      }
-
-      const url = isEditMode ? `/api/stories/${storyId}/update-story` : '/api/stories';
-      const method = isEditMode ? 'PATCH' : 'POST';
-
-      const response = await fetch(url, {
+      const response = await fetch('/api/stories', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        method: method,
-        body: formData,
+        method: 'POST',
+        body: formData
       });
 
-      if (!response.ok) throw new Error('Failed to save story');
+      if (!response.ok) throw new Error('Failed to create story');
 
-      await response.json();
-      router.push("/your-stories");
+      const responseData = await response.json();
+      
+      // Navigate to episode creation with new story ID
+      router.push(`/create-story/${responseData.storyId}/create-episode`);
     } catch (error) {
-      setError("Failed to save story. Please try again.");
-      console.error("Error saving story:", error);
-    } finally {
-      setIsLoading(false);
+      setError("Failed to create story. Please try again.");
+      console.error(error);
     }
   };
 
-  // Conditional rendering for loading and initial setup
-  if (isInitialLoading) {
-    return <LoadingSpinner />;
-  }
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
-      {isLoading && <LoadingSpinner />}
-      
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">
-          {isEditMode ? "Edit Your Story" : "Create Your Story"}
-        </h1>
-        
+    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8 md:pt-28">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Create Your Story</h1>
+
         {error && (
           <div className="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-lg mb-6">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Story Type Selection - Only for create mode */}
-          {!isEditMode && (
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">Story Type</h2>
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setStoryData(prev => ({ ...prev, storyType: "chat" }))}
-                  className={`px-6 py-3 rounded-lg transition ${
-                    storyData.storyType === "chat"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  Chat Story
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStoryData(prev => ({ ...prev, storyType: "normal" }))}
-                  className={`px-6 py-3 rounded-lg transition ${
-                    storyData.storyType === "normal"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  Normal Story
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Basic Details */}
-          <div className="bg-gray-800 p-6 rounded-lg space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Basic Details</h2>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Story Name</label>
-              <input
-                type="text"
-                value={storyData.storyName}
-                onChange={(e) => setStoryData(prev => ({ ...prev, storyName: e.target.value }))}
-                className="w-full p-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-purple-600"
-                placeholder="Enter story name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Synopsis</label>
-              <textarea
-                value={storyData.storySynopsis}
-                onChange={(e) => setStoryData(prev => ({ ...prev, storySynopsis: e.target.value }))}
-                className="w-full p-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-purple-600 h-32"
-                placeholder="Write your story synopsis"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Category</label>
-              <select
-                value={storyData.category}
-                onChange={(e) => setStoryData(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full p-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-purple-600"
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Story Name */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Story Name</label>
+            <input
+              type="text"
+              value={storyData.name}
+              onChange={(e) => setStoryData(prev => ({ ...prev, name: e.target.value }))}
+              className="w-full p-3 rounded-lg bg-gray-800 focus:ring-2 focus:ring-purple-600"
+              placeholder="Enter your story name"
+            />
           </div>
 
-          {/* Cover Image */}
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">Cover Image</h2>
-            <div className="flex flex-col md:flex-row gap-6">
+          {/* Synopsis */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Story Synopsis</label>
+            <textarea
+              value={storyData.synopsis}
+              onChange={(e) => setStoryData(prev => ({ ...prev, synopsis: e.target.value }))}
+              className="w-full p-3 rounded-lg bg-gray-800 focus:ring-2 focus:ring-purple-600 h-32"
+              placeholder="Write a brief synopsis of your story"
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Story Category</label>
+            <select
+              value={storyData.category}
+              onChange={(e) => setStoryData(prev => ({ ...prev, category: e.target.value }))}
+              className="w-full p-3 rounded-lg bg-gray-800 focus:ring-2 focus:ring-purple-600"
+            >
+              <option value="">Select a category</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Cover Image Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Cover Image</label>
+            <div className="flex items-center gap-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium mb-2">Upload Image</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="w-full p-3 rounded-lg bg-gray-700"
+                  className="hidden"
+                  id="coverImageUpload"
                 />
-                <p className="text-sm text-gray-400 mt-2">Maximum file size: 5MB</p>
+                <label 
+                  htmlFor="coverImageUpload" 
+                  className="w-full p-3 rounded-lg bg-gray-800 flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
+                >
+                  <Upload className="mr-2" /> Upload Cover Image
+                </label>
               </div>
-              {(storyData.coverImagePreview || storyData.oldCoverImageUrl) && (
-                <div className="w-32 h-32">
+              {storyData.coverImagePreview && (
+                <div className="w-32 h-32 relative">
                   <img
-                    // src={storyData.coverImagePreview || storyData.oldCoverImageUrl}
-                    src={`${BASE_IMAGE_URL}${storyData.coverImagePreview}` || `${BASE_IMAGE_URL}${storyData.oldCoverImageUrl}`}
+                    src={storyData.coverImagePreview}
                     alt="Cover Preview"
                     className="w-full h-full object-cover rounded-lg"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setStoryData(prev => ({ 
+                      ...prev, 
+                      coverImage: null, 
+                      coverImagePreview: null 
+                    }))}
+                    className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Episodes Section */}
-          <div className="bg-gray-800 p-6 rounded-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Episodes (Optional)</h2>
-              <button
-                type="button"
-                onClick={handleAddEpisode}
-                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm"
-              >
-                Add Episode
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {storyData.episodes.map((episode, index) => (
-                <div key={index} className="bg-gray-700 p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-medium">Episode {index + 1}</h3>
-                    {/* In edit mode, prevent removing existing episodes */}
-                    {(index >= (isEditMode ? storyData.episodes.length : 0)) && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveEpisode(index)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      placeholder="Episode Name"
-                      value={episode.name}
-                      onChange={(e) => handleEpisodeChange(index, 'name', e.target.value)}
-                      className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
-                    />
-                    <textarea
-                      placeholder="Episode Synopsis"
-                      value={episode.synopsis}
-                      onChange={(e) => handleEpisodeChange(index, 'synopsis', e.target.value)}
-                      className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Characters Section - Only for chat stories */}
-          {storyData.storyType === "chat" && (
-            <div className="bg-gray-800 p-6 rounded-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Characters</h2>
-                <button
-                  type="button"
-                  onClick={handleAddCharacter}
-                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm"
-                >
-                  Add Character
-                </button>
-              </div>
-              
-              <div className="space-y-3">
-                {storyData.characters.map((character, index) => (
-                  <div key={index} className="flex flex-col md:flex-row gap-3">
-                    <input
-                      type="text"
-                      value={character}
-                      onChange={(e) => handleCharacterChange(index, e.target.value)}
-                      placeholder={`Character ${index + 1}`}
-                      className="flex-1 p-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-purple-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleSenderToggle(index)}
-                      className={`px-4 py-2 rounded-lg transition ${
-                        storyData.characterSenders[index]
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
-                    >
-                      Sender
-                    </button>
-                    {/* In edit mode, prevent removing original characters */}
-                    {(index >= (isEditMode ? storyData.characters.length : 2)) && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCharacter(index)}
-                        className="px-4 py-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isLoading}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 
-              disabled:cursor-not-allowed px-6 py-3 rounded-lg font-semibold text-lg 
-              transition duration-200"
+            className="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold text-lg transition"
           >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                {isEditMode ? 'Updating Story...' : 'Creating Story...'}
-              </span>
-            ) : (
-              isEditMode ? 'Update Story' : 'Create Story'
-            )}
+            Create Story
           </button>
         </form>
       </div>
@@ -537,4 +206,4 @@ const CreateStoryForm = () => {
   );
 };
 
-export default CreateStoryForm;
+export default CreateStoryBasics;

@@ -16,6 +16,5 @@ export default {
         host: "localhost",
         user: "root",
         database: "chat_stories",
-        password: ''
     }
 };

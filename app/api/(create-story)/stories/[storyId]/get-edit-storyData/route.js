@@ -26,7 +26,8 @@ console.log("story id , user id", storyId, userId);
         category_id: STORIES.category_id,
         story_type: STORIES.story_type,
         cover_image: STORIES.cover_img,
-        is_published: STORIES.is_published
+        is_published: STORIES.is_published,
+        has_episodes: STORIES.has_episodes
       })
       .from(STORIES)
       .where(and(

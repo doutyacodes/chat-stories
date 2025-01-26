@@ -63,9 +63,9 @@ const YourStoriesPage = () => {
 
   const navigateToContent = (story) => {
     if (story.type === 'chat') {
-      router.push(`/create-story/${story.id}/chat-content`); // Route for chat stories
+      router.push(`/create-story/${story.id}/create-episode`); // Route for chat stories
     } else {
-      router.push(`/create-story/${story.id}/normal-content`); // Route for normal stories
+      // router.push(`/create-story/${story.id}/normal-content`); // Route for normal stories
     }
   };
 

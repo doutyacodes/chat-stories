@@ -1,20 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FaVideo, FaPhone, FaEllipsisV, FaArrowLeft, FaArrowRight, FaArrowCircleRight } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo } from 'react-icons/fa';
 import { useParams, useRouter } from 'next/navigation';
 
-const ChatPage = () => {
+const StorySlides = () => {
   const router = useRouter();
-  const { id, storyId } = useParams();
-  const [episode, setEpisode] = useState(null);
-  const [showChat, setShowChat] = useState(false);
-  const [currentDetailIndex, setCurrentDetailIndex] = useState(0);
-  const [isMobileView, setIsMobileView] = useState(false);
+  const { storyId, id:episodeId } = useParams();
+  const [slides, setSlides] = useState([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [slideContent, setSlideContent] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [storyData, setStoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLastSlide, setIsLastSlide] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [nextEpisode, setNextEpisode] = useState(null);
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
+
+  console.log('slideContent',slideContent, 'currentSlideIndex', currentSlideIndex)
 
   useEffect(() => {
     const handleResize = () => {
@@ -26,125 +32,118 @@ const ChatPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    const fetchEpisodeData = async () => {
-      try {
-        console.log("episode data");
+  // useEffect(() => {
+  //   const fetchInitialSlides = async () => {
+  //     try {
+  //       const slidesResponse = await fetch(`/api/slides/${storyId}/${episodeId}`);
+  //       if (!slidesResponse.ok) throw new Error('Failed to fetch slides');
         
-        const response = await fetch(`/api/episodes/${id}`);
-        console.log("episode data res", response);
+  //       const slidesData = await slidesResponse.json();
+  //       setSlides(slidesData.slides);
+  //       setStoryData(slidesData.story)
+  //       setLoading(false);
+  //     } catch (err) {
+  //       setError(err.message);
+  //       setLoading(false);
+  //     }
+  //   };
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch episode data');
+  //   if (storyId && episodeId) {
+  //     fetchInitialSlides();
+  //   }
+  // }, [storyId, episodeId]);
+
+
+  const fetchSlideContent = async (slideId, slideType) => {
+    console.log("log4 slideType",slideId, slideType);
+
+    try {
+      setLoading(true);
+      
+      if (slideType === 'image') {
+        const contentResponse = await fetch(`/api/slide-content/${slideId}`);
+        if (!contentResponse.ok) throw new Error('Failed to fetch slide content');
+        const contentData = await contentResponse.json();
+        setSlideContent(contentData);
+      } else if (slideType === 'chat') {
+        const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}`);
+        if (!chatResponse.ok) throw new Error('Failed to fetch chat messages');
+        const chatData = await chatResponse.json();
+        setChatMessages(chatData);
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchInitialSlides = async () => {
+      try {
+        const slidesResponse = await fetch(`/api/slides/${storyId}/${episodeId}`);
+        if (!slidesResponse.ok) throw new Error('Failed to fetch slides');
+        
+        const slidesData = await slidesResponse.json();
+        setSlides(slidesData.slides);
+        setStoryData(slidesData.story)
+  
+        // Fetch content for the first slide using existing function
+        if (slidesData.slides.length > 0) {
+          const firstSlide = slidesData.slides[0];
+          await fetchSlideContent(firstSlide.id, firstSlide.slide_type);
         }
-
-        const data = await response.json();
-        setEpisode(data);
-        console.log("episode data res", data);
-        // Track story view after 5 seconds
-        setTimeout(() => {
-          trackStoryView(storyId);
-        }, 5000);
-
-        // Track user read immediately
-        trackUserRead(storyId);
-
+  
+        setLoading(false);
       } catch (err) {
-        console.error('Error fetching episode:', err);
         setError(err.message);
-      } finally {
         setLoading(false);
       }
     };
-
-    if (id) {
-      fetchEpisodeData();
+  
+    if (storyId && episodeId) {
+      fetchInitialSlides();
     }
-  }, [id, storyId]);
+  }, [storyId, episodeId]);
 
-  const trackStoryView = async (storyId) => {
-    let sessionId = null;
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      sessionId = sessionStorage.getItem('session_id');
-      if (!sessionId) {
-        sessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
-        sessionStorage.setItem('session_id', sessionId);
-      }
-    }
+  const handleNextSlide = async () => {
+    const nextIndex = currentSlideIndex + 1;
+    console.log("log1");
 
-    try {
-      const response = await fetch('/api/analytics/story-views', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        },
-        body: JSON.stringify({
-          story_id: storyId,
-          session_id: sessionId,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to record story view');
-      }
-    } catch (error) {
-      console.error('Error recording view:', error);
-    }
-  };
-
-  const trackUserRead = async (storyId) => {
-    let sessionId = null;
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      sessionId = sessionStorage.getItem('session_id');
-      if (!sessionId) {
-        sessionId = 'sess_' + Math.random().toString(36).substring(2, 15);
-        sessionStorage.setItem('session_id', sessionId);
-      }
-    }
-
-    try {
-      const response = await fetch('/api/analytics/user-reads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` })
-        },
-        body: JSON.stringify({
-          story_id: storyId,
-          session_id: sessionId,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to record user read');
-      }
-    } catch (error) {
-      console.error('Error recording user read:', error);
-    }
-  };
-
-  const handleNextDetail = () => {
-    if (currentDetailIndex < episode.details.length - 1) {
-      setCurrentDetailIndex(prev => prev + 1);
+    if (nextIndex < slides.length) {
+      console.log("log2");
+      
+      await fetchSlideContent(slides[nextIndex].id, slides[nextIndex].slide_type);
+      setCurrentSlideIndex(nextIndex);
     } else {
-      setShowChat(true);
+      try {
+        console.log("log3");
+        const nextEpisodeResponse = await fetch(`/api/next-episode/${storyId}/${episodeId}`);
+        if (nextEpisodeResponse.ok) {
+          const nextEpisodeData = await nextEpisodeResponse.json();
+          setNextEpisode(nextEpisodeData);
+        }
+      } catch (err) {
+        console.error('Error fetching next episode:', err);
+      }
+      setIsLastSlide(true);
     }
   };
 
-  const handlePrevDetail = () => {
-    if (currentDetailIndex > 0) {
-      setCurrentDetailIndex(prev => prev - 1);
+  const handlePreviousSlide = async () => {
+    const prevIndex = currentSlideIndex - 1;
+    
+    if (prevIndex >= 0) {
+      await fetchSlideContent(slides[prevIndex].id, slides[prevIndex].slide_type);
+      setCurrentSlideIndex(prevIndex);
+      setIsLastSlide(false);
     }
   };
 
   const handleNextEpisode = () => {
-    if (episode.nextEpisode) {
-      router.push(`/stories/${episode.nextEpisode.id}/${storyId}/chat-story`);
+    if (nextEpisode) {
+      router.push(`/stories/${nextEpisode.id}/${storyId}/chat-story`);
     }
   };
 
@@ -156,305 +155,168 @@ const ChatPage = () => {
     );
   }
 
-  if (error || !episode) {
+  if (error) {
     return (
       <div className="h-screen bg-gray-900 text-white flex items-center justify-center">
-        <p>Error loading episode: {error}</p>
+        <p>Error: {error}</p>
       </div>
     );
   }
 
-  // const CurrentDetail = () => {
-  //   if (!episode.details?.length) return null;
-    
-  //   const detail = episode.details[currentDetailIndex];
-    
-  //   return (
-  //     <div className="flex-1 bg-gray-900 p-6 overflow-y-auto">
-  //       <div className="max-w-2xl mx-auto">
-  //         <div className="relative bg-gray-800 rounded-lg p-4">
-  //           {/* Navigation Arrows */}
-  //           <div className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-4 z-10">
-  //             {currentDetailIndex > 0 && (
-  //               <button
-  //                 onClick={handlePrevDetail}
-  //                 className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
-  //               >
-  //                 <FaArrowLeft className="text-white" />
-  //               </button>
-  //             )}
-  //             {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
-  //               <button
-  //                 onClick={handleNextDetail}
-  //                 className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors ml-auto"
-  //               >
-  //                 <FaArrowRight className="text-white" />
-  //               </button>
-  //             )}
-  //           </div>
+  const currentSlide = slides[currentSlideIndex];
 
-  //           {/* Media Content */}
-  //           <div className="mb-4">
-  //             {detail.media_type === 'video' ? (
-  //               <video
-  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
-  //                 controls
-  //                 className="w-full rounded-lg"
-  //               />
-  //             ) : (
-  //               <img
-  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
-  //                 alt="Episode detail"
-  //                 className="w-full rounded-lg"
-  //               />
-  //             )}
-  //           </div>
-
-  //           {/* Description */}
-  //           <p className="text-white text-lg">{detail.description}</p>
-
-  //           {/* Progress Indicators */}
-  //           <div className="flex justify-center mt-4 gap-2">
-  //             {episode.details.map((_, index) => (
-  //               <div
-  //                 key={index}
-  //                 className={`h-2 w-2 rounded-full ${
-  //                   index === currentDetailIndex ? 'bg-purple-600' : 'bg-gray-600'
-  //                 }`}
-  //               />
-  //             ))}
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
-  // const CurrentDetail = () => {
-  //   if (!episode.details?.length) return null;
-    
-  //   const detail = episode.details[currentDetailIndex];
-  //   const isMobileView = window.innerWidth < 640;
-    
-  //   return (
-  //     <div className="flex-1 bg-gray-900 p-6 overflow-y-auto">
-  //       <div className="max-w-4xl mx-auto h-[70vh] flex flex-col">
-  //         <div className="relative bg-gray-800 rounded-lg p-4 flex-1">
-  //           {/* Media Content */}
-  //           <div className={`mb-4 ${isMobileView ? 'h-[60vh]' : 'h-full'}`}>
-  //             {detail.media_type === 'video' ? (
-  //               <video
-  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
-  //                 controls
-  //                 className="w-full h-full object-contain rounded-lg"
-  //               />
-  //             ) : (
-  //               <img
-  //                 src={`${BASE_IMAGE_URL}${detail.media_url}`}
-  //                 alt="Episode detail"
-  //                 className="w-full h-full object-contain rounded-lg"
-  //               />
-  //             )}
-  //           </div>
-  
-  //           {/* Navigation Arrows */}
-  //           <div className="absolute bottom-4 w-full flex justify-between px-4 z-10 left-0">
-  //             {/* Left Arrow */}
-  //             <div className="w-1/2 flex justify-start">
-  //               {currentDetailIndex > 0 && (
-  //                 <button
-  //                   onClick={handlePrevDetail}
-  //                   className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
-  //                 >
-  //                   <FaArrowLeft className="text-white" />
-  //                 </button>
-  //               )}
-  //             </div>
-              
-  //             {/* Right Arrow */}
-  //             <div className="w-1/2 flex justify-end">
-  //               {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
-  //                 <button
-  //                   onClick={handleNextDetail}
-  //                   className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
-  //                 >
-  //                   <FaArrowRight className="text-white" />
-  //                 </button>
-  //               )}
-  //             </div>
-  //           </div>
-
-  
-  //           {/* Progress Indicators */}
-  //           <div className="flex justify-center mt-4 gap-2">
-  //             {episode.details.map((_, index) => (
-  //               <div
-  //                 key={index}
-  //                 className={`h-2 w-2 rounded-full ${
-  //                   index === currentDetailIndex ? 'bg-purple-600' : 'bg-gray-600'
-  //                 }`}
-  //               />
-  //             ))}
-  //           </div>
-  //         </div>
-  
-  //         {/* Description */}
-  //         <div className="mt-4 bg-gray-800 rounded-lg p-4">
-  //           <p className="text-white text-lg">{detail.description}</p>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // };
-
-  const CurrentDetail = () => {
-    // if (!episode.details?.length) return null;
-    
-    const detail = episode.details[currentDetailIndex];
-    const isMobileView = window.innerWidth < 640;
+  const DetailView = () => {
     
     return (
       <div className="flex-1 bg-gray-900 overflow-y-auto md:pt-28">
+        {/* Navbar */}
+        <div className="bg-gray-800 p-4 flex items-center justify-center">
+            <h2 className="text-2xl font-bold">{storyData.title}</h2>
+        </div>
         <div className="relative h-full flex flex-col">
           {/* Header */}
           <div className="bg-gray-800 p-4">
-            <h1 className="text-xl font-bold text-center">{episode.story.title}</h1>
-            <p className="text-sm text-gray-400 text-center">Episode {episode.episode_number}</p>
+            <h1 className="text-xl font-bold text-center">{slideContent.title}</h1>
+            {/* <p className="text-sm text-gray-400 text-center">Episode {slideContent.episode_number}</p> */}
           </div>
-  
+
           {/* Media Section */}
           <div className="relative flex-1">
             <div className="relative h-[70vh]">
-              {detail.media_type === 'video' ? (
+              <div className="relative h-[70vh]">
+                <img
+                  src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
+                  alt="Episode detail"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
+                  <p className="text-white text-lg">{slideContent.description}</p>
+                </div>
+              </div>
+              {/* {detail.media_type === 'video' ? (
                 <video
-                  src={`${BASE_IMAGE_URL}${detail.media_url}`}
+                  src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
                   controls
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="relative h-[70vh]">
                   <img
-                    src={`${BASE_IMAGE_URL}${detail.media_url}`}
+                    src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
                     alt="Episode detail"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
-                    <p className="text-white text-lg">{detail.description}</p>
+                    <p className="text-white text-lg">{slideContent.description}</p>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
-          </div>
-
-          {/* Navigation Arrows */}
-          <div className="w-full flex justify-between px-4 mt-5">
-            {/* Left Arrow */}
-                <div className="w-1/2 flex justify-start">
-                    {currentDetailIndex > 0 && (
-                        <button
-                        onClick={handlePrevDetail}
-                        className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
-                      >
-                        <FaArrowLeft className="text-white" />
-                      </button>
-                        )}
-                </div>
-                {/* Right Arrow */}
-                <div className="w-1/2 flex justify-end">
-                  {(currentDetailIndex < episode.details.length - 1 || !showChat) && (
-                    <button
-                      onClick={handleNextDetail}
-                      className={`bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors`}
-                    >
-                    <FaArrowRight className="text-white" />
-                  </button>
-                  )}
-                </div>   
           </div>
         </div>
       </div>
     );
   };
-  
-  const ChatView = () => (
-    <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
-      {/* Navbar */}
-      <div className="bg-gray-800 p-4 flex items-center justify-between">
-        <div className="flex items-center">
-          <img
-            src={`${BASE_IMAGE_URL}${episode.story.image_url}`}
-            alt="Profile"
-            className="w-10 h-10 rounded-full mr-2"
-          />
-          <div>
-            <h2 className="text-lg font-bold">{episode.story.title}</h2>
-            <p className="text-sm text-gray-400">Episode {episode.episode_number}</p>
+
+    const ChatView = () => (
+      <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
+        {/* Navbar */}
+        <div className="bg-gray-800 p-4 flex items-center justify-between">
+          <div className="flex items-center">
+            <img
+              src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+              alt="Profile"
+              className="w-10 h-10 rounded-full mr-2"
+            />
+            <div>
+              <h2 className="text-lg font-bold">{storyData.title}</h2>
+              {/* <p className="text-sm text-gray-400">Episode {episode.episode_number}</p> */}
+            </div>
+          </div>
+          <div className="flex items-center space-x-4 text-gray-300">
+            <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
+            <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
+            <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
           </div>
         </div>
-        <div className="flex items-center space-x-4 text-gray-300">
-          <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
-          <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
-          <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
+        {/* Chat Messages */}
+        <div className="flex-1 max-h-[80vh] p-4 overflow-y-auto">
+          <div className="flex flex-col space-y-4">
+            {chatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`relative p-3 rounded-lg max-w-xs ${
+                  message.character.is_sender
+                    ? 'bg-green-700 text-white self-end'
+                    : 'bg-gray-800 text-gray-300 self-start'
+                }`}
+              >
+                <strong>{message.character.name}: </strong>
+                <p>{message.message}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-      {/* Chat Messages */}
-      <div className="flex-1 max-h-[80vh] p-4 overflow-y-auto">
-        <div className="flex flex-col space-y-4">
-          {episode.messages.map((message) => (
-            <div
-              key={message.id}
-              className={`relative p-3 rounded-lg max-w-xs ${
-                message.is_sender
-                  ? 'bg-green-700 text-white self-end'
-                  : 'bg-gray-800 text-gray-300 self-start'
-              }`}
-            >
-              <p>{message.content}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-  
+    );
+
   return (
-    <div className={`h-screen bg-gray-900 text-white flex flex-col sm:flex-row`}>
-      {/* Story Info Sidebar - Desktop only */}
+    <div className={`h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row`}>
+      {/* Sidebar */}
       {!isMobileView && (
+        // Existing sidebar code
         <div className="w-1/4 min-w-[250px] bg-gray-800 p-4 border-r border-gray-700 md:pt-32">
           <img
-            src={`${BASE_IMAGE_URL}${episode.story.image_url}`}
-            alt={episode.story.title}
+            src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+            alt={storyData.title}
             className="w-full h-48 object-cover rounded-lg mb-4"
           />
-          <h2 className="text-lg font-bold mb-2">{episode.story.title}</h2>
-          <p className="text-sm text-gray-300">{episode.story.synopsis}</p>
+          <h2 className="text-lg font-bold mb-2">{storyData.title}</h2>
+          <p className="text-sm text-gray-300">{storyData.synopsis}</p>
         </div>
       )}
 
-      {/* Main Content Area */}
       <div className="flex-1 relative">
-        {!showChat && episode.details?.length ? <CurrentDetail /> : 
-        <>
-          <ChatView />
-            {/* Next Episode Button */}
-            {episode.nextEpisode && (
-              <div className="absolute w-full bottom-0 mb-20 md:mb-0 px-4 flex justify-end bg-gray-700">
-                <button
-                  onClick={handleNextEpisode}
-                  className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
-                >
-                  <FaArrowCircleRight className="text-xl text-white" />
-                </button>
-              </div>
-            )}
-        </>
+        {currentSlide.slide_type === 'image' && slideContent && (
+            <DetailView />
+          )}
 
-        }
-
+        {currentSlide.slide_type === 'chat' && chatMessages.length > 0 && (
+          <>
+            <ChatView />
+          </>
+        )}
       </div>
+
+      {/* Navigation */}
+      <div className="absolute bottom-16 md:bottom-0 left-0 right-0 flex justify-between p-4">
+          {currentSlideIndex > 0 && (
+            <button 
+              onClick={handlePreviousSlide}
+              className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+            >
+              <FaArrowLeft className="text-white" />
+            </button>
+          )}
+
+          {!isLastSlide ? (
+            <button 
+              onClick={handleNextSlide}
+              className="ml-auto bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+            >
+              <FaArrowRight className="text-white" />
+            </button>
+          ) : nextEpisode ? (
+            <button 
+              onClick={handleNextEpisode}
+              className="ml-auto bg-blue-700 p-2 rounded-full hover:bg-blue-600 transition-colors"
+            >
+              Next Episode
+            </button>
+          ) : null}
+        </div>
     </div>
   );
 };
 
-export default ChatPage;
+export default StorySlides;

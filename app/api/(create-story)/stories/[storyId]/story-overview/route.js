@@ -23,6 +23,7 @@ export async function GET(request, { params }) {
         coverImg: STORIES.cover_img,
         storyType: STORIES.story_type,
         categoryId: STORIES.category_id,
+        hasEpisodes: STORIES.has_episodes,
         authorId: STORIES.user_id,
       })
       .from(STORIES)
@@ -96,6 +97,7 @@ export async function GET(request, { params }) {
         synopsis: story.synopsis,
         cover_img: story.coverImg,
         story_type: story.storyType,
+        has_episodes: story.hasEpisodes,
         author,
         authorId: authorDetails[0]?.authorId
       },

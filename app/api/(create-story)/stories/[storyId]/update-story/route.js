@@ -4,7 +4,7 @@ import Client from 'ssh2-sftp-client';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { authenticate } from '@/lib/jwtMiddleware';
 import { db } from '@/utils';
 import { STORIES, CHARACTERS, EPISODES } from '@/utils/schema';
@@ -25,6 +25,7 @@ export async function PATCH(request, { params }) {
     const category = formData.get('category');
     const coverImage = formData.get('coverImage');
     const episodesList = JSON.parse(formData.get('episodes'));
+    const hasEpisodes = JSON.parse(formData.get('hasEpisodes') || 'false'); 
 
     // Verify story ownership
     const existingStory = await db
@@ -47,7 +48,8 @@ export async function PATCH(request, { params }) {
     const updateData = {
         title: storyName,
         synopsis: storySynopsis,
-        category_id: parseInt(category)
+        category_id: parseInt(category),
+        has_episodes: hasEpisodes
       };
 
     // Handle cover image upload
@@ -83,61 +85,60 @@ export async function PATCH(request, { params }) {
     // }
 
     // Update episodes
-if (episodesList && episodesList.length > 0) {
-    // Fetch existing episodes for this story
-    const existingEpisodes = await db
-      .select()
-      .from(EPISODES)
-      .where(eq(EPISODES.story_id, storyId));
-  
-    // Create maps for quick lookup
-    const existingEpisodeMap = new Map(
-      existingEpisodes.map((ep) => [ep.id, ep])
-    );
-  
-    // Track ids of episodes to keep
-    const idsToKeep = new Set();
-  
-    // Process incoming episodes
-    const episodePromises = episodesList.map((episode, index) => {
-      const isExisting = episode.id && existingEpisodeMap.has(episode.id);
-  
-      if (isExisting) {
-        // Update existing episode
-        idsToKeep.add(episode.id);
-        return db
-          .update(EPISODES)
-          .set({
+    if (hasEpisodes && episodesList && episodesList.length > 0) {
+      // Fetch existing episodes for this story
+      const existingEpisodes = await db
+        .select()
+        .from(EPISODES)
+        .where(eq(EPISODES.story_id, storyId));
+    
+      // Create maps for quick lookup
+      const existingEpisodeMap = new Map(
+        existingEpisodes.map((ep) => [ep.id, ep])
+      );
+    
+      // Track ids of episodes to keep
+      const idsToKeep = new Set();
+    
+      // Process incoming episodes
+      const episodePromises = episodesList.map((episode, index) => {
+        const isExisting = episode.id && existingEpisodeMap.has(episode.id);
+    
+        if (isExisting) {
+          // Update existing episode
+          idsToKeep.add(episode.id);
+          return db
+            .update(EPISODES)
+            .set({
+              name: episode.name.trim(),
+              synopsis: episode.synopsis ? episode.synopsis.trim() : null,
+              episode_number: index + 1,
+            })
+            .where(eq(EPISODES.id, episode.id));
+        } else {
+          // Insert new episode
+          return db.insert(EPISODES).values({
+            story_id: storyId,
             name: episode.name.trim(),
             synopsis: episode.synopsis ? episode.synopsis.trim() : null,
             episode_number: index + 1,
-          })
-          .where(eq(EPISODES.id, episode.id));
-      } else {
-        // Insert new episode
-        return db.insert(EPISODES).values({
-          story_id: storyId,
-          name: episode.name.trim(),
-          synopsis: episode.synopsis ? episode.synopsis.trim() : null,
-          episode_number: index + 1,
-        });
-      }
-    });
-  
-    // Execute all updates/inserts
-    await Promise.all(episodePromises);
-  
-    // Find episodes to delete (those not in the incoming list)
-    const idsToDelete = existingEpisodes
-      .filter((ep) => !idsToKeep.has(ep.id))
-      .map((ep) => ep.id);
-  
-    if (idsToDelete.length > 0) {
-      await db.delete(EPISODES).where(inArray(EPISODES.id, idsToDelete));
+          });
+        }
+      });
+    
+      // Execute all updates/inserts
+      await Promise.all(episodePromises);
+    
+      // Find episodes to delete (those not in the incoming list)
+      // const idsToDelete = existingEpisodes
+      //   .filter((ep) => !idsToKeep.has(ep.id))
+      //   .map((ep) => ep.id);
+    
+      // if (idsToDelete.length > 0) {
+      //   await db.delete(EPISODES).where(inArray(EPISODES.id, idsToDelete));
+      // }
     }
-  }
   
-
     // Handle characters for chat stories
     if (storyType === 'chat') {
         const charactersData = formData.get('characters');

@@ -89,7 +89,7 @@
 import { NextResponse } from 'next/server';
 import { EPISODES, STORIES, CHAT_MESSAGES, CHARACTERS, EPISODE_DETAILS } from '../../../../../utils/schema';
 import { db } from '../../../../../utils';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, gt } from 'drizzle-orm';
 
 export async function GET(request, { params }) {
   const { id: episodeId } = await params; // Extract `episodeId` from the route parameter
@@ -162,12 +162,15 @@ export async function GET(request, { params }) {
         media_url: EPISODE_DETAILS.media_url,
         description: EPISODE_DETAILS.description,
         order: EPISODE_DETAILS.order,
+        position: EPISODE_DETAILS.position
       })
       .from(EPISODE_DETAILS)
       .where(eq(EPISODE_DETAILS.episode_id, episodeId))
       .orderBy(asc(EPISODE_DETAILS.order));
 
-    // Fetch the next episode
+      console.log("episodeData.story_id", episodeData.story_id)
+
+    // Fetch the next episode within the same story
     const nextEpisode = await db
       .select({
         id: EPISODES.id,
@@ -176,11 +179,11 @@ export async function GET(request, { params }) {
       .from(EPISODES)
       .where(
         and(
-          eq(EPISODES.story_id, episodeData.story_id),
-          asc(EPISODES.episode_number)
+          eq(EPISODES.story_id, episodeData.story_id), // Ensure it's from the same story
+          gt(EPISODES.episode_number, episodeData.episode_number) // Find episodes with a higher number
         )
       )
-      .where(eq(EPISODES.episode_number, episodeData.episode_number + 1))
+      .orderBy(asc(EPISODES.episode_number)) // Get the immediate next episode
       .limit(1);
 
     const nextEpisodeData = nextEpisode.length > 0 ? nextEpisode[0] : null;
