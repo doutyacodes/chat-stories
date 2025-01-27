@@ -172,7 +172,7 @@ const CreateEpisode = () => {
     const updatedSlides = [...episodeData.slides];
     updatedSlides[slideIndex].content.storyLines[lineIndex][field] = value;
     setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-  };
+  }; /* ------- */
 
   const handleAddLine = (slideIndex) => {
     const updatedSlides = [...episodeData.slides];
@@ -209,51 +209,6 @@ const CreateEpisode = () => {
       setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
     }
   };
-  
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setError("");
-  
-  //   // Basic validation
-  //   if (!episodeData.name.trim()) {
-  //     setError("Episode name is required");
-  //     return;
-  //   }
-  
-  //   const formData = new FormData();
-  //   formData.append('storyId', storyId);
-  //   formData.append('name', episodeData.name);
-  //   formData.append('synopsis', episodeData.synopsis);
-  //   formData.append('slides', JSON.stringify(slides));
-  //   formData.append('characters', JSON.stringify(
-  //     slides
-  //       .filter(slide => slide.type === 'chat')
-  //       .flatMap(slide => slide.content.characters)
-  //   ));
-  
-  //   slides.forEach((slide, index) => {
-  //     if (slide.type === 'image' && slide.content.media.file) {
-  //       formData.append(`slides[${index}].file`, slide.content.media.file);
-  //     }
-  //     if (slide.type === 'chat' && slide.content.pdfFile) {
-  //       formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
-  //     }
-  //   });
-    
-  //   try {
-  //     const response = await fetch('/api/stories/story-slides', {
-  //       method: 'POST',
-  //       body: formData, // Send the FormData
-  //     });
-  
-  //     if (!response.ok) throw new Error('Failed to create episode');
-  
-  //     router.push('/your-stories');
-  //   } catch (error) {
-  //     setError("Failed to create episode. Please try again.");
-  //     console.error(error);
-  //   }
-  // };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -303,7 +258,7 @@ const CreateEpisode = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8 md:pt-28">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Create Episode</h1>
 

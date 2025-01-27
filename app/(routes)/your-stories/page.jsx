@@ -213,7 +213,7 @@ const YourStoriesPage = () => {
 
                         {/* New Edit Story Button */}
                         <button
-                          onClick={() => router.push(`/create-story?storyId=${story.id}`)}
+                          onClick={() => router.push(`/edit-episode/${story.id}`)}
                           className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-2xl 
                             flex items-center gap-2 text-xs me-4"
                         >
