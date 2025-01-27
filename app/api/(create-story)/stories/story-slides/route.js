@@ -8,12 +8,14 @@ import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES } f
 import { authenticate } from '@/lib/jwtMiddleware';
 import { eq, and, desc } from 'drizzle-orm';
 
+export const maxDuration = 300; // This function can run for a maximum of 5 seconds
+export const dynamic = 'force-dynamic';
+
 // Lazy load pdf-parse only when needed
 async function getPDFParser() {
     const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
     return pdfParse;
 }
-
 
 export async function POST(request) {
   const authResult = await authenticate(request, true);
