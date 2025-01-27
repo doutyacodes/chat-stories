@@ -122,40 +122,40 @@ export async function POST(request) {
     }
 
     // Process slides
-    for (let [position, slide] of slides.entries()) {
-        if (slide.type === 'image') {
-            // Look for file using the specific key
-            const imageFile = formData.get(`slides[${position}].file`);
-            if (imageFile) {
-            const mediaUrl = await uploadImage(imageFile);
-            // Rest of image processing remains the same
-            }
-        } else if (slide.type === 'chat' && slide.content.inputType === 'pdf') {
-          const pdfFile = formData.get(`slides[${position}].pdfFile`);
+    // for (let [position, slide] of slides.entries()) {
+    //     if (slide.type === 'image') {
+    //         // Look for file using the specific key
+    //         const imageFile = formData.get(`slides[${position}].file`);
+    //         if (imageFile) {
+    //         const mediaUrl = await uploadImage(imageFile);
+    //         // Rest of image processing remains the same
+    //         }
+    //     } else if (slide.type === 'chat' && slide.content.inputType === 'pdf') {
+    //       const pdfFile = formData.get(`slides[${position}].pdfFile`);
           
-          if (pdfFile) {
-            // Process characters first
-            const characters = JSON.parse(formData.get('characters') || '[]');
-            const characterIds = await processCharacters(storyId, characters);
+    //       if (pdfFile) {
+    //         // Process characters first
+    //         const characters = JSON.parse(formData.get('characters') || '[]');
+    //         const characterIds = await processCharacters(storyId, characters);
             
-            const pdfContent = await processPDFContent(
-              pdfFile, 
-              new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
-            );
+    //         const pdfContent = await processPDFContent(
+    //           pdfFile, 
+    //           new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
+    //         );
 
-            // Insert PDF chat messages
-            for (let [sequence, { characterId, message }] of pdfContent.entries()) {
-              await db.insert(CHAT_MESSAGES).values({
-                story_id: storyId,
-                episode_id: episodeId,
-                character_id: characterId,
-                message,
-                sequence
-              });
-            }
-          }
-        }
-    }
+    //         // Insert PDF chat messages
+    //         for (let [sequence, { characterId, message }] of pdfContent.entries()) {
+    //           await db.insert(CHAT_MESSAGES).values({
+    //             story_id: storyId,
+    //             episode_id: episodeId,
+    //             character_id: characterId,
+    //             message,
+    //             sequence
+    //           });
+    //         }
+    //       }
+    //     }
+    // }
 
     return NextResponse.json({ 
       message: 'Episode created successfully', 
@@ -242,33 +242,6 @@ if (!pdfData || !pdfData.text) {
     .filter(line => line !== null);
 }
 
-// PDF processing function
-// async function processPDFContent(file, characterMap) {
-//     const parsePDF = await import('pdf-parse');
-    
-//     const arrayBuffer = await file.arrayBuffer();
-//     const buffer = Buffer.from(arrayBuffer);
-    
-//     const pdfData = await parsePDF(buffer);
-    
-//     return pdfData.text
-//       .split('\n')
-//       .filter(line => line.trim())
-//       .map(line => {
-//         const colonIndex = line.indexOf(':');
-//         if (colonIndex === -1) return null;
-        
-//         const characterName = line.substring(0, colonIndex).trim();
-//         const message = line.substring(colonIndex + 1).trim();
-        
-//         const characterId = characterMap.get(characterName.toLowerCase());
-//         if (!characterId) return null;
-  
-//         return { characterId, message };
-//       })
-//       .filter(line => line !== null);
-//   }
-
 // Helper function to process characters
 async function processCharacters(storyId, characters) {
   const savedCharacters = [];
@@ -307,28 +280,3 @@ async function processCharacters(storyId, characters) {
 
   return savedCharacters;
 }
-
-// Helper function to upload image
-// async function uploadImage(filePath) {
-//   const sftp = new Client();
-//   const fileName = `${Date.now()}-${path.basename(filePath)}`;
-
-//   try {
-//     await sftp.connect({
-//       host: '68.178.163.247',
-//       port: 22,
-//       username: 'devusr',
-//       password: 'Wowfyuser#123',
-//     });
-
-//     const cPanelDirectory = '/home/devusr/public_html/testusr/images';
-//     await sftp.put(filePath, `${cPanelDirectory}/${fileName}`);
-
-//     return `${fileName}`;
-//   } catch (error) {
-//     console.error('Error during upload:', error);
-//     throw error;
-//   } finally {
-//     await sftp.end();
-//   }
-// }`
