@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo } from 'react-icons/fa';
+import { useState, useEffect, useRef } from 'react';
+import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
 import { useParams, useRouter } from 'next/navigation';
 
 const StorySlides = () => {
@@ -18,6 +18,17 @@ const StorySlides = () => {
   const [isMobileView, setIsMobileView] = useState(false);
   const [nextEpisode, setNextEpisode] = useState(null);
 
+  /* ----------------------- */
+  const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
+
+  const [quizData, setQuizData] = useState(null);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [showError, setShowError] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [currentAudio, setCurrentAudio] = useState(null); 
+  const audioRef = useRef(null);
+
+
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 
   console.log('slideContent',slideContent, 'currentSlideIndex', currentSlideIndex)
@@ -32,33 +43,70 @@ const StorySlides = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // useEffect(() => {
-  //   const fetchInitialSlides = async () => {
-  //     try {
-  //       const slidesResponse = await fetch(`/api/slides/${storyId}/${episodeId}`);
-  //       if (!slidesResponse.ok) throw new Error('Failed to fetch slides');
-        
-  //       const slidesData = await slidesResponse.json();
-  //       setSlides(slidesData.slides);
-  //       setStoryData(slidesData.story)
-  //       setLoading(false);
-  //     } catch (err) {
-  //       setError(err.message);
-  //       setLoading(false);
-  //     }
-  //   };
+  // 3. Update your audio useEffect to this:
+  useEffect(() => {
+    // Clean up previous audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    const audioUrl =
+    slideContent?.audio_url ||
+    chatMessages?.audio_url ||
+    quizData?.audio_url;
 
-  //   if (storyId && episodeId) {
-  //     fetchInitialSlides();
-  //   }
-  // }, [storyId, episodeId]);
+    if (audioUrl) {
+      // Create new audio instance
+      const newAudio = new Audio(`https://wowfy.in/testusr/audio/${audioUrl}`);
+      newAudio.volume = isMuted ? 0 : 1;
+      
+      // Store in ref for cleanup
+      audioRef.current = newAudio;
+
+      // Add play attempt after user interaction
+      const handleFirstInteraction = () => {
+        newAudio.play().catch(console.error);
+        document.removeEventListener('click', handleFirstInteraction);
+      };
+
+      // Try to play automatically if possible
+      newAudio.play().catch(() => {
+        // If autoplay blocked, wait for user interaction
+        console.log('Autoplay blocked, waiting for user interaction...');
+        document.addEventListener('click', handleFirstInteraction);
+      });
+
+      // Cleanup audio on unmount
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+      };
+    }
+  }, [slideContent, chatMessages, quizData]);
+
+  // 4. Update volume effect
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = isMuted ? 0 : 1;
+    }
+  }, [isMuted]);
 
 
   const fetchSlideContent = async (slideId, slideType) => {
     console.log("log4 slideType",slideId, slideType);
 
     try {
+
+      setSlideContent(null)
+      setChatMessages([])
+      setQuizData(null) /* clearning old  */
+
       setLoading(true);
+      setUserAnswer('');
+      setIsAnswerCorrect(false);
+      setShowError(false);
       
       if (slideType === 'image') {
         const contentResponse = await fetch(`/api/slide-content/${slideId}`);
@@ -70,6 +118,11 @@ const StorySlides = () => {
         if (!chatResponse.ok) throw new Error('Failed to fetch chat messages');
         const chatData = await chatResponse.json();
         setChatMessages(chatData);
+      } else if (slideType === 'quiz') {
+        const quizResponse = await fetch(`/api/quiz-content/${slideId}`);
+        if (!quizResponse.ok) throw new Error('Failed to fetch quiz content');
+        const quizData = await quizResponse.json();
+        setQuizData(quizData);
       }
       
       setLoading(false);
@@ -107,13 +160,49 @@ const StorySlides = () => {
     }
   }, [storyId, episodeId]);
 
-  const handleNextSlide = async () => {
-    const nextIndex = currentSlideIndex + 1;
-    console.log("log1");
+  
+  const handleQuizAnswer = (answer) => {
+    setUserAnswer(answer);
+    setShowError(false);
+    
+    if (quizData.quiz.answer_type === 'multiple_choice') {
+      const isCorrect = quizData.quiz.options.find(opt => 
+        opt.id === answer && opt.is_correct
+      );
+      setIsAnswerCorrect(!!isCorrect);
+    } else {
+      setIsAnswerCorrect(answer === quizData.quiz.correct_answer);
+    }
+  };
 
-    if (nextIndex < slides.length) {
-      console.log("log2");
-      
+  const validateAnswer = () => {
+    if (!userAnswer) {
+      setShowError(true);
+      return false;
+    }
+    
+    if (!isAnswerCorrect) {
+      setShowError(true);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleNextSlide = async () => {
+    // Stop current audio immediately
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    if (currentSlide.slide_type === 'quiz' && !validateAnswer()) {
+      return;
+    }
+
+    const nextIndex = currentSlideIndex + 1;
+    
+    if (nextIndex < slides.length) {      
       await fetchSlideContent(slides[nextIndex].id, slides[nextIndex].slide_type);
       setCurrentSlideIndex(nextIndex);
     } else {
@@ -132,6 +221,13 @@ const StorySlides = () => {
   };
 
   const handlePreviousSlide = async () => {
+
+    // Stop current audio immediately
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
     const prevIndex = currentSlideIndex - 1;
     
     if (prevIndex >= 0) {
@@ -165,41 +261,24 @@ const StorySlides = () => {
 
   const currentSlide = slides[currentSlideIndex];
 
-  const DetailView = () => {
-    
-    return (
-      <div className="flex-1 bg-gray-900 overflow-y-auto md:pt-28">
-        {/* Navbar */}
-        <div className="bg-gray-800 p-4 flex items-center justify-center">
-            <h2 className="text-2xl font-bold">{storyData.title}</h2>
-        </div>
-        <div className="relative h-full flex flex-col">
-          {/* Header */}
-          <div className="bg-gray-800 p-4">
-            <h1 className="text-xl font-bold text-center">{slideContent.title}</h1>
-            {/* <p className="text-sm text-gray-400 text-center">Episode {slideContent.episode_number}</p> */}
+    const DetailView = () => {
+      
+      return (
+        <div className="flex-1 bg-gray-900 overflow-y-auto md:pt-28">
+          {/* Navbar */}
+          <div className="bg-gray-800 p-4 flex items-center justify-center">
+              <h2 className="text-2xl font-bold">{storyData.title}</h2>
           </div>
+          <div className="relative h-full flex flex-col">
+            {/* Header */}
+            <div className="bg-gray-800 p-4">
+              <h1 className="text-xl font-bold text-center">{slideContent.title}</h1>
+              {/* <p className="text-sm text-gray-400 text-center">Episode {slideContent.episode_number}</p> */}
+            </div>
 
-          {/* Media Section */}
-          <div className="relative flex-1">
-            <div className="relative h-[70vh]">
+            {/* Media Section */}
+            <div className="relative flex-1">
               <div className="relative h-[70vh]">
-                <img
-                  src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
-                  alt="Episode detail"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
-                  <p className="text-white text-lg">{slideContent.description}</p>
-                </div>
-              </div>
-              {/* {detail.media_type === 'video' ? (
-                <video
-                  src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
-                  controls
-                  className="w-full h-full object-cover"
-                />
-              ) : (
                 <div className="relative h-[70vh]">
                   <img
                     src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
@@ -210,13 +289,30 @@ const StorySlides = () => {
                     <p className="text-white text-lg">{slideContent.description}</p>
                   </div>
                 </div>
-              )} */}
+                {/* {detail.media_type === 'video' ? (
+                  <video
+                    src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
+                    controls
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="relative h-[70vh]">
+                    <img
+                      src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
+                      alt="Episode detail"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
+                      <p className="text-white text-lg">{slideContent.description}</p>
+                    </div>
+                  </div>
+                )} */}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    );
-  };
+      );
+    };
 
     const ChatView = () => (
       <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
@@ -260,8 +356,89 @@ const StorySlides = () => {
       </div>
     );
 
+    const QuizView = () => {
+      const renderOptions = () => {
+        if (quizData.quiz.answer_type === 'multiple_choice') {
+          return quizData.quiz.options.map((option) => (
+            <button
+              key={option.id}
+              onClick={() => handleQuizAnswer(option.id)}
+              className={`p-3 text-left rounded-lg transition-colors ${
+                userAnswer === option.id
+                  ? option.is_correct
+                    ? 'bg-green-700 text-white'
+                    : 'bg-red-700 text-white'
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+            >
+              {option.option_text}
+            </button>
+          ));
+        }
+    
+        return (
+          <div className="w-full">
+            <input
+              type="text"
+              value={userAnswer}
+              onChange={(e) => handleQuizAnswer(e.target.value)}
+              className="w-full p-3 bg-gray-700 rounded-lg text-white"
+              placeholder="Type your answer here..."
+            />
+            {isAnswerCorrect && (
+              <p className="text-green-500 mt-2">Correct answer!</p>
+            )}
+          </div>
+        );
+      };
+    
+      return (
+        <div className="flex-1 bg-gray-900 flex flex-col items-center justify-center p-4 md:pt-28">
+          {/* Media Section */}
+          {quizData.media_url && (
+            <div className="w-full max-w-5xl mb-8">
+              <img
+                src={`${BASE_IMAGE_URL}${quizData.media_url}`}
+                alt="Quiz visual"
+                className="w-full aspect-[3/2] object-cover rounded-lg"
+              />
+            </div>
+          )}
+    
+          {/* Quiz Content */}
+          <div className="w-full max-w-2xl bg-gray-800 p-6 rounded-lg">
+            <h3 className="text-xl font-bold mb-4">{quizData.quiz.question}</h3>
+            <div className="grid gap-3">
+              {renderOptions()}
+            </div>
+            
+            {showError && (
+              <p className="text-red-500 mt-4">
+                {!userAnswer ? 'Please answer the question to continue!' : 'Incorrect answer, please try again!'}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+
   return (
     <div className={`h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row`}>
+      <div className="absolute top-4 pt-28 right-4 z-50">
+        <button 
+          onClick={() => setIsMuted(!isMuted)}
+          className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
+          aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+        >
+          {isMuted ? (
+            <FaVolumeMute className="text-white w-6 h-6" />
+          ) : (
+            <FaVolumeUp className="text-white w-6 h-6" />
+          )}
+        </button>
+      </div>
+
       {/* Sidebar */}
       {!isMobileView && (
         // Existing sidebar code
@@ -286,6 +463,10 @@ const StorySlides = () => {
             <ChatView />
           </>
         )}
+
+        {currentSlide.slide_type === 'quiz' && quizData && (
+          <QuizView />
+        )}
       </div>
 
       {/* Navigation */}
@@ -300,12 +481,23 @@ const StorySlides = () => {
           )}
 
           {!isLastSlide ? (
+            // <button 
+            //   onClick={handleNextSlide}
+            //   className="ml-auto bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+            // >
+            //   <FaArrowRight className="text-white" />
+            // </button>
             <button 
-              onClick={handleNextSlide}
-              className="ml-auto bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
-            >
-              <FaArrowRight className="text-white" />
-            </button>
+                onClick={handleNextSlide}
+                className={`ml-auto p-2 rounded-full transition-colors ${
+                  (currentSlide.slide_type === 'quiz' && !isAnswerCorrect)
+                    ? 'bg-gray-700 cursor-not-allowed'
+                    : 'bg-gray-700 hover:bg-gray-600'
+                }`}
+                disabled={currentSlide.slide_type === 'quiz' && !isAnswerCorrect}
+              >
+                <FaArrowRight className="text-white" />
+              </button>
           ) : nextEpisode ? (
             <button 
               onClick={handleNextEpisode}

@@ -11,6 +11,7 @@ const CreateEpisode = () => {
   const [characters, setCharacters] = useState([]);
   const [fetchedCharacters, setFetchedCharacters] = useState([]); // Store fetched characters
   const [slides, setSlides] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [ episodeData, setEpisodeData] = useState({
     name: "",
@@ -23,7 +24,8 @@ const CreateEpisode = () => {
 
   const slideTypes = [
     { value: "image", label: "Image Slide" },
-    { value: "chat", label: "Chat Slide" }
+    { value: "chat", label: "Chat Slide" },
+    { value: "quiz", label: "Quiz Slide" }
   ];
 
     useEffect(() => {
@@ -67,15 +69,27 @@ const CreateEpisode = () => {
     
         const newSlide = {
         type,
-        content:
-            type === "image"
-            ? { media: null, description: "" }
+        content: type === "quiz" ? {
+          media: null,
+          question: "",
+          options: [
+            { text: "", is_correct: false },
+            { text: "", is_correct: false }
+          ],
+          audio: null // Add audio field
+        } : type === "image"
+            ? { 
+              media: null, 
+              description: "",
+              audio: null // Add audio field
+              }
             : {
                 characters: mergedCharacters,
                 inputType: "manual",
                 storyLines: [{ character: "", line: "" }],
-                pdfFile: null
-                }
+                pdfFile: null,
+                audio: null 
+              }
         };
     
         setEpisodeData((prev) => ({
@@ -158,15 +172,6 @@ const CreateEpisode = () => {
       slides: updatedSlides,
     }));
   };
-  
-  const handleAddChatCharacter = (slideIndex) => {
-    const updatedSlides = [...episodeData.slides];
-    updatedSlides[slideIndex].content.characters.push({
-      name: "",
-      isSender: false
-    });
-    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
-  };
 
   const handleLineChange = (slideIndex, lineIndex, field, value) => {
     const updatedSlides = [...episodeData.slides];
@@ -191,6 +196,74 @@ const CreateEpisode = () => {
     }
   };
 
+  /* quizzz */
+  // Quiz Question Change
+  const handleQuizChange = (slideIndex, field, value) => {
+    const updatedSlides = [...episodeData.slides];
+    updatedSlides[slideIndex].content[field] = value;
+    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+  };
+
+  // Option Change Handler
+  const handleOptionChange = (slideIndex, optionIndex, field, value) => {
+    const updatedSlides = [...episodeData.slides];
+    updatedSlides[slideIndex].content.options[optionIndex][field] = value;
+    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+  };
+
+  // Toggle Correct Answer
+  const toggleCorrectAnswer = (slideIndex, optionIndex) => {
+    const updatedSlides = [...episodeData.slides];
+    updatedSlides[slideIndex].content.options = updatedSlides[slideIndex].content.options.map(
+      (opt, idx) => ({
+        ...opt,
+        is_correct: idx === optionIndex ? !opt.is_correct : false
+      })
+    );
+    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+  };
+
+  // Add Option
+  const handleAddOption = (slideIndex) => {
+    const updatedSlides = [...episodeData.slides];
+    updatedSlides[slideIndex].content.options.push({ text: "", is_correct: false });
+    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+  };
+
+  // Add these new handler functions
+  const handleAudioUpload = (slideIndex, file) => {
+    if (file) {
+      if (!file.type.startsWith('audio/')) {
+        setError('Please upload an audio file (MP3, WAV, etc.)');
+        return;
+      }
+      
+      const updatedSlides = [...episodeData.slides];
+      updatedSlides[slideIndex].content.audio = {
+        file: file,
+        name: file.name
+      };
+      setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+    }
+  };
+
+  const handleRemoveAudio = (slideIndex) => {
+    const updatedSlides = [...episodeData.slides];
+    updatedSlides[slideIndex].content.audio = null;
+    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+  };
+
+  // Remove Option
+  const handleRemoveOption = (slideIndex, optionIndex) => {
+    const updatedSlides = [...episodeData.slides];
+    if (updatedSlides[slideIndex].content.options.length > 2) {
+      updatedSlides[slideIndex].content.options.splice(optionIndex, 1);
+      setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+    }
+  };
+
+  /* quizzzz end */
+
   const handlePDFUpload = (slideIndex, event) => {
     const file = event.target.files[0];
     if (file) {
@@ -213,7 +286,8 @@ const CreateEpisode = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-  
+    setIsSubmitting(true); // Add this
+
     // Basic validation
     if (!episodeData.name.trim()) {
       setError("Episode name is required");
@@ -234,11 +308,33 @@ const CreateEpisode = () => {
     ));
   
     episodeData.slides.forEach((slide, index) => {
+
+      if (slide.content.audio?.file) { // Check for .file property
+        formData.append(`slides[${index}].audio`, slide.content.audio.file); // Append the File object
+      }
       if (slide.type === 'image' && slide.content.media?.file) {
+        formData.append(`slides[${index}].file`, slide.content.media.file);
+      }
+      if (slide.type === 'quiz' && slide.content.media?.file) {
         formData.append(`slides[${index}].file`, slide.content.media.file);
       }
       if (slide.type === 'chat' && slide.content.pdfFile) {
         formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
+      }
+      
+      if (slide.type === 'quiz') {
+        if (!slide.content.question.trim()) {
+          setError('Quiz question is required');
+          throw new Error('Validation failed');
+        }
+        if (slide.content.options.some(opt => !opt.text.trim())) {
+          setError('All quiz options must have text');
+          throw new Error('Validation failed');
+        }
+        if (!slide.content.options.some(opt => opt.is_correct)) {
+          setError('Please select a correct answer for quiz');
+          throw new Error('Validation failed');
+        }
       }
     });
     
@@ -254,6 +350,8 @@ const CreateEpisode = () => {
     } catch (error) {
       setError("Failed to create episode. Please try again.");
       console.error(error);
+    } finally {
+      setIsSubmitting(false); // Add this
     }
   };
 
@@ -321,14 +419,47 @@ const CreateEpisode = () => {
                     </div>
                     <div className="bg-gray-700 p-4 rounded-lg mb-4">
                         <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-medium capitalize">{slide.type} Slide</h3>
-                        <button
-                            type="button"
-                            onClick={() => handleRemoveSlide(index)}
-                            className="text-red-400 hover:text-red-300"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
+                          <h3 className="font-medium capitalize">{slide.type} Slide</h3>
+                          <button
+                              type="button"
+                              onClick={() => handleRemoveSlide(index)}
+                              className="text-red-400 hover:text-red-300"
+                          >
+                              <X className="h-5 w-5" />
+                          </button>
+                        </div>
+
+                        <div className="mb-6">
+                          <label className="block text-sm font-medium mb-2">Audio (Optional)</label>
+                          <div className="flex items-center gap-4">
+                            <input
+                              type="file"
+                              accept="audio/*"
+                              onChange={(e) => handleAudioUpload(index, e.target.files[0])}
+                              className="hidden"
+                              id={`audio-${index}`}
+                            />
+                            <label 
+                              htmlFor={`audio-${index}`}
+                              className="flex items-center gap-2 px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500 cursor-pointer"
+                            >
+                              <Upload className="h-5 w-5" />
+                              <span>Upload Audio</span>
+                            </label>
+                            
+                            {slide.content.audio && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm">{slide.content.audio.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAudio(index)}
+                                  className="text-red-400 hover:text-red-300"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {slide.type === 'image' && (
@@ -348,7 +479,7 @@ const CreateEpisode = () => {
                                 className="w-full p-3 rounded-lg bg-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-500 transition"
                                 >
                                 <Upload className="mr-2 h-5 w-5" />
-                                {slide.content.media ? 'Change Image' : 'Upload Image'}
+                                {slide.content.media ? 'Change Image' : 'Upload Image/Gif'}
                                 </label>
                             </div>
                             {slide.content.media && (
@@ -531,17 +662,116 @@ const CreateEpisode = () => {
                             </div>
                         </div>
                         )}
+
+                        {slide.type === 'quiz' && (
+                          <div className="space-y-4">
+                            {/* Image Upload (same as image slide) */}
+                            <div className="flex items-center gap-4">
+                              {/* Reuse image upload code from image slide */}
+                                <div className="flex-1">
+                                  <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleImageUpload(index, e.target.files[0])}
+                                  className="hidden"
+                                  id={`imageUpload-${index}`}
+                                  />
+                                  <label 
+                                  htmlFor={`imageUpload-${index}`} 
+                                  className="w-full p-3 rounded-lg bg-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-500 transition"
+                                  >
+                                  <Upload className="mr-2 h-5 w-5" />
+                                  {slide.content.media ? 'Change Image' : 'Upload Image'}
+                                  </label>
+                                </div>
+                                  {slide.content.media && (
+                                  <div className="w-32 h-32">
+                                      <img 
+                                          src={slide.content.media.preview} 
+                                          alt="Preview" 
+                                          className="w-full h-full object-cover rounded-lg" 
+                                      />
+                                      </div>
+                                  )}
+                            </div>
+
+                            {/* Question Input */}
+                            <input
+                              type="text"
+                              value={slide.content.question}
+                              onChange={(e) => handleQuizChange(index, 'question', e.target.value)}
+                              placeholder="Enter question"
+                              className="w-full p-3 rounded-lg bg-gray-600"
+                            />
+
+                            {/* Options */}
+                            {slide.content.options.map((option, optIndex) => (
+                              <div key={optIndex} className="flex items-center gap-4 bg-gray-600 p-3 rounded-lg">
+                                <input
+                                  type="text"
+                                  value={option.text}
+                                  onChange={(e) => handleOptionChange(index, optIndex, 'text', e.target.value)}
+                                  placeholder={`Option ${optIndex + 1}`}
+                                  className="flex-1 p-2 rounded-lg bg-gray-500"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => toggleCorrectAnswer(index, optIndex)}
+                                  className={`px-4 py-2 rounded-lg ${
+                                    option.is_correct ? 'bg-green-600' : 'bg-gray-500'
+                                  }`}
+                                >
+                                  Correct
+                                </button>
+                                {slide.content.options.length > 2 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveOption(index, optIndex)}
+                                    className="text-red-500 hover:text-red-400"
+                                  >
+                                    <X className="h-5 w-5" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+
+                            {slide.content.options.length < 4 && (
+                              <button
+                                type="button"
+                                onClick={() => handleAddOption(index)}
+                                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+                              >
+                                Add Option
+                              </button>
+                            )}
+                          </div>
+                        )}
+
                     </div>
                 </React.Fragment>
             ))}
           </div>
 
           {/* Submit Button */}
-          <button
+          {/* <button
             type="submit"
             className="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold text-lg transition duration-200"
           >
             Create Episode
+          </button> */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold text-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Submitting...
+              </div>
+            ) : (
+              'Create Episode'
+            )}
           </button>
         </form>
       </div>

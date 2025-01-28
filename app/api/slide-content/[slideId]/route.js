@@ -12,6 +12,7 @@ export async function GET(request, { params }) {
         id: SLIDE_CONTENT.id,
         media_type: SLIDE_CONTENT.media_type,
         media_url: SLIDE_CONTENT.media_url,
+        audio_url: SLIDE_CONTENT.audio_url,
         description: SLIDE_CONTENT.description
       })
       .from(SLIDE_CONTENT)

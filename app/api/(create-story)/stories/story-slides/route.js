@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import Client from 'ssh2-sftp-client';
 import { db } from '@/utils';
-import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES } from '@/utils/schema';
+import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, QUIZ_OPTIONS, QUIZZES } from '@/utils/schema';
 import { authenticate } from '@/lib/jwtMiddleware';
 import { eq, and, desc } from 'drizzle-orm';
 
@@ -32,6 +32,22 @@ export async function POST(request) {
     const synopsis = formData.get('synopsis');
     const slides = JSON.parse(formData.get('slides') || '[]');
 
+    // Validate quiz slides
+    for (const slide of slides) {
+      if (slide.type === 'quiz') {
+        if (!slide.content.question?.trim()) {
+          throw new Error('Quiz question is required');
+        }
+        if (slide.content.options.filter(opt => opt.is_correct).length !== 1) {
+          throw new Error('Exactly one correct answer must be selected for quiz');
+        }
+        if (slide.content.options.some(opt => !opt.text.trim())) {
+          throw new Error('All quiz options must have text');
+        }
+      }
+    }
+  
+
     // Fetch the latest episode number
     const lastEpisode = await db
       .select({ episode_number: EPISODES.episode_number })
@@ -52,6 +68,14 @@ export async function POST(request) {
 
     const episodeId = episodeResult[0].insertId;
 
+      const audioFiles = [];
+      slides.forEach((_, index) => {
+        const audioFile = formData.get(`slides[${index}].audio`);
+        if (audioFile) {
+          audioFiles.push({ position: index, file: audioFile });
+        }
+      });
+
     // Process slides
     for (let [position, slide] of slides.entries()) {
       // Insert slide
@@ -62,6 +86,14 @@ export async function POST(request) {
         position
       });
       const slideId = slideResult[0].insertId;
+
+      // Process audio for ALL slide types
+      const audioFile = formData.get(`slides[${position}].audio`);
+      let audioUrl = null;
+      
+      if (audioFile) {
+        audioUrl = await uploadAudio(audioFile);
+      }
 
       // Handle slide content based on type
       if (slide.type === 'image') {
@@ -76,6 +108,7 @@ export async function POST(request) {
           slide_id: slideId,
           media_type: 'image',
           media_url: mediaUrl,
+          audio_url: audioUrl,
           description: slide.content.description || ''
         });
       } else if (slide.type === 'chat') {
@@ -118,44 +151,52 @@ export async function POST(request) {
             }
           }
         }
+
+        await db.insert(SLIDE_CONTENT).values({
+          slide_id: slideId,
+          audio_url: audioUrl, // Add audio URL
+          // ... other fields ...
+        });
+      } else if (slide.type === 'quiz') {
+        // Upload image if present
+        let mediaUrl = null;
+        const imageFile = formData.get(`slides[${position}].file`);
+        
+        if (imageFile) {
+          mediaUrl = await uploadImage(imageFile);
+        }
+      
+        // Create quiz entry
+        const correctAnswer = slide.content.options.find(opt => opt.is_correct)?.text || '';
+        const quizResult = await db.insert(QUIZZES).values({
+          slide_id: slideId,
+          question: slide.content.question,
+          answer_type: 'multiple_choice',
+          correct_answer: correctAnswer
+        });
+        const quizId = quizResult[0].insertId;
+
+        // Insert slide content
+        await db.insert(SLIDE_CONTENT).values({
+          slide_id: slideId,
+          media_type: 'image',
+          media_url: mediaUrl,
+          audio_url: audioUrl, 
+          description: slide.content.description || '',
+          chat_story_id: storyId,
+          quiz_id: quizId
+        });
+        
+        // Insert quiz options
+        for (const option of slide.content.options) {
+          await db.insert(QUIZ_OPTIONS).values({
+            quiz_id: quizId,
+            option_text: option.text,
+            is_correct: option.is_correct
+          });
+        }
       }
     }
-
-    // Process slides
-    // for (let [position, slide] of slides.entries()) {
-    //     if (slide.type === 'image') {
-    //         // Look for file using the specific key
-    //         const imageFile = formData.get(`slides[${position}].file`);
-    //         if (imageFile) {
-    //         const mediaUrl = await uploadImage(imageFile);
-    //         // Rest of image processing remains the same
-    //         }
-    //     } else if (slide.type === 'chat' && slide.content.inputType === 'pdf') {
-    //       const pdfFile = formData.get(`slides[${position}].pdfFile`);
-          
-    //       if (pdfFile) {
-    //         // Process characters first
-    //         const characters = JSON.parse(formData.get('characters') || '[]');
-    //         const characterIds = await processCharacters(storyId, characters);
-            
-    //         const pdfContent = await processPDFContent(
-    //           pdfFile, 
-    //           new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
-    //         );
-
-    //         // Insert PDF chat messages
-    //         for (let [sequence, { characterId, message }] of pdfContent.entries()) {
-    //           await db.insert(CHAT_MESSAGES).values({
-    //             story_id: storyId,
-    //             episode_id: episodeId,
-    //             character_id: characterId,
-    //             message,
-    //             sequence
-    //           });
-    //         }
-    //       }
-    //     }
-    // }
 
     return NextResponse.json({ 
       message: 'Episode created successfully', 
@@ -279,4 +320,35 @@ async function processCharacters(storyId, characters) {
   }
 
   return savedCharacters;
+}
+
+async function uploadAudio(file) {
+  const sftp = new Client();
+  const fileName = `${Date.now()}-${file.name}`;
+
+  try {
+    await sftp.connect({
+      host: '68.178.163.247',
+      port: 22,
+      username: 'devusr',
+      password: 'Wowfyuser#123',
+    });
+
+    // Convert File to Buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const localFilePath = path.join(os.tmpdir(), fileName);
+    fs.writeFileSync(localFilePath, buffer);
+
+    const cPanelDirectory = '/home/devusr/public_html/testusr/audio';
+    await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
+
+    return `${fileName}`;
+  } catch (error) {
+    console.error('Error during audio upload:', error);
+    throw error;
+  } finally {
+    await sftp.end();
+  }
 }

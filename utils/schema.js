@@ -180,6 +180,7 @@ export const SLIDE_CONTENT = mysqlTable("slide_content", {
   slide_id: int("slide_id").notNull().references(() => SLIDES.id),
   media_type: mysqlEnum("media_type", ["image", "video"]).notNull(), // For slides with images/videos
   media_url: varchar("media_url", { length: 255 }),
+  audio_url: varchar("audio_url", { length: 255 }), // New field for audio URLs
   description: text("description"),
   chat_story_id: int("chat_story_id").references(() => CHAT_MESSAGES.id), // For slides showing chat messages
   quiz_id: int("quiz_id").references(() => QUIZZES.id), // For slides gated by a quiz
@@ -197,13 +198,14 @@ export const QUIZZES = mysqlTable("quizzes", {
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
 
-// export const QUIZ_OPTIONS = mysqlTable("quiz_options", {
-//   id: int("id").primaryKey().autoincrement(),
-//   quiz_id: int("quiz_id").notNull().references(() => QUIZZES.id),
-//   option_text: text("option_text").notNull(),
-//   is_correct: boolean("is_correct").default(false),
-//   created_at: timestamp("created_at").defaultNow(),
-// });
+
+export const QUIZ_OPTIONS = mysqlTable("quiz_options", {
+  id: int("id").primaryKey().autoincrement(),
+  quiz_id: int("quiz_id").notNull().references(() => QUIZZES.id),
+  option_text: text("option_text").notNull(),
+  is_correct: boolean("is_correct").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+});
 
 // export const EPISODE_BRANCHES = mysqlTable("episode_branches", {
 //   id: int("id").primaryKey().autoincrement(),
