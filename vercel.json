@@ -2,8 +2,7 @@
   "functions": {
     "app/api/**/*.js": {
       "maxDuration": 300,
-      "memory": 3000,
-      "maxBodySize": "100mb"
+      "memory": 3000
     }
   }
 }
