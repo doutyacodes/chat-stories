@@ -5,13 +5,8 @@ const withNextIntl = createNextIntlPlugin("./app/i18n/request.js");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '100mb', // Increase body size limit for Server Actions
-    },
-  },
   images: {
-    remotePatterns: [ 
+    remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.pexels.com',
@@ -45,3 +40,5 @@ const nextConfig = {
 };
 
 export default withNextIntl(nextConfig);
+
+
