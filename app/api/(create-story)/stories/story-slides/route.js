@@ -11,15 +11,15 @@ import { eq, and, desc } from 'drizzle-orm';
 export const maxDuration = 300; // This function can run for a maximum of 5 seconds
 export const dynamic = 'force-dynamic';
 
-// export const config = {
-//   api: {
-//     bodyParser: {
-//       sizeLimit: '100mb' // Next.js-specific limit
-//     }
-//   }
-// };
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb' // Next.js-specific limit
+    }
+  }
+};
 
-export const maxBodyLength = 1024 * 1024 * 100; // 100MB
+// export const maxBodyLength = 1024 * 1024 * 100; // 100MB
 
 
 
