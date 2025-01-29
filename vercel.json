@@ -1,9 +1,0 @@
-{
-  "functions": {
-    "app/api/**/*.js": {
-      "maxDuration": 300,
-      "bodySizeLimit": "100mb",
-      "memory": 3000      
-    }
-  }
-}
