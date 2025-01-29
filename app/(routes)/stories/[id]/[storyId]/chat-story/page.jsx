@@ -11,6 +11,7 @@ const StorySlides = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [slideContent, setSlideContent] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
+  const [chatAudio, setChatAudio] = useState(null);
   const [storyData, setStoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,7 +52,7 @@ const StorySlides = () => {
     }
     const audioUrl =
     slideContent?.audio_url ||
-    chatMessages?.audio_url ||
+    chatAudio ||
     quizData?.audio_url;
 
     if (audioUrl) {
@@ -117,7 +118,8 @@ const StorySlides = () => {
         const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}`);
         if (!chatResponse.ok) throw new Error('Failed to fetch chat messages');
         const chatData = await chatResponse.json();
-        setChatMessages(chatData);
+        setChatMessages(chatData.chatMessages);
+        setChatAudio(chatData.audio_url);
       } else if (slideType === 'quiz') {
         const quizResponse = await fetch(`/api/quiz-content/${slideId}`);
         if (!quizResponse.ok) throw new Error('Failed to fetch quiz content');

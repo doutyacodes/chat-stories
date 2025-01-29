@@ -52,7 +52,10 @@ export async function GET(request, { params }) {
       if (type === 'trending') {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        query = query.where(gte(STORIES.created_at, sevenDaysAgo));
+        query = query.where(and(
+          gte(STORIES.created_at, sevenDaysAgo),
+          eq(STORIES.is_published, true)
+        ))
         query = query.orderBy(sql`views_count DESC`);
       } else {
         // For 'latest' type with different sort options
