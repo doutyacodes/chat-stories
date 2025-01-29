@@ -11,17 +11,22 @@ import { eq, and, desc } from 'drizzle-orm';
 export const maxDuration = 300; // This function can run for a maximum of 5 seconds
 export const dynamic = 'force-dynamic';
 
+// export const config = {
+//   api: {
+//     bodyParser: {
+//       sizeLimit: '100mb' // Next.js-specific limit
+//     }
+//   }
+// };
+
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '100mb' // Next.js-specific limit
-    }
-  }
+      sizeLimit: '100mb'
+    },
+    responseLimit: false,
+  },
 };
-
-// export const maxBodyLength = 1024 * 1024 * 100; // 100MB
-
-
 
 // Lazy load pdf-parse only when needed
 async function getPDFParser() {
