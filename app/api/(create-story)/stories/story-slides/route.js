@@ -11,6 +11,15 @@ import { eq, and, desc } from 'drizzle-orm';
 export const maxDuration = 300; // This function can run for a maximum of 5 seconds
 export const dynamic = 'force-dynamic';
 
+// In your API route file (e.g., pages/api/upload.js)
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb' // Must match vercel.json's "bodySizeLimit"
+    }
+  }
+};
+
 // Lazy load pdf-parse only when needed
 async function getPDFParser() {
     const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
