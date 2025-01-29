@@ -19,14 +19,16 @@ export const dynamic = 'force-dynamic';
 //   }
 // };
 
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb'
-    },
-    responseLimit: false,
-  },
-};
+export const maxBodyLength = 1024 * 1024 * 100; // 100MB
+
+// export const config = {
+//   api: {
+//     bodyParser: {
+//       sizeLimit: '100mb'
+//     },
+//     responseLimit: false,
+//   },
+// };
 
 // Lazy load pdf-parse only when needed
 async function getPDFParser() {
