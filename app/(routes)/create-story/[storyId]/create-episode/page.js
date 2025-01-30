@@ -121,16 +121,86 @@ const CreateEpisode = () => {
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
 
-  const handleImageUpload = (index, file) => {
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleImageSlideChange(index, 'media', {
-          file: file,
-          preview: reader.result
-        });
+  const validateImage = (file, type) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        const width = img.width;
+        const height = img.height;
+        
+        if (type === 'image') {
+          // 16:9 aspect ratio validation
+          const aspectRatio = width / height;
+          const expectedRatio = 16 / 9;
+          const tolerance = 0.1; // 10% tolerance
+          
+          if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+            reject('Image must have a 16:9 aspect ratio (recommended: 1920x1080px)');
+          } else if (width < 1280 || height < 720) {
+            reject('Image resolution is too low. Recommended: 1920x1080px');
+          }
+        } else if (type === 'quiz') {
+          // 3:2 aspect ratio validation
+          const aspectRatio = width / height;
+          const expectedRatio = 3 / 2;
+          const tolerance = 0.1; // 10% tolerance
+          
+          if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+            reject('Image must have a 3:2 aspect ratio (recommended: 1200x800px)');
+          } else if (width < 900 || height < 600) {
+            reject('Image resolution is too low. Recommended: 1200x800px');
+          }
+        }
+        
+        resolve(true);
       };
-      reader.readAsDataURL(file);
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        reject('Error loading image');
+      };
+    });
+  };
+
+  // const handleImageUpload = (index, file) => {
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       handleImageSlideChange(index, 'media', {
+  //         file: file,
+  //         preview: reader.result
+  //       });
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
+
+  const handleImageUpload = async (index, file) => {
+    if (file) {
+      try {
+        // Get the slide type for validation
+        const slideType = episodeData.slides[index].type;
+        
+        // Validate the image
+        await validateImage(file, slideType);
+        
+        // If validation passes, proceed with upload
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          handleImageSlideChange(index, 'media', {
+            file: file,
+            preview: reader.result
+          });
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        setError(error);
+        // Clear the error after 5 seconds
+        setTimeout(() => setError(''), 5000);
+      }
     }
   };
 
@@ -282,7 +352,7 @@ const CreateEpisode = () => {
       setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -475,11 +545,14 @@ const CreateEpisode = () => {
                                 id={`imageUpload-${index}`}
                                 />
                                 <label 
-                                htmlFor={`imageUpload-${index}`} 
-                                className="w-full p-3 rounded-lg bg-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-500 transition"
-                                >
-                                <Upload className="mr-2 h-5 w-5" />
-                                {slide.content.media ? 'Change Image' : 'Upload Image/Gif'}
+                                  htmlFor={`imageUpload-${index}`} 
+                                  className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
+                                  >
+                                  <Upload className="mr-2 h-5 w-5" />
+                                  <span>{slide.content.media ? 'Change Image' : 'Upload Image/Gif'}</span>
+                                  <span className="text-xs text-gray-400 mt-1">
+                                    16:9 aspect ratio required (recommended: 1920x1080px)
+                                  </span>                                  
                                 </label>
                             </div>
                             {slide.content.media && (
@@ -676,12 +749,23 @@ const CreateEpisode = () => {
                                   className="hidden"
                                   id={`imageUpload-${index}`}
                                   />
-                                  <label 
+                                  {/* <label 
                                   htmlFor={`imageUpload-${index}`} 
                                   className="w-full p-3 rounded-lg bg-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-500 transition"
                                   >
                                   <Upload className="mr-2 h-5 w-5" />
                                   {slide.content.media ? 'Change Image' : 'Upload Image'}
+                                  </label> */}
+
+                                  <label 
+                                    htmlFor={`imageUpload-${index}`} 
+                                    className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
+                                  >
+                                    <Upload className="mr-2 h-5 w-5" />
+                                    <span>{slide.content.media ? 'Change Image' : 'Upload Image'}</span>
+                                    <span className="text-xs text-gray-400 mt-1">
+                                      3:2 aspect ratio required (recommended: 1200x800px)
+                                    </span>
                                   </label>
                                 </div>
                                   {slide.content.media && (
@@ -752,13 +836,6 @@ const CreateEpisode = () => {
             ))}
           </div>
 
-          {/* Submit Button */}
-          {/* <button
-            type="submit"
-            className="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold text-lg transition duration-200"
-          >
-            Create Episode
-          </button> */}
           <button
             type="submit"
             disabled={isSubmitting}

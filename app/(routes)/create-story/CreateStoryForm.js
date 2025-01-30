@@ -30,7 +30,7 @@ const CreateStoryBasics = () => {
     }
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
@@ -38,16 +38,42 @@ const CreateStoryBasics = () => {
         return;
       }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setStoryData(prev => ({
-          ...prev,
-          coverImage: file,
-          coverImagePreview: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        await validateImageAspectRatio(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setStoryData(prev => ({
+            ...prev,
+            coverImage: file,
+            coverImagePreview: reader.result
+          }));
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        setError(error);
+        return;
+      }
     }
+  };
+
+  const validateImageAspectRatio = (file) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        const aspectRatio = img.width / img.height;
+        const targetRatio = 16 / 9;
+        const tolerance = 0.1; // Allow 10% deviation from target ratio
+        
+        if (Math.abs(aspectRatio - targetRatio) > tolerance) {
+          reject("Image must have a 16:9 aspect ratio (e.g., 1920x1080px)");
+        } else {
+          resolve();
+        }
+      };
+      img.onerror = () => reject("Failed to load image");
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -154,6 +180,9 @@ const CreateStoryBasics = () => {
           {/* Cover Image Upload */}
           <div>
             <label className="block text-sm font-medium mb-2">Cover Image</label>
+            <p className="text-sm text-gray-400 mb-2">
+              Image must be in 16:9 aspect ratio (Recommended: 1920 x 1080px)
+            </p>
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <input
