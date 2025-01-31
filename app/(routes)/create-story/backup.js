@@ -6,14 +6,12 @@ const CreateStoryBasics = () => {
   const router = useRouter();
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
   const [storyData, setStoryData] = useState({
     name: "",
     synopsis: "",
     category: "",
     coverImage: null,
-    coverImagePreview: null,
-    uploadedFileName: null
+    coverImagePreview: null
   });
 
   useEffect(() => {
@@ -32,34 +30,10 @@ const CreateStoryBasics = () => {
     }
   };
 
-  const uploadImageToCPanel = async (file) => {
-    const formData = new FormData();
-    formData.append('coverImage', file);
-    
-    try {
-      const response = await fetch('https://wowfy.in/testusr/upload.php', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-      
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
-      }
-      
-      return data.filePath; // This should be the filename returned from PHP
-    } catch (error) {
-      throw new Error(`Image upload failed: ${error.message}`);
-    }
-  };
-
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
+
       try {
         await validateImageAspectRatio(file);
         const reader = new FileReader();
@@ -86,7 +60,7 @@ const CreateStoryBasics = () => {
         URL.revokeObjectURL(img.src);
         const aspectRatio = img.width / img.height;
         const targetRatio = 16 / 9;
-        const tolerance = 0.1;
+        const tolerance = 0.1; // Allow 10% deviation from target ratio
         
         if (Math.abs(aspectRatio - targetRatio) > tolerance) {
           reject("Image must have a 16:9 aspect ratio (e.g., 1920x1080px)");
@@ -101,42 +75,49 @@ const CreateStoryBasics = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setIsUploading(true);
+
+    // Validation
+    if (!storyData.name.trim()) {
+      setError("Story name is required");
+      return;
+    }
+    if (!storyData.synopsis.trim()) {
+      setError("Story synopsis is required");
+      return;
+    }
+    if (!storyData.category) {
+      setError("Please select a category");
+      return;
+    }
+    if (!storyData.coverImage) {
+      setError("Please upload a cover image");
+      return;
+    }
 
     try {
-      // Validation
-      if (!storyData.name.trim()) throw new Error("Story name is required");
-      if (!storyData.synopsis.trim()) throw new Error("Story synopsis is required");
-      if (!storyData.category) throw new Error("Please select a category");
-      if (!storyData.coverImage) throw new Error("Please upload a cover image");
+      const formData = new FormData();
+      formData.append('name', storyData.name);
+      formData.append('synopsis', storyData.synopsis);
+      formData.append('category', storyData.category);
+      formData.append('coverImage', storyData.coverImage);
 
-      // First upload the image to cPanel
-      const uploadedFileName = await uploadImageToCPanel(storyData.coverImage);
-
-      // Then send the story data with the filename to your backend
       const response = await fetch('/api/stories', {
-        method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          name: storyData.name,
-          synopsis: storyData.synopsis,
-          category: storyData.category,
-          coverImagePath: uploadedFileName // Send only the filename
-        })
+        method: 'POST',
+        body: formData
       });
 
       if (!response.ok) throw new Error('Failed to create story');
 
       const responseData = await response.json();
+      
+      // Navigate to episode creation with new story ID
       router.push(`/create-story/${responseData.storyId}/create-episode`);
     } catch (error) {
-      setError(error.message);
+      setError("Failed to create story. Please try again.");
       console.error(error);
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -206,11 +187,10 @@ const CreateStoryBasics = () => {
                   onChange={handleImageUpload}
                   className="hidden"
                   id="coverImageUpload"
-                  disabled={isUploading}
                 />
                 <label 
                   htmlFor="coverImageUpload" 
-                  className={`w-full p-3 rounded-lg bg-gray-800 flex items-center justify-center cursor-pointer hover:bg-gray-700 transition ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className="w-full p-3 rounded-lg bg-gray-800 flex items-center justify-center cursor-pointer hover:bg-gray-700 transition"
                 >
                   <Upload className="mr-2" /> Upload Cover Image
                 </label>
@@ -230,7 +210,6 @@ const CreateStoryBasics = () => {
                       coverImagePreview: null 
                     }))}
                     className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                    disabled={isUploading}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -242,10 +221,9 @@ const CreateStoryBasics = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isUploading}
-            className={`w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold text-lg transition ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold text-lg transition"
           >
-            {isUploading ? 'Creating Story...' : 'Create Story'}
+            Create Story
           </button>
         </form>
       </div>
