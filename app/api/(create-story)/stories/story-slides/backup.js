@@ -50,6 +50,7 @@ export async function POST(request) {
       }
     }
   
+
     // Fetch the latest episode number
     const lastEpisode = await db
       .select({ episode_number: EPISODES.episode_number })
@@ -70,9 +71,16 @@ export async function POST(request) {
 
     const episodeId = episodeResult[0].insertId;
 
+      const audioFiles = [];
+      slides.forEach((_, index) => {
+        const audioFile = formData.get(`slides[${index}].audio`);
+        if (audioFile) {
+          audioFiles.push({ position: index, file: audioFile });
+        }
+      });
+
     // Process slides
     for (let [position, slide] of slides.entries()) {
-      console.log("slide", slide)
       // Insert slide
       const slideResult = await db.insert(SLIDES).values({
         story_id: storyId,
@@ -82,13 +90,28 @@ export async function POST(request) {
       });
       const slideId = slideResult[0].insertId;
 
+      // Process audio for ALL slide types
+      const audioFile = formData.get(`slides[${position}].audio`);
+      let audioUrl = null;
+      
+      if (audioFile) {
+        audioUrl = await uploadAudio(audioFile);
+      }
+
       // Handle slide content based on type
       if (slide.type === 'image') {
+        const imageFile = formData.get(`slides[${position}].file`);
+        let mediaUrl = null;
+
+        if (imageFile) {
+          mediaUrl = await uploadImage(imageFile);
+        }
+
         await db.insert(SLIDE_CONTENT).values({
           slide_id: slideId,
           media_type: 'image',
-          media_url: slide.content.media?.name || null, // Use the filename from cPanel upload
-          audio_url: slide.content.audio?.name || null, // Use the audio filename from cPanel upload
+          media_url: mediaUrl,
+          audio_url: audioUrl,
           description: slide.content.description || ''
         });
       } else if (slide.type === 'chat') {
@@ -134,9 +157,18 @@ export async function POST(request) {
 
         await db.insert(SLIDE_CONTENT).values({
           slide_id: slideId,
-          audio_url: slide.content.audio?.name || null, // Use the audio filename
+          audio_url: audioUrl, // Add audio URL
+          // ... other fields ...
         });
       } else if (slide.type === 'quiz') {
+        // Upload image if present
+        let mediaUrl = null;
+        const imageFile = formData.get(`slides[${position}].file`);
+        
+        if (imageFile) {
+          mediaUrl = await uploadImage(imageFile);
+        }
+      
         // Create quiz entry
         const correctAnswer = slide.content.options.find(opt => opt.is_correct)?.text || '';
         const quizResult = await db.insert(QUIZZES).values({
@@ -151,8 +183,8 @@ export async function POST(request) {
         await db.insert(SLIDE_CONTENT).values({
           slide_id: slideId,
           media_type: 'image',
-          media_url: slide.content.media?.name || null, // Use the filename from cPanel upload
-          audio_url: slide.content.audio?.name || null, // Use the audio filename
+          media_url: mediaUrl,
+          audio_url: audioUrl, 
           description: slide.content.description || '',
           chat_story_id: storyId,
           quiz_id: quizId
@@ -182,6 +214,7 @@ export async function POST(request) {
     );
   }
 }
+
 // Helper functions (uploadImage, processPDFContent, processCharacters)
 // Implement these as in the previous example, adjusting for File handling
 async function uploadImage(file) {

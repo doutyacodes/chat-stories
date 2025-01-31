@@ -165,32 +165,6 @@ const CreateEpisode = () => {
     });
   };
 
-  const handleImageUpload = async (index, file) => {
-    if (file) {
-      try {
-        // Get the slide type for validation
-        const slideType = episodeData.slides[index].type;
-        
-        // Validate the image
-        await validateImage(file, slideType);
-        
-        // If validation passes, proceed with upload
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          handleImageSlideChange(index, 'media', {
-            file: file,
-            preview: reader.result
-          });
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        setError(error);
-        // Clear the error after 5 seconds
-        setTimeout(() => setError(''), 5000);
-      }
-    }
-  };
-
   const handleAddCharacter = (slideIndex) => {
     const updatedSlides = [...episodeData.slides];
     updatedSlides[slideIndex].content.characters.push({ name: "", isSender: false });
@@ -287,22 +261,22 @@ const CreateEpisode = () => {
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
 
-  // Add these new handler functions
-  const handleAudioUpload = (slideIndex, file) => {
-    if (file) {
-      if (!file.type.startsWith('audio/')) {
-        setError('Please upload an audio file (MP3, WAV, etc.)');
-        return;
-      }
+  // // Add these new handler functions
+  // const handleAudioUpload = (slideIndex, file) => {
+  //   if (file) {
+  //     if (!file.type.startsWith('audio/')) {
+  //       setError('Please upload an audio file (MP3, WAV, etc.)');
+  //       return;
+  //     }
       
-      const updatedSlides = [...episodeData.slides];
-      updatedSlides[slideIndex].content.audio = {
-        file: file,
-        name: file.name
-      };
-      setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
-    }
-  };
+  //     const updatedSlides = [...episodeData.slides];
+  //     updatedSlides[slideIndex].content.audio = {
+  //       file: file,
+  //       name: file.name
+  //     };
+  //     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+  //   }
+  // };
 
   const handleRemoveAudio = (slideIndex) => {
     const updatedSlides = [...episodeData.slides];
@@ -340,6 +314,106 @@ const CreateEpisode = () => {
     }
   };
 
+  const handleAudioUpload = async (slideIndex, file) => {
+    if (file) {
+      if (!file.type.startsWith('audio/')) {
+        setError('Please upload an audio file (MP3, WAV, AAC, OGG)');
+        return;
+      }
+      
+      try {
+        const fileName = await uploadFile(file, 'audio');
+        
+        const updatedSlides = [...episodeData.slides];
+        updatedSlides[slideIndex].content.audio = {
+          file: file,
+          name: file.name,
+          fileName: fileName // Store the uploaded filename
+        };
+        setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+      } catch (error) {
+        setError(error.message);
+      }
+    }
+  };
+
+  // const handleImageUpload = async (index, file) => {
+  //   if (file) {
+  //     try {
+  //       // Get the slide type for validation
+  //       const slideType = episodeData.slides[index].type;
+        
+  //       // Validate the image
+  //       await validateImage(file, slideType);
+        
+  //       // If validation passes, proceed with upload
+  //       const reader = new FileReader();
+  //       reader.onloadend = () => {
+  //         handleImageSlideChange(index, 'media', {
+  //           file: file,
+  //           preview: reader.result
+  //         });
+  //       };
+  //       reader.readAsDataURL(file);
+  //     } catch (error) {
+  //       setError(error);
+  //       // Clear the error after 5 seconds
+  //       setTimeout(() => setError(''), 5000);
+  //     }
+  //   }
+  // };
+
+  const handleImageUpload = async (index, file) => {
+    if (file) {
+      try {
+        const slideType = episodeData.slides[index].type;
+        await validateImage(file, slideType);
+        
+        // Upload the file first
+        const fileName = await uploadFile(file, 'image');
+        
+        // Then update the state with both the preview and the uploaded filename
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          handleImageSlideChange(index, 'media', {
+            file: file,
+            preview: reader.result,
+            fileName: fileName // Store the uploaded filename
+          });
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        setError(error.message);
+        setTimeout(() => setError(''), 5000);
+      }
+    }
+  };
+
+  const uploadFile = async (file, type) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const url = type === 'audio' 
+      ? 'https://wowfy.in/testusr/audioUpload.php'
+      : 'https://wowfy.in/testusr/upload.php';
+  
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      return data.filePath; // This will be the filename returned from server
+    } catch (error) {
+      throw new Error(`Failed to upload ${type}: ${error.message}`);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -350,31 +424,59 @@ const CreateEpisode = () => {
       setError("Episode name is required");
       return;
     }
-  
+
+    // Inside handleSubmit function, replace the FormData section with:
     const formData = new FormData();
     formData.append('storyId', storyId);
     formData.append('name', episodeData.name);
     formData.append('synopsis', episodeData.synopsis);
-    
-    // Correctly set slides and characters
-    formData.append('slides', JSON.stringify(episodeData.slides));
+
+    // Modify the slides to include the uploaded filenames instead of file objects
+    const processedSlides = episodeData.slides.map(slide => {
+      const processedSlide = { ...slide };
+      
+      if (slide.content.audio?.fileName) {
+        processedSlide.content.audio = slide.content.audio.fileName;
+      }
+      
+      if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.fileName) {
+        processedSlide.content.media = slide.content.media.fileName;
+      }
+      
+      return processedSlide;
+    });
+
+    formData.append('slides', JSON.stringify(processedSlides));
     formData.append('characters', JSON.stringify(
-      episodeData.slides
+      processedSlides
         .filter(slide => slide.type === 'chat')
         .flatMap(slide => slide.content.characters)
     ));
+      
+    // const formData = new FormData();
+    // formData.append('storyId', storyId);
+    // formData.append('name', episodeData.name);
+    // formData.append('synopsis', episodeData.synopsis);
+    
+    // // Correctly set slides and characters
+    // formData.append('slides', JSON.stringify(episodeData.slides));
+    // formData.append('characters', JSON.stringify(
+    //   episodeData.slides
+    //     .filter(slide => slide.type === 'chat')
+    //     .flatMap(slide => slide.content.characters)
+    // ));
   
     episodeData.slides.forEach((slide, index) => {
 
-      if (slide.content.audio?.file) { // Check for .file property
-        formData.append(`slides[${index}].audio`, slide.content.audio.file); // Append the File object
-      }
-      if (slide.type === 'image' && slide.content.media?.file) {
-        formData.append(`slides[${index}].file`, slide.content.media.file);
-      }
-      if (slide.type === 'quiz' && slide.content.media?.file) {
-        formData.append(`slides[${index}].file`, slide.content.media.file);
-      }
+      // if (slide.content.audio?.file) { // Check for .file property
+      //   formData.append(`slides[${index}].audio`, slide.content.audio.file); // Append the File object
+      // }
+      // if (slide.type === 'image' && slide.content.media?.file) {
+      //   formData.append(`slides[${index}].file`, slide.content.media.file);
+      // }
+      // if (slide.type === 'quiz' && slide.content.media?.file) {
+      //   formData.append(`slides[${index}].file`, slide.content.media.file);
+      // }
       if (slide.type === 'chat' && slide.content.pdfFile) {
         formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
       }
@@ -736,6 +838,14 @@ const CreateEpisode = () => {
                                   className="hidden"
                                   id={`imageUpload-${index}`}
                                   />
+                                  {/* <label 
+                                  htmlFor={`imageUpload-${index}`} 
+                                  className="w-full p-3 rounded-lg bg-gray-600 flex items-center justify-center cursor-pointer hover:bg-gray-500 transition"
+                                  >
+                                  <Upload className="mr-2 h-5 w-5" />
+                                  {slide.content.media ? 'Change Image' : 'Upload Image'}
+                                  </label> */}
+
                                   <label 
                                     htmlFor={`imageUpload-${index}`} 
                                     className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
