@@ -124,6 +124,7 @@ const CreateEpisode = () => {
   };
 
   const validateImage = (file, type) => {
+    if (file.type.startsWith('video/')) return true; // Skip validation for videos
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
@@ -341,6 +342,56 @@ const CreateEpisode = () => {
       setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
     }
   };
+  
+// Update your handler function name if needed
+const handleMediaUpload = async (index, file) => {
+  if (file) {
+    try {
+      const slideType = episodeData.slides[index].type;
+      
+      // Only validate images (skip validation for videos/gifs)
+      if (file.type.startsWith('image/') && !file.type.includes('gif')) {
+        await validateImage(file, slideType);
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleImageSlideChange(index, 'media', {
+          file: file,
+          preview: reader.result,
+          type: file.type.split('/')[0] // 'image' or 'video'
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      setError(error);
+      setTimeout(() => setError(''), 5000);
+    }
+  }
+};
+
+  const uploadMediaToCPanel = async (file) => {
+    const isVideo = file.type.startsWith('video/');
+    const formData = new FormData();
+    formData.append(isVideo ? 'videoFile' : 'coverImage', file);
+  
+    try {
+      const response = await axios.post(
+        `https://wowfy.in/testusr/${isVideo ? 'upload2.php' : 'upload.php'}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+  
+      if (response.data.success) {
+        return response.data.filePath;
+      }
+      throw new Error(response.data.error);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError(`Failed to upload ${isVideo ? 'video' : 'image'}`);
+      return null;
+    }
+  };
 
   const uploadImageToCPanel = async (file, type) => {
     const formData = new FormData();
@@ -384,78 +435,6 @@ const CreateEpisode = () => {
     }
   };
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setError("");
-//     setIsSubmitting(true); // Add this
-
-//     // Basic validation
-//     if (!episodeData.name.trim()) {
-//       setError("Episode name is required");
-//       return;
-//     }
-  
-//     const formData = new FormData();
-//     formData.append('storyId', storyId);
-//     formData.append('name', episodeData.name);
-//     formData.append('synopsis', episodeData.synopsis);
-    
-//     // Correctly set slides and characters
-//     formData.append('slides', JSON.stringify(episodeData.slides));
-//     formData.append('characters', JSON.stringify(
-//       episodeData.slides
-//         .filter(slide => slide.type === 'chat')
-//         .flatMap(slide => slide.content.characters)
-//     ));
-  
-//     episodeData.slides.forEach((slide, index) => {
-
-//       if (slide.content.audio?.file) { // Check for .file property
-//         formData.append(`slides[${index}].audio`, slide.content.audio.file); // Append the File object
-//       }
-//       if (slide.type === 'image' && slide.content.media?.file) {
-//         formData.append(`slides[${index}].file`, slide.content.media.file);
-//       }
-//       if (slide.type === 'quiz' && slide.content.media?.file) {
-//         formData.append(`slides[${index}].file`, slide.content.media.file);
-//       }
-//       if (slide.type === 'chat' && slide.content.pdfFile) {
-//         formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
-//       }
-      
-//       if (slide.type === 'quiz') {
-//         if (!slide.content.question.trim()) {
-//           setError('Quiz question is required');
-//           throw new Error('Validation failed');
-//         }
-//         if (slide.content.options.some(opt => !opt.text.trim())) {
-//           setError('All quiz options must have text');
-//           throw new Error('Validation failed');
-//         }
-//         if (!slide.content.options.some(opt => opt.is_correct)) {
-//           setError('Please select a correct answer for quiz');
-//           throw new Error('Validation failed');
-//         }
-//       }
-//     });
-    
-//     try {
-//       const response = await fetch('/api/stories/story-slides', {
-//         method: 'POST',
-//         body: formData,
-//       });
-  
-//       if (!response.ok) throw new Error('Failed to create episode');
-  
-//       router.push('/your-stories');
-//     } catch (error) {
-//       setError("Failed to create episode. Please try again.");
-//       console.error(error);
-//     } finally {
-//       setIsSubmitting(false); // Add this
-//     }
-//   };
-
 const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -479,11 +458,20 @@ const handleSubmit = async (e) => {
         }
   
         // Upload Image for Image and Quiz slides
+        // if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.file) {
+        //   const imageFileName = await uploadImageToCPanel(slide.content.media.file);
+        //   updatedSlide.content.media = imageFileName ? { preview: slide.content.media.preview, name: imageFileName } : null;
+        // }
+
+        // In handleSubmit function, replace uploadImageToCPanel with:
         if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.file) {
-          const imageFileName = await uploadImageToCPanel(slide.content.media.file);
-          updatedSlide.content.media = imageFileName ? { preview: slide.content.media.preview, name: imageFileName } : null;
+          const mediaFileName = await uploadMediaToCPanel(slide.content.media.file);
+          updatedSlide.content.media = mediaFileName ? { 
+            ...slide.content.media,
+            name: mediaFileName 
+          } : null;
         }
-  
+          
         return updatedSlide;
       }));
   
@@ -656,26 +644,48 @@ const handleSubmit = async (e) => {
                         <div className="space-y-4">
                             {/* Image Upload */}
                             <div className="flex items-center gap-4">
-                            <div className="flex-1">
+                              {/* <div className="flex-1">
+                                  <input
+                                  type="file"
+                                  accept="image/*, video/*, image/gif"
+                                  onChange={(e) => handleImageUpload(index, e.target.files[0])}
+                                  className="hidden"
+                                  id={`imageUpload-${index}`}
+                                  />
+                                  <label 
+                                    htmlFor={`imageUpload-${index}`} 
+                                    className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
+                                    >
+                                    <Upload className="mr-2 h-5 w-5" />
+                                    <span>{slide.content.media ? 'Change Image' : 'Upload Image/Gif'}</span>
+                                    <span className="text-xs text-gray-400 mt-1">
+                                      16:9 aspect ratio required (recommended: 1920x1080px)
+                                    </span>                                  
+                                  </label>
+                              </div> */}
+                              {/* Update the file input section for both image and quiz slides */}
+                              <div className="flex-1">
                                 <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload(index, e.target.files[0])}
-                                className="hidden"
-                                id={`imageUpload-${index}`}
+                                  type="file"
+                                  accept="image/*, video/*, image/gif"
+                                  onChange={(e) => handleMediaUpload(index, e.target.files[0])}
+                                  className="hidden"
+                                  id={`mediaUpload-${index}`} // Changed ID to match
                                 />
                                 <label 
-                                  htmlFor={`imageUpload-${index}`} 
+                                  htmlFor={`mediaUpload-${index}`} // Match the input ID
                                   className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
-                                  >
+                                >
                                   <Upload className="mr-2 h-5 w-5" />
-                                  <span>{slide.content.media ? 'Change Image' : 'Upload Image/Gif'}</span>
-                                  <span className="text-xs text-gray-400 mt-1">
-                                    16:9 aspect ratio required (recommended: 1920x1080px)
-                                  </span>                                  
+                                  <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
+                                  {slide.content.media?.file && !slide.content.media.file.type.startsWith('video/') && (
+                                    <span className="text-xs text-gray-400 mt-1">
+                                      {slide.type === 'image' ? '16:9' : '3:2'} aspect ratio required
+                                    </span>
+                                  )}
                                 </label>
-                            </div>
-                            {slide.content.media && (
+                              </div>
+                            {/* {slide.content.media && (
                                 <div className="w-32 h-32">
                                 <img 
                                     src={slide.content.media.preview} 
@@ -683,6 +693,25 @@ const handleSubmit = async (e) => {
                                     className="w-full h-full object-cover rounded-lg" 
                                 />
                                 </div>
+                            )} */}
+
+                            {slide.content.media && (
+                              <div className="w-32 h-32">
+                                {slide.content.media.type === 'video' ? (
+                                  <video 
+                                    controls 
+                                    className="w-full h-full object-cover rounded-lg"
+                                  >
+                                    <source src={slide.content.media.preview} type={slide.content.media.file.type} />
+                                  </video>
+                                ) : (
+                                  <img 
+                                    src={slide.content.media.preview} 
+                                    alt="Preview" 
+                                    className="w-full h-full object-cover rounded-lg" 
+                                  />
+                                )}
+                              </div>
                             )}
                             </div>
                             
@@ -861,10 +890,10 @@ const handleSubmit = async (e) => {
                             {/* Image Upload (same as image slide) */}
                             <div className="flex items-center gap-4">
                               {/* Reuse image upload code from image slide */}
-                                <div className="flex-1">
+                                {/* <div className="flex-1">
                                   <input
                                   type="file"
-                                  accept="image/*"
+                                  accept="image/*, video/*, image/gif"
                                   onChange={(e) => handleImageUpload(index, e.target.files[0])}
                                   className="hidden"
                                   id={`imageUpload-${index}`}
@@ -879,8 +908,32 @@ const handleSubmit = async (e) => {
                                       3:2 aspect ratio required (recommended: 1200x800px)
                                     </span>
                                   </label>
+                                </div> */}
+
+                                {/* Update the file input section for both image and quiz slides */}
+                                <div className="flex-1">
+                                  <input
+                                    type="file"
+                                    accept="image/*, video/*, image/gif"
+                                    onChange={(e) => handleMediaUpload(index, e.target.files[0])}
+                                    className="hidden"
+                                    id={`mediaUpload-${index}`} // Changed ID to match
+                                  />
+                                  <label 
+                                    htmlFor={`mediaUpload-${index}`} // Match the input ID
+                                    className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
+                                  >
+                                    <Upload className="mr-2 h-5 w-5" />
+                                    <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
+                                    {slide.content.media?.file && !slide.content.media.file.type.startsWith('video/') && (
+                                      <span className="text-xs text-gray-400 mt-1">
+                                        {slide.type === 'image' ? '16:9' : '3:2'} aspect ratio required
+                                      </span>
+                                    )}
+                                  </label>
                                 </div>
-                                  {slide.content.media && (
+
+                                  {/* {slide.content.media && (
                                   <div className="w-32 h-32">
                                       <img 
                                           src={slide.content.media.preview} 
@@ -888,6 +941,25 @@ const handleSubmit = async (e) => {
                                           className="w-full h-full object-cover rounded-lg" 
                                       />
                                       </div>
+                                  )} */}
+
+                                  {slide.content.media && (
+                                    <div className="w-32 h-32">
+                                      {slide.content.media.type === 'video' ? (
+                                        <video 
+                                          controls 
+                                          className="w-full h-full object-cover rounded-lg"
+                                        >
+                                          <source src={slide.content.media.preview} type={slide.content.media.file.type} />
+                                        </video>
+                                      ) : (
+                                        <img 
+                                          src={slide.content.media.preview} 
+                                          alt="Preview" 
+                                          className="w-full h-full object-cover rounded-lg" 
+                                        />
+                                      )}
+                                    </div>
                                   )}
                             </div>
 

@@ -31,6 +31,7 @@ const StorySlides = () => {
 
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
+  const BASE_VIDEO_URL = 'https://wowfy.in/testusr/videos/';
 
   console.log('slideContent',slideContent, 'currentSlideIndex', currentSlideIndex)
 
@@ -356,11 +357,20 @@ const StorySlides = () => {
             <div className="relative flex-1">
               <div className="relative h-[70vh]">
                 <div className="relative h-[70vh]">
-                  <img
-                    src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
-                    alt="Episode detail"
-                    className="w-full h-full object-cover"
-                  />
+                  {slideContent.media_type === 'video' ? (
+                    <video
+                      src={`${BASE_VIDEO_URL}${slideContent.media_url}`}
+                      controls
+                      className="w-full h-full object-cover"
+                    />
+                    ):(
+                      <img
+                      src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
+                      alt="Episode detail"
+                      className="w-full h-full object-cover"
+                    />
+                    )
+                  }
                   <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-4">
                     <p className="text-white text-lg">{slideContent.description}</p>
                   </div>
@@ -473,11 +483,21 @@ const StorySlides = () => {
           {/* Media Section */}
           {quizData.media_url && (
             <div className="w-full max-w-5xl mb-8">
-              <img
-                src={`${BASE_IMAGE_URL}${quizData.media_url}`}
-                alt="Quiz visual"
-                className="w-full aspect-[3/2] object-cover rounded-lg"
-              />
+              
+              {quizData.media_type === 'video' ? (
+                <video
+                  src={`${BASE_VIDEO_URL}${quizData.media_url}`}
+                  controls
+                  className="w-full aspect-[3/2] object-cover rounded-lg"
+                />
+                ):(
+                  <img
+                    src={`${BASE_IMAGE_URL}${quizData.media_url}`}
+                    alt="Quiz visual"
+                    className="w-full aspect-[3/2] object-cover rounded-lg"
+                  />
+                )
+              }
             </div>
           )}
     
