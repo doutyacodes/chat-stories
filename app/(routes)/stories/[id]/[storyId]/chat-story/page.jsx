@@ -589,25 +589,271 @@ const StorySlides = () => {
 //   );
 // };
 
-const DetailView = () => {
-  return (
-    <div className="flex-1 bg-gray-900 overflow-y-auto md:pt-28">
-      <div className="max-w-[500px] mx-auto h-full flex flex-col bg-gray-800 min-h-screen shadow-lg">
-        {/* Navbar */}
-        <div className="bg-gray-800 p-4 flex items-center justify-center border-b border-gray-700">
-          <h2 className="text-2xl font-bold">{storyData.title}</h2>
-        </div>
+  // const DetailView = () => {
+  //   return (
+  //     <div className="flex-1 bg-gray-900 overflow-y-auto md:pt-28">
+  //       <div className="max-w-[500px] mx-auto h-full flex flex-col bg-gray-800 min-h-screen shadow-lg">
+  //         {/* Navbar */}
+  //         <div className="bg-gray-800 p-4 flex items-center justify-center border-b border-gray-700">
+  //           <h2 className="text-2xl font-bold">{storyData.title}</h2>
+  //         </div>
+          
+  //         <div className="flex-1 overflow-y-auto">
+  //           <div className="relative flex flex-col">
+  //             {/* Media Section */}
+  //             <div className="relative w-full">
+  //               <div className="relative aspect-[9/16] w-full">
+  //                 {slideContent.media_type === 'video' ? (
+  //                   <video
+  //                     src={`${BASE_VIDEO_URL}${slideContent.media_url}`}
+  //                     controls
+  //                     className="w-full h-full object-cover"
+  //                   />
+  //                 ) : (
+  //                   <img
+  //                     src={`${BASE_IMAGE_URL}${slideContent.media_url}`}
+  //                     alt="Episode detail"
+  //                     className="w-full h-full object-cover"
+  //                   />
+  //                 )}
+  //               </div>
+  //               <div className="bg-black bg-opacity-50 p-4">
+  //                 <p className="text-white text-lg">{slideContent.description}</p>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  // const ChatView = () => (
+  //   <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
+  //     <div className="max-w-[500px] mx-auto w-full h-full flex flex-col bg-gray-800   shadow-lg border-x border-gray-700">
+  //       {/* Navbar */}
+  //       <div className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700">
+  //         <div className="flex items-center">
+  //           <img
+  //             src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+  //             alt="Profile"
+  //             className="w-10 h-10 rounded-full mr-2"
+  //           />
+  //           <div>
+  //             <h2 className="text-lg font-bold">{storyData.title}</h2>
+  //           </div>
+  //         </div>
+  //         <div className="flex items-center space-x-4 text-gray-300">
+  //           <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
+  //           <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
+  //           <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
+  //         </div>
+  //       </div>
         
-        <div className="flex-1 overflow-y-auto">
-          <div className="relative flex flex-col">
-            {/* Media Section */}
-            <div className="relative w-full">
-              <div className="relative aspect-[9/16] w-full">
+  //       {/* Chat Messages */}
+  //       <div className="flex-1 overflow-y-auto">
+  //         <div className="p-4">
+  //           <div className="flex flex-col space-y-4">
+  //             {chatMessages.map((message) => (
+  //               <div
+  //                 key={message.id}
+  //                 className={`relative p-3 rounded-lg max-w-xs ${
+  //                   message.character.is_sender
+  //                     ? 'bg-green-700 text-white self-end'
+  //                     : 'bg-gray-700 text-gray-300 self-start'
+  //                 }`}
+  //               >
+  //                 <strong>{message.character.name}: </strong>
+  //                 <p>{message.message}</p>
+  //               </div>
+  //             ))}
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
+
+  // const QuizView = () => {
+  //   const renderOptions = () => {
+  //     if (quizData.quiz.answer_type === 'multiple_choice') {
+  //       return quizData.quiz.options.map((option) => (
+  //         <button
+  //           key={option.id}
+  //           onClick={() => handleQuizAnswer(option.id)}
+  //           className={`p-3 text-left rounded-lg transition-colors ${
+  //             userAnswer === option.id
+  //               ? option.is_correct
+  //                 ? 'bg-green-700 text-white'
+  //                 : 'bg-red-700 text-white'
+  //               : 'bg-gray-700 hover:bg-gray-600'
+  //           }`}
+  //         >
+  //           {option.option_text}
+  //         </button>
+  //       ));
+  //     }
+
+  //     return (
+  //       <div className="w-full">
+  //         <input
+  //           type="text"
+  //           value={userAnswer}
+  //           onChange={(e) => handleQuizAnswer(e.target.value)}
+  //           className="w-full p-3 bg-gray-700 rounded-lg text-white"
+  //           placeholder="Type your answer here..."
+  //         />
+  //         {isAnswerCorrect && (
+  //           <p className="text-green-500 mt-2">Correct answer!</p>
+  //         )}
+  //       </div>
+  //     );
+  //   };
+
+  //   return (
+  //     <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
+  //       <div className="max-w-[500px] mx-auto w-full h-full flex flex-col bg-gray-800 min-h-screen shadow-lg border-x border-gray-700">
+  //         <div className="flex-1 overflow-y-auto">
+  //           {/* Media Section */}
+  //           {quizData.media_url && (
+  //             <div className="w-full">
+  //               <div className="aspect-[9/16] w-full">
+  //                 {quizData.media_type === 'video' ? (
+  //                   <video
+  //                     src={`${BASE_VIDEO_URL}${quizData.media_url}`}
+  //                     controls
+  //                     className="w-full h-full object-cover"
+  //                   />
+  //                 ) : (
+  //                   <img
+  //                     src={`${BASE_IMAGE_URL}${quizData.media_url}`}
+  //                     alt="Quiz visual"
+  //                     className="w-full h-full object-cover"
+  //                   />
+  //                 )}
+  //               </div>
+  //             </div>
+  //           )}
+
+  //           {/* Quiz Content */}
+  //           <div className="p-6">
+  //             <h3 className="text-xl font-bold mb-4">{quizData.quiz.question}</h3>
+  //             <div className="grid gap-3">
+  //               {renderOptions()}
+  //             </div>
+              
+  //             {showError && (
+  //               <p className="text-red-500 mt-4">
+  //                 {!userAnswer ? 'Please answer the question to continue!' : 'Incorrect answer, please try again!'}
+  //               </p>
+  //             )}
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  // return (
+  //   <div className="h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row">
+  //     <div className="absolute top-4 right-4 z-50 md:pt-28">
+  //       <button 
+  //         onClick={() => setIsMuted(!isMuted)}
+  //         className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
+  //         aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+  //       >
+  //         {isMuted ? (
+  //           <FaVolumeMute className="text-white w-6 h-6" />
+  //         ) : (
+  //           <FaVolumeUp className="text-white w-6 h-6" />
+  //         )}
+  //       </button>
+  //     </div>
+
+  //     {/* Sidebar */}
+  //     {!isMobileView && (
+  //       <div className="w-1/4 min-w-[250px] bg-gray-800 p-4 border-r border-gray-700 h-screen overflow-hidden md:pt-28">
+  //         <div className="fixed w-[inherit] min-w-[inherit] pr-8">
+  //           <img
+  //             src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+  //             alt={storyData.title}
+  //             className="w-full h-48 object-cover rounded-lg mb-4"
+  //           />
+  //           <h2 className="text-lg font-bold mb-2">{storyData.title}</h2>
+  //           <p className="text-sm text-gray-300">{storyData.synopsis}</p>
+  //         </div>
+  //       </div>
+  //     )}
+
+  //     <div className="flex-1 relative overflow-y-auto pb-24">
+  //       {currentSlide.slide_type === 'image' && slideContent && <DetailView />}
+  //       {currentSlide.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
+  //       {currentSlide.slide_type === 'quiz' && quizData && <QuizView />}
+
+  //       {/* Navigation */}
+  //         <div className="absolute -bottom- left-0 right-0 flex justify-center p-4 pb-24 z-50">
+  //           <div className="max-w-[500px] w-full flex justify-between px-4">
+  //             {currentSlideIndex > 0 && (
+  //               <button 
+  //                 onClick={handlePreviousSlide}
+  //                 className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
+  //               >
+  //                 <FaArrowLeft className="text-white" />
+  //               </button>
+  //             )}
+
+  //             {!isLastSlide ? (
+  //               <button 
+  //                 onClick={handleNextSlide}
+  //                 className={`ml-auto p-2 rounded-full transition-colors ${
+  //                   (currentSlide.slide_type === 'quiz' && !isAnswerCorrect)
+  //                     ? 'bg-gray-700 cursor-not-allowed'
+  //                     : 'bg-gray-700 hover:bg-gray-600'
+  //                 }`}
+  //                 disabled={currentSlide.slide_type === 'quiz' && !isAnswerCorrect}
+  //               >
+  //                 <FaArrowRight className="text-white" />
+  //               </button>
+  //             ) : nextEpisode ? (
+  //               <button 
+  //                 onClick={handleNextEpisode}
+  //                 className="ml-auto bg-blue-700 p-2 rounded-full hover:bg-blue-600 transition-colors"
+  //               >
+  //                 Next Episode
+  //               </button>
+  //             ) : null}
+  //           </div>
+  //         </div>
+
+  //     </div>
+
+
+  //   </div>
+  // );
+
+  const DetailView = () => {
+    return (
+      <div className="flex-1 bg-gray-900 md:pt-28">
+        <div className="max-w-[500px] mx-auto h-full flex flex-col bg-gray-800 shadow-lg">
+          <div className="h-full flex flex-col">
+            {/* Navbar */}
+            <div className="bg-gray-800 p-4 flex items-center justify-center border-b border-gray-700">
+              <h2 className="text-2xl font-bold">{storyData.title}</h2>
+            </div>
+            
+            <div className="flex-1 flex flex-col">
+              {/* Fixed height media section */}
+              <div className="w-full h-[55vh]">
                 {slideContent.media_type === 'video' ? (
                   <video
                     src={`${BASE_VIDEO_URL}${slideContent.media_url}`}
+                    autoPlay
+                    muted
+                    loop
                     controls
                     className="w-full h-full object-cover"
+                    controlsList="nodownload nofullscreen"
+                    onLoadedMetadata={(e) => e.target.play()}
                   />
                 ) : (
                   <img
@@ -617,112 +863,74 @@ const DetailView = () => {
                   />
                 )}
               </div>
-              <div className="bg-black bg-opacity-50 p-4">
-                <p className="text-white text-lg">{slideContent.description}</p>
-              </div>
+              {/* Description section */}
+              {
+                slideContent.description && (
+                  <div className="flex-1 bg-gray-800 p-6">
+                    <p className="text-white text-lg">{slideContent.description}</p>
+                  </div>
+                )
+              }
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-const ChatView = () => (
-  <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
-    <div className="max-w-[500px] mx-auto w-full h-full flex flex-col bg-gray-800 min-h-screen shadow-lg border-x border-gray-700">
-      {/* Navbar */}
-      <div className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700">
-        <div className="flex items-center">
-          <img
-            src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
-            alt="Profile"
-            className="w-10 h-10 rounded-full mr-2"
-          />
-          <div>
-            <h2 className="text-lg font-bold">{storyData.title}</h2>
-          </div>
-        </div>
-        <div className="flex items-center space-x-4 text-gray-300">
-          <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
-          <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
-          <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
-        </div>
-      </div>
-      
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4">
-          <div className="flex flex-col space-y-4">
-            {chatMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`relative p-3 rounded-lg max-w-xs ${
-                  message.character.is_sender
-                    ? 'bg-green-700 text-white self-end'
-                    : 'bg-gray-700 text-gray-300 self-start'
-                }`}
-              >
-                <strong>{message.character.name}: </strong>
-                <p>{message.message}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const QuizView = () => {
-  const renderOptions = () => {
-    if (quizData.quiz.answer_type === 'multiple_choice') {
-      return quizData.quiz.options.map((option) => (
-        <button
-          key={option.id}
-          onClick={() => handleQuizAnswer(option.id)}
-          className={`p-3 text-left rounded-lg transition-colors ${
-            userAnswer === option.id
-              ? option.is_correct
-                ? 'bg-green-700 text-white'
-                : 'bg-red-700 text-white'
-              : 'bg-gray-700 hover:bg-gray-600'
-          }`}
-        >
-          {option.option_text}
-        </button>
-      ));
-    }
-
-    return (
-      <div className="w-full">
-        <input
-          type="text"
-          value={userAnswer}
-          onChange={(e) => handleQuizAnswer(e.target.value)}
-          className="w-full p-3 bg-gray-700 rounded-lg text-white"
-          placeholder="Type your answer here..."
-        />
-        {isAnswerCorrect && (
-          <p className="text-green-500 mt-2">Correct answer!</p>
-        )}
-      </div>
     );
   };
-
-  return (
-    <div className="flex-1 bg-gray-900 flex flex-col md:pt-28">
-      <div className="max-w-[500px] mx-auto w-full h-full flex flex-col bg-gray-800 min-h-screen shadow-lg border-x border-gray-700">
-        <div className="flex-1 overflow-y-auto">
-          {/* Media Section */}
-          {quizData.media_url && (
-            <div className="w-full">
-              <div className="aspect-[9/16] w-full">
+  
+  const QuizView = () => {
+    const renderOptions = () => {
+      if (quizData.quiz.answer_type === 'multiple_choice') {
+        return quizData.quiz.options.map((option) => (
+          <button
+            key={option.id}
+            onClick={() => handleQuizAnswer(option.id)}
+            className={`p-2.5 text-left rounded-lg transition-colors ${
+              userAnswer === option.id
+                ? option.is_correct
+                  ? 'bg-green-700 text-white'
+                  : 'bg-red-700 text-white'
+                : 'bg-gray-700 hover:bg-gray-600'
+            }`}
+          >
+            {option.option_text}
+          </button>
+        ));
+      }
+  
+      return (
+        <div className="w-full">
+          <input
+            type="text"
+            value={userAnswer}
+            onChange={(e) => handleQuizAnswer(e.target.value)}
+            className="w-full p-2.5 bg-gray-700 rounded-lg text-white"
+            placeholder="Type your answer here..."
+          />
+          {isAnswerCorrect && (
+            <p className="text-green-500 mt-2">Correct answer!</p>
+          )}
+        </div>
+      );
+    };
+  
+    return (
+      <div className="flex-1 bg-gray-900 md:pt-28">
+        <div className="max-w-[500px] mx-auto h-full flex flex-col bg-gray-800 shadow-lg">
+          <div className="h-full flex flex-col">
+            {/* Media Section with fixed height */}
+            {quizData.media_url && (
+              <div className="w-full h-[55vh]">
                 {quizData.media_type === 'video' ? (
                   <video
                     src={`${BASE_VIDEO_URL}${quizData.media_url}`}
+                    autoPlay
+                    muted
+                    loop
                     controls
                     className="w-full h-full object-cover"
+                    controlsList="nodownload nofullscreen"
+                    onLoadedMetadata={(e) => e.target.play()}
                   />
                 ) : (
                   <img
@@ -732,105 +940,155 @@ const QuizView = () => {
                   />
                 )}
               </div>
-            </div>
-          )}
-
-          {/* Quiz Content */}
-          <div className="p-6">
-            <h3 className="text-xl font-bold mb-4">{quizData.quiz.question}</h3>
-            <div className="grid gap-3">
-              {renderOptions()}
-            </div>
-            
-            {showError && (
-              <p className="text-red-500 mt-4">
-                {!userAnswer ? 'Please answer the question to continue!' : 'Incorrect answer, please try again!'}
-              </p>
             )}
+  
+            {/* Quiz Content */}
+            <div className="flex-1 p-6">
+              <h3 className="text-lg font-bold mb-3">{quizData.quiz.question}</h3>
+              <div className="grid gap-2.5">
+                {renderOptions()}
+              </div>
+              
+              {showError && (
+                <p className="text-red-500 mt-3">
+                  {!userAnswer ? 'Please answer the question to continue!' : 'Incorrect answer, please try again!'}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  {/* Updated Navigation Component */}
+  const Navigation = () => (
+    // <div className="fixed bottom-36 left-0 right-0 pointer-events-none">
+      <div className="fixed bottom-36 left-0 right-0 pointer-events-none sm:left-[25%]">
+      <div className="max-w-[500px] mx-auto w-full px-4">
+        <div className="flex justify-between items-center">
+          {currentSlideIndex > 0 && (
+            <button 
+              onClick={handlePreviousSlide}
+              className="pointer-events-auto bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition-colors shadow-lg"
+            >
+              <FaArrowLeft className="text-white w-5 h-5" />
+            </button>
+          )}
+  
+          {!isLastSlide ? (
+            <button 
+              onClick={handleNextSlide}
+              className={`pointer-events-auto ml-auto p-3 rounded-full transition-colors shadow-lg ${
+                (currentSlide.slide_type === 'quiz' && !isAnswerCorrect)
+                  ? 'bg-gray-700 cursor-not-allowed'
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              disabled={currentSlide.slide_type === 'quiz' && !isAnswerCorrect}
+            >
+              <FaArrowRight className="text-white w-5 h-5" />
+            </button>
+          ) : nextEpisode ? (
+            <button 
+              onClick={handleNextEpisode}
+              className="pointer-events-auto ml-auto bg-blue-700 p-3 rounded-full hover:bg-blue-600 transition-colors shadow-lg"
+            >
+              Next Episode
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+
+  const ChatView = () => (
+    <div className="flex-1 bg-gray-900 md:pt-28 overflow-hidden">
+      <div className="max-w-[500px] mx-auto h-[calc(100vh-7rem)] md:h-[calc(100vh-9rem)] flex flex-col bg-gray-800 shadow-lg">
+        {/* Fixed Header */}
+        <div className="bg-gray-800 p-4 flex items-center justify-between border-b border-gray-700">
+          <div className="flex items-center">
+            <img
+              src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+              alt="Profile"
+              className="w-10 h-10 rounded-full mr-2"
+            />
+            <div>
+              <h2 className="text-lg font-bold">{storyData.title}</h2>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4 text-gray-300">
+            <FaVideo className="w-5 h-5 cursor-pointer hover:text-white" title="Video Call" />
+            <FaPhone className="w-5 h-5 cursor-pointer hover:text-white" title="Voice Call" />
+            <FaEllipsisV className="w-5 h-5 cursor-pointer hover:text-white" title="Options" />
+          </div>
+        </div>
+
+        {/* Scrollable Chat Area */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <div className="p-4">
+            <div className="flex flex-col space-y-4">
+              {chatMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`relative p-3 rounded-lg max-w-xs ${
+                    message.character.is_sender
+                      ? 'bg-green-700 text-white self-end'
+                      : 'bg-gray-700 text-gray-300 self-start'
+                  }`}
+                >
+                  <strong>{message.character.name}: </strong>
+                  <p>{message.message}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
 
-return (
-  <div className="h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row">
-    <div className="absolute top-4 right-4 z-50 md:pt-28">
-      <button 
-        onClick={() => setIsMuted(!isMuted)}
-        className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
-        aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-      >
-        {isMuted ? (
-          <FaVolumeMute className="text-white w-6 h-6" />
-        ) : (
-          <FaVolumeUp className="text-white w-6 h-6" />
-        )}
-      </button>
-    </div>
-
-    {/* Sidebar */}
-    {!isMobileView && (
-      <div className="w-1/4 min-w-[250px] bg-gray-800 p-4 border-r border-gray-700 h-screen overflow-hidden md:pt-28">
-        <div className="fixed w-[inherit] min-w-[inherit] pr-8">
-          <img
-            src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
-            alt={storyData.title}
-            className="w-full h-48 object-cover rounded-lg mb-4"
-          />
-          <h2 className="text-lg font-bold mb-2">{storyData.title}</h2>
-          <p className="text-sm text-gray-300">{storyData.synopsis}</p>
-        </div>
+  return (
+    <div className="h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row overflow-hidden">
+      <div className="absolute top-4 right-4 z-50 md:pt-28">
+        <button 
+          onClick={() => setIsMuted(!isMuted)}
+          className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
+          aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+        >
+          {isMuted ? (
+            <FaVolumeMute className="text-white w-6 h-6" />
+          ) : (
+            <FaVolumeUp className="text-white w-6 h-6" />
+          )}
+        </button>
       </div>
-    )}
 
-    <div className="flex-1 relative overflow-y-auto pb-24">
-      {currentSlide.slide_type === 'image' && slideContent && <DetailView />}
-      {currentSlide.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
-      {currentSlide.slide_type === 'quiz' && quizData && <QuizView />}
-
-      {/* Navigation */}
-        <div className="absolute -bottom- left-0 right-0 flex justify-center p-4 pb-24 z-50">
-          <div className="max-w-[500px] w-full flex justify-between px-4">
-            {currentSlideIndex > 0 && (
-              <button 
-                onClick={handlePreviousSlide}
-                className="bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-colors"
-              >
-                <FaArrowLeft className="text-white" />
-              </button>
-            )}
-
-            {!isLastSlide ? (
-              <button 
-                onClick={handleNextSlide}
-                className={`ml-auto p-2 rounded-full transition-colors ${
-                  (currentSlide.slide_type === 'quiz' && !isAnswerCorrect)
-                    ? 'bg-gray-700 cursor-not-allowed'
-                    : 'bg-gray-700 hover:bg-gray-600'
-                }`}
-                disabled={currentSlide.slide_type === 'quiz' && !isAnswerCorrect}
-              >
-                <FaArrowRight className="text-white" />
-              </button>
-            ) : nextEpisode ? (
-              <button 
-                onClick={handleNextEpisode}
-                className="ml-auto bg-blue-700 p-2 rounded-full hover:bg-blue-600 transition-colors"
-              >
-                Next Episode
-              </button>
-            ) : null}
+      {/* Sidebar */}
+      {!isMobileView && (
+        <div className="w-1/4 min-w-[250px] bg-gray-800 p-4 border-r border-gray-700 h-screen md:pt-28">
+          <div className="fixed w-[inherit] min-w-[inherit] pr-8">
+            <img
+              src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+              alt={storyData.title}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+            />
+            <h2 className="text-lg font-bold mb-2">{storyData.title}</h2>
+            <p className="text-sm text-gray-300">{storyData.synopsis}</p>
           </div>
         </div>
+      )}
 
+      <div className="flex-1 relative overflow-hidden">
+        <div className="h-full">
+          {currentSlide.slide_type === 'image' && slideContent && <DetailView />}
+          {currentSlide.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
+          {currentSlide.slide_type === 'quiz' && quizData && <QuizView />}
+        </div>
+
+        <Navigation />
+      </div>
     </div>
-
-
-  </div>
-);
-
+  );
 };
 
 export default StorySlides;

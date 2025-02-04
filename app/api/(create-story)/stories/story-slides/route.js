@@ -182,38 +182,6 @@
       );
     }
   }
-  // Helper functions (uploadImage, processPDFContent, processCharacters)
-  // Implement these as in the previous example, adjusting for File handling
-  async function uploadImage(file) {
-    const sftp = new Client();
-    const fileName = `${Date.now()}-${file.name}`;
-
-    try {
-      await sftp.connect({
-        host: '68.178.163.247',
-        port: 22,
-        username: 'devusr',
-        password: 'Wowfyuser#123',
-      });
-
-      // Convert File to Buffer
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      const localFilePath = path.join(os.tmpdir(), fileName);
-      fs.writeFileSync(localFilePath, buffer);
-
-      const cPanelDirectory = '/home/devusr/public_html/testusr/images';
-      await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
-
-      return `${fileName}`;
-    } catch (error) {
-      console.error('Error during upload:', error);
-      throw error;
-    } finally {
-      await sftp.end();
-    }
-  }
 
   // Implement other helper functions similarly
   // Helper function to process PDF content
@@ -317,6 +285,39 @@
       return `${fileName}`;
     } catch (error) {
       console.error('Error during audio upload:', error);
+      throw error;
+    } finally {
+      await sftp.end();
+    }
+  }
+
+    // Helper functions (uploadImage, processPDFContent, processCharacters)
+  // Implement these as in the previous example, adjusting for File handling
+  async function uploadImage(file) {
+    const sftp = new Client();
+    const fileName = `${Date.now()}-${file.name}`;
+
+    try {
+      await sftp.connect({
+        host: '68.178.163.247',
+        port: 22,
+        username: 'devusr',
+        password: 'Wowfyuser#123',
+      });
+
+      // Convert File to Buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const localFilePath = path.join(os.tmpdir(), fileName);
+      fs.writeFileSync(localFilePath, buffer);
+
+      const cPanelDirectory = '/home/devusr/public_html/testusr/images';
+      await sftp.put(localFilePath, `${cPanelDirectory}/${fileName}`);
+
+      return `${fileName}`;
+    } catch (error) {
+      console.error('Error during upload:', error);
       throw error;
     } finally {
       await sftp.end();

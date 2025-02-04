@@ -121,43 +121,74 @@ const CreateEpisode = () => {
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
 
-  const validateImage = (file, type) => {
+  // const validateImage = (file, type) => {
+  //   return new Promise((resolve, reject) => {
+  //     const img = new Image();
+  //     img.src = URL.createObjectURL(file);
+      
+  //     img.onload = () => {
+  //       URL.revokeObjectURL(img.src);
+  //       const width = img.width;
+  //       const height = img.height;
+        
+  //       if (type === 'image') {
+  //         // 16:9 aspect ratio validation
+  //         const aspectRatio = width / height;
+  //         const expectedRatio = 16 / 9;
+  //         const tolerance = 0.1; // 10% tolerance
+          
+  //         if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+  //           reject('Image must have a 16:9 aspect ratio (recommended: 1920x1080px)');
+  //         } else if (width < 1280 || height < 720) {
+  //           reject('Image resolution is too low. Recommended: 1920x1080px');
+  //         }
+  //       } else if (type === 'quiz') {
+  //         // 3:2 aspect ratio validation
+  //         const aspectRatio = width / height;
+  //         const expectedRatio = 3 / 2;
+  //         const tolerance = 0.1; // 10% tolerance
+          
+  //         if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+  //           reject('Image must have a 3:2 aspect ratio (recommended: 1200x800px)');
+  //         } else if (width < 900 || height < 600) {
+  //           reject('Image resolution is too low. Recommended: 1200x800px');
+  //         }
+  //       }
+        
+  //       resolve(true);
+  //     };
+      
+  //     img.onerror = () => {
+  //       URL.revokeObjectURL(img.src);
+  //       reject('Error loading image');
+  //     };
+  //   });
+  // };
+
+  const validateImage = (file) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
-      
+  
       img.onload = () => {
         URL.revokeObjectURL(img.src);
         const width = img.width;
         const height = img.height;
-        
-        if (type === 'image') {
-          // 16:9 aspect ratio validation
-          const aspectRatio = width / height;
-          const expectedRatio = 16 / 9;
-          const tolerance = 0.1; // 10% tolerance
-          
-          if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-            reject('Image must have a 16:9 aspect ratio (recommended: 1920x1080px)');
-          } else if (width < 1280 || height < 720) {
-            reject('Image resolution is too low. Recommended: 1920x1080px');
-          }
-        } else if (type === 'quiz') {
-          // 3:2 aspect ratio validation
-          const aspectRatio = width / height;
-          const expectedRatio = 3 / 2;
-          const tolerance = 0.1; // 10% tolerance
-          
-          if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-            reject('Image must have a 3:2 aspect ratio (recommended: 1200x800px)');
-          } else if (width < 900 || height < 600) {
-            reject('Image resolution is too low. Recommended: 1200x800px');
-          }
+  
+        // 4:5 aspect ratio validation
+        const aspectRatio = width / height;
+        const expectedRatio = 4 / 5;
+        const tolerance = 0.1; // 10% tolerance
+  
+        if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+          reject('Image must have a 4:5 aspect ratio (recommended: 1080x1350px)');
+        } else if (width < 1080 || height < 1350) {
+          reject('Image resolution is too low. Recommended: 1080x1350pxpx');
         }
-        
+  
         resolve(true);
       };
-      
+  
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
         reject('Error loading image');
@@ -165,6 +196,7 @@ const CreateEpisode = () => {
     });
   };
 
+  
   const handleAddCharacter = (slideIndex) => {
     const updatedSlides = [...episodeData.slides];
     updatedSlides[slideIndex].content.characters.push({ name: "", isSender: false });
@@ -640,7 +672,7 @@ const CreateEpisode = () => {
                                   <Upload className="mr-2 h-5 w-5" />
                                   <span>{slide.content.media ? 'Change Image' : 'Upload Image/Gif'}</span>
                                   <span className="text-xs text-gray-400 mt-1">
-                                    16:9 aspect ratio required (recommended: 1920x1080px)
+                                    4:5 aspect ratio required (recommended: 1080x1350px)
                                   </span>                                  
                                 </label>
                             </div>

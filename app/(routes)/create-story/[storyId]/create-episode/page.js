@@ -123,50 +123,84 @@ const CreateEpisode = () => {
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
 
-  const validateImage = (file, type) => {
-    if (file.type.startsWith('video/')) return true; // Skip validation for videos
+  // const validateImage = (file, type) => {
+  //   if (file.type.startsWith('video/')) return true; // Skip validation for videos
+  //   return new Promise((resolve, reject) => {
+  //     const img = new Image();
+  //     img.src = URL.createObjectURL(file);
+      
+  //     img.onload = () => {
+  //       URL.revokeObjectURL(img.src);
+  //       const width = img.width;
+  //       const height = img.height;
+        
+  //       if (type === 'image') {
+  //         // 16:9 aspect ratio validation
+  //         const aspectRatio = width / height;
+  //         const expectedRatio = 16 / 9;
+  //         const tolerance = 0.1; // 10% tolerance
+          
+  //         if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+  //           reject('Image must have a 16:9 aspect ratio (recommended: 1920x1080px)');
+  //         } else if (width < 1280 || height < 720) {
+  //           reject('Image resolution is too low. Recommended: 1920x1080px');
+  //         }
+  //       } else if (type === 'quiz') {
+  //         // 3:2 aspect ratio validation
+  //         const aspectRatio = width / height;
+  //         const expectedRatio = 3 / 2;
+  //         const tolerance = 0.1; // 10% tolerance
+          
+  //         if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+  //           reject('Image must have a 3:2 aspect ratio (recommended: 1200x800px)');
+  //         } else if (width < 900 || height < 600) {
+  //           reject('Image resolution is too low. Recommended: 1200x800px');
+  //         }
+  //       }
+        
+  //       resolve(true);
+  //     };
+      
+  //     img.onerror = () => {
+  //       URL.revokeObjectURL(img.src);
+  //       reject('Error loading image');
+  //     };
+  //   });
+  // };
+
+  const validateImage = (file) => {
+    if (file.type.startsWith("video/")) return true; // Skip validation for videos
+  
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.src = URL.createObjectURL(file);
-      
+  
       img.onload = () => {
         URL.revokeObjectURL(img.src);
         const width = img.width;
         const height = img.height;
-        
-        if (type === 'image') {
-          // 16:9 aspect ratio validation
-          const aspectRatio = width / height;
-          const expectedRatio = 16 / 9;
-          const tolerance = 0.1; // 10% tolerance
-          
-          if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-            reject('Image must have a 16:9 aspect ratio (recommended: 1920x1080px)');
-          } else if (width < 1280 || height < 720) {
-            reject('Image resolution is too low. Recommended: 1920x1080px');
-          }
-        } else if (type === 'quiz') {
-          // 3:2 aspect ratio validation
-          const aspectRatio = width / height;
-          const expectedRatio = 3 / 2;
-          const tolerance = 0.1; // 10% tolerance
-          
-          if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-            reject('Image must have a 3:2 aspect ratio (recommended: 1200x800px)');
-          } else if (width < 900 || height < 600) {
-            reject('Image resolution is too low. Recommended: 1200x800px');
-          }
+  
+        // Validate 4:5 aspect ratio for any type
+        const aspectRatio = width / height;
+        const expectedRatio = 4 / 5;
+        const tolerance = 0.1; // 10% tolerance
+  
+        if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+          reject("Image must have a 4:5 aspect ratio (recommended: 1080x1350px)");
+        } else if (width < 1080 || height < 1350) {
+          reject("Image resolution is too low. Recommended: 1080x1350px");
         }
-        
+  
         resolve(true);
       };
-      
+  
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
-        reject('Error loading image');
+        reject("Error loading image");
       };
     });
   };
+  
 
   const handleImageUpload = async (index, file) => {
     if (file) {
@@ -644,25 +678,6 @@ const handleSubmit = async (e) => {
                         <div className="space-y-4">
                             {/* Image Upload */}
                             <div className="flex items-center gap-4">
-                              {/* <div className="flex-1">
-                                  <input
-                                  type="file"
-                                  accept="image/*, video/*, image/gif"
-                                  onChange={(e) => handleImageUpload(index, e.target.files[0])}
-                                  className="hidden"
-                                  id={`imageUpload-${index}`}
-                                  />
-                                  <label 
-                                    htmlFor={`imageUpload-${index}`} 
-                                    className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
-                                    >
-                                    <Upload className="mr-2 h-5 w-5" />
-                                    <span>{slide.content.media ? 'Change Image' : 'Upload Image/Gif'}</span>
-                                    <span className="text-xs text-gray-400 mt-1">
-                                      16:9 aspect ratio required (recommended: 1920x1080px)
-                                    </span>                                  
-                                  </label>
-                              </div> */}
                               {/* Update the file input section for both image and quiz slides */}
                               <div className="flex-1">
                                 <input
@@ -680,7 +695,7 @@ const handleSubmit = async (e) => {
                                   <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
                                   {slide.content.media?.file && !slide.content.media.file.type.startsWith('video/') && (
                                     <span className="text-xs text-gray-400 mt-1">
-                                      {slide.type === 'image' ? '16:9' : '3:2'} aspect ratio required
+                                      4:5 aspect ratio required
                                     </span>
                                   )}
                                 </label>
@@ -927,7 +942,7 @@ const handleSubmit = async (e) => {
                                     <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
                                     {slide.content.media?.file && !slide.content.media.file.type.startsWith('video/') && (
                                       <span className="text-xs text-gray-400 mt-1">
-                                        {slide.type === 'image' ? '16:9' : '3:2'} aspect ratio required
+                                        4:5 aspect ratio required
                                       </span>
                                     )}
                                   </label>
