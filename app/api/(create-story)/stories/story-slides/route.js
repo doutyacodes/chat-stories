@@ -41,11 +41,18 @@
           if (!slide.content.question?.trim()) {
             throw new Error('Quiz question is required');
           }
-          if (slide.content.options.filter(opt => opt.is_correct).length !== 1) {
-            throw new Error('Exactly one correct answer must be selected for quiz');
-          }
-          if (slide.content.options.some(opt => !opt.text.trim())) {
-            throw new Error('All quiz options must have text');
+          
+          if (slide.content.quizType === 'multiple') {
+            if (slide.content.options.filter(opt => opt.is_correct).length !== 1) {
+              throw new Error('Exactly one correct answer must be selected for multiple choice quiz');
+            }
+            if (slide.content.options.some(opt => !opt.text.trim())) {
+              throw new Error('All quiz options must have text');
+            }
+          } else if (slide.content.quizType === 'normal') {
+            if (!slide.content.answer?.trim()) {
+              throw new Error('Answer is required for normal quiz');
+            }
           }
         }
       }
@@ -138,37 +145,41 @@
           });
         } else if (slide.type === 'quiz') {
           // Create quiz entry
-          const correctAnswer = slide.content.options.find(opt => opt.is_correct)?.text || '';
+          const correctAnswer = slide.content.quizType === 'multiple' 
+            ? slide.content.options.find(opt => opt.is_correct)?.text || ''
+            : slide.content.answer;
+        
           const quizResult = await db.insert(QUIZZES).values({
             slide_id: slideId,
             question: slide.content.question,
-            answer_type: 'multiple_choice',
+            answer_type: slide.content.quizType === 'multiple' ? 'multiple_choice' : 'text',
             correct_answer: correctAnswer
           });
           const quizId = quizResult[0].insertId;
-
+        
           // Insert slide content
           await db.insert(SLIDE_CONTENT).values({
             slide_id: slideId,
             media_type: slide.content.media?.type || 'image',
-            media_url: slide.content.media?.name || null, // Use the filename from cPanel upload
-            audio_url: slide.content.audio?.name || null, // Use the audio filename
+            media_url: slide.content.media?.name || null,
+            audio_url: slide.content.audio?.name || null,
             description: slide.content.description || '',
             chat_story_id: storyId,
             quiz_id: quizId
           });
           
-          // Insert quiz options
-          for (const option of slide.content.options) {
-            await db.insert(QUIZ_OPTIONS).values({
-              quiz_id: quizId,
-              option_text: option.text,
-              is_correct: option.is_correct
-            });
+          // Insert quiz options only for multiple choice
+          if (slide.content.quizType === 'multiple') {
+            for (const option of slide.content.options) {
+              await db.insert(QUIZ_OPTIONS).values({
+                quiz_id: quizId,
+                option_text: option.text,
+                is_correct: option.is_correct
+              });
+            }
           }
         }
       }
-
       return NextResponse.json({ 
         message: 'Episode created successfully', 
         episodeId 

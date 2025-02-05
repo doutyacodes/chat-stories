@@ -73,11 +73,13 @@ const CreateEpisode = () => {
         type,
         content: type === "quiz" ? {
           media: null,
+          quizType: "multiple",
           question: "",
           options: [
             { text: "", is_correct: false },
             { text: "", is_correct: false }
           ],
+          answer: "", // For normal quiz type
           audio: null // Add audio field
         } : type === "image"
             ? { 
@@ -99,6 +101,7 @@ const CreateEpisode = () => {
         slides: [...prev.slides, newSlide]
         }));
     };
+
     
   const handleInputTypeChange = (index, inputType) => {
     setEpisodeData(prev => {
@@ -122,51 +125,6 @@ const CreateEpisode = () => {
     updatedSlides[index].content[field] = value;
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
-
-  // const validateImage = (file, type) => {
-  //   if (file.type.startsWith('video/')) return true; // Skip validation for videos
-  //   return new Promise((resolve, reject) => {
-  //     const img = new Image();
-  //     img.src = URL.createObjectURL(file);
-      
-  //     img.onload = () => {
-  //       URL.revokeObjectURL(img.src);
-  //       const width = img.width;
-  //       const height = img.height;
-        
-  //       if (type === 'image') {
-  //         // 16:9 aspect ratio validation
-  //         const aspectRatio = width / height;
-  //         const expectedRatio = 16 / 9;
-  //         const tolerance = 0.1; // 10% tolerance
-          
-  //         if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-  //           reject('Image must have a 16:9 aspect ratio (recommended: 1920x1080px)');
-  //         } else if (width < 1280 || height < 720) {
-  //           reject('Image resolution is too low. Recommended: 1920x1080px');
-  //         }
-  //       } else if (type === 'quiz') {
-  //         // 3:2 aspect ratio validation
-  //         const aspectRatio = width / height;
-  //         const expectedRatio = 3 / 2;
-  //         const tolerance = 0.1; // 10% tolerance
-          
-  //         if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-  //           reject('Image must have a 3:2 aspect ratio (recommended: 1200x800px)');
-  //         } else if (width < 900 || height < 600) {
-  //           reject('Image resolution is too low. Recommended: 1200x800px');
-  //         }
-  //       }
-        
-  //       resolve(true);
-  //     };
-      
-  //     img.onerror = () => {
-  //       URL.revokeObjectURL(img.src);
-  //       reject('Error loading image');
-  //     };
-  //   });
-  // };
 
   const validateImage = (file) => {
     if (file.type.startsWith("video/")) return true; // Skip validation for videos
@@ -291,6 +249,24 @@ const CreateEpisode = () => {
   };
 
   /* quizzz */
+  // Add a new handler for quiz type change
+  const handleQuizTypeChange = (slideIndex, value) => {
+    const updatedSlides = [...episodeData.slides];
+    updatedSlides[slideIndex].content.quizType = value;
+    // Reset the quiz content based on type
+    if (value === "normal") {
+      updatedSlides[slideIndex].content.options = [];
+      updatedSlides[slideIndex].content.answer = "";
+    } else {
+      updatedSlides[slideIndex].content.options = [
+        { text: "", is_correct: false },
+        { text: "", is_correct: false }
+      ];
+      updatedSlides[slideIndex].content.answer = "";
+    }
+    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+  };
+
   // Quiz Question Change
   const handleQuizChange = (slideIndex, field, value) => {
     const updatedSlides = [...episodeData.slides];
@@ -530,21 +506,26 @@ const handleSubmit = async (e) => {
 
         if (slide.type === 'chat' && slide.content.pdfFile) {
           formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
-        }
-        
+        } 
         if (slide.type === 'quiz') {
           if (!slide.content.question.trim()) {
             setError('Quiz question is required');
             setIsSubmitting(false);
             throw new Error('Validation failed');
           }
-          if (slide.content.options.some(opt => !opt.text.trim())) {
-            setError('All quiz options must have text');
-            setIsSubmitting(false);
-            throw new Error('Validation failed');
-          }
-          if (!slide.content.options.some(opt => opt.is_correct)) {
-            setError('Please select a correct answer for quiz');
+          if (slide.content.quizType === 'multiple') {
+            if (slide.content.options.some(opt => !opt.text.trim())) {
+              setError('All quiz options must have text');
+              setIsSubmitting(false);
+              throw new Error('Validation failed');
+            }
+            if (!slide.content.options.some(opt => opt.is_correct)) {
+              setError('Please select a correct answer for quiz');
+              setIsSubmitting(false);
+              throw new Error('Validation failed');
+            }
+          } else if (!slide.content.answer.trim()) {
+            setError('Answer is required for normal quiz');
             setIsSubmitting(false);
             throw new Error('Validation failed');
           }
@@ -905,26 +886,6 @@ const handleSubmit = async (e) => {
                             {/* Image Upload (same as image slide) */}
                             <div className="flex items-center gap-4">
                               {/* Reuse image upload code from image slide */}
-                                {/* <div className="flex-1">
-                                  <input
-                                  type="file"
-                                  accept="image/*, video/*, image/gif"
-                                  onChange={(e) => handleImageUpload(index, e.target.files[0])}
-                                  className="hidden"
-                                  id={`imageUpload-${index}`}
-                                  />
-                                  <label 
-                                    htmlFor={`imageUpload-${index}`} 
-                                    className="w-full p-3 rounded-lg bg-gray-600 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-500 transition"
-                                  >
-                                    <Upload className="mr-2 h-5 w-5" />
-                                    <span>{slide.content.media ? 'Change Image' : 'Upload Image'}</span>
-                                    <span className="text-xs text-gray-400 mt-1">
-                                      3:2 aspect ratio required (recommended: 1200x800px)
-                                    </span>
-                                  </label>
-                                </div> */}
-
                                 {/* Update the file input section for both image and quiz slides */}
                                 <div className="flex-1">
                                   <input
@@ -978,6 +939,19 @@ const handleSubmit = async (e) => {
                                   )}
                             </div>
 
+                             {/* Quiz Type Selector */}
+                            <div className="flex items-center gap-4">
+                              <label className="text-sm font-medium">Quiz Type:</label>
+                              <select
+                                value={slide.content.quizType}
+                                onChange={(e) => handleQuizTypeChange(index, e.target.value)}
+                                className="p-2 rounded-lg bg-gray-600"
+                              >
+                                <option value="multiple">Multiple Choice</option>
+                                <option value="normal">Question & Answer</option>
+                              </select>
+                            </div>
+
                             {/* Question Input */}
                             <input
                               type="text"
@@ -988,7 +962,7 @@ const handleSubmit = async (e) => {
                             />
 
                             {/* Options */}
-                            {slide.content.options.map((option, optIndex) => (
+                            {/* {slide.content.options.map((option, optIndex) => (
                               <div key={optIndex} className="flex items-center gap-4 bg-gray-600 p-3 rounded-lg">
                                 <input
                                   type="text"
@@ -1026,10 +1000,63 @@ const handleSubmit = async (e) => {
                               >
                                 Add Option
                               </button>
+                            )} */}
+                            {/* Conditional rendering based on quiz type */}
+                            {slide.content.quizType === "multiple" ? (
+                              // Existing multiple choice options code
+                              <>
+                                {slide.content.options.map((option, optIndex) => (
+                                  <div key={optIndex} className="flex items-center gap-4 bg-gray-600 p-3 rounded-lg">
+                                    <input
+                                      type="text"
+                                      value={option.text}
+                                      onChange={(e) => handleOptionChange(index, optIndex, 'text', e.target.value)}
+                                      placeholder={`Option ${optIndex + 1}`}
+                                      className="flex-1 p-2 rounded-lg bg-gray-500"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleCorrectAnswer(index, optIndex)}
+                                      className={`px-4 py-2 rounded-lg ${
+                                        option.is_correct ? 'bg-green-600' : 'bg-gray-500'
+                                      }`}
+                                    >
+                                      Correct
+                                    </button>
+                                    {slide.content.options.length > 2 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveOption(index, optIndex)}
+                                        className="text-red-500 hover:text-red-400"
+                                      >
+                                        <X className="h-5 w-5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                                
+                                {slide.content.options.length < 4 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAddOption(index)}
+                                    className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
+                                  >
+                                    Add Option
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              // Normal quiz answer input
+                              <input
+                                type="text"
+                                value={slide.content.answer}
+                                onChange={(e) => handleQuizChange(index, 'answer', e.target.value)}
+                                placeholder="Enter answer"
+                                className="w-full p-3 rounded-lg bg-gray-600"
+                              />
                             )}
                           </div>
                         )}
-
                     </div>
                 </React.Fragment>
             ))}

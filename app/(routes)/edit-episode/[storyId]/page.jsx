@@ -841,6 +841,54 @@ const EditEpisode = () => {
 
                             {slide.type === "chat" && (
                               <>
+                                <div className="bg-gray-600 p-4 rounded-lg">
+                                  <h4 className="font-medium mb-4">Chat Characters</h4>
+                                  {slide?.content?.characters?.map((character, charIndex) => (
+                                  <div key={charIndex} className="mb-2 flex gap-4 items-center">
+                                      <input
+                                      type="text"
+                                      value={character.name}
+                                      onChange={(e) => {
+                                          const updatedSlides = [...episodeData.slides];
+                                          updatedSlides[index].content.characters[charIndex].name = e.target.value;
+                                          setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+                                          setModifications(prev => ({
+                                          ...prev,
+                                          slides: {
+                                              ...prev.slides,
+                                              [slide.id]: { ...prev.slides[slide.id], charactersModified: true }
+                                          }
+                                          }));
+                                      }}
+                                      placeholder="Character Name"
+                                      className="flex-1 p-2 rounded-lg bg-gray-500"
+                                      />
+                                      <button
+                                      type="button"
+                                      onClick={() => {
+                                          const updatedSlides = [...episodeData.slides];
+                                          updatedSlides[index].content.characters = updatedSlides[index].content.characters.map(
+                                          (char, idx) => ({ ...char, isSender: idx === charIndex })
+                                          );
+                                          setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+                                          setModifications(prev => ({
+                                          ...prev,
+                                          slides: {
+                                              ...prev.slides,
+                                              [slide.id]: { ...prev.slides[slide.id], charactersModified: true }
+                                          }
+                                          }));
+                                      }}
+                                      className={`px-4 py-2 rounded-lg ${
+                                          character.isSender ? "bg-green-600" : "bg-gray-500"
+                                      }`}
+                                      >
+                                      {character.isSender ? "Sender" : "Set as Sender"}
+                                      </button>
+                                  </div>
+                                  ))}
+                              </div>
+
                                 <h4>Expand/Collapse Chats</h4>
                                 {slide.content.storyLines.map((line, lineIndex) => (
                                   <div key={lineIndex} className="mt-2">
@@ -858,10 +906,13 @@ const EditEpisode = () => {
                                       className="w-full p-2 rounded-lg bg-gray-500"
                                     >
                                       <option value="">Select Character</option>
-                                      {fetchedCharacters.map((char) => (
+                                      {/* {fetchedCharacters.map((char) => (
                                         <option key={char.id} value={char.name}>
                                           {char.name}
                                         </option>
+                                      ))} */}
+                                      {slide.content.characters.map((char, idx) => (
+                                          <option key={idx} value={char.name}>{char.name}</option>
                                       ))}
                                     </select>
                                     <textarea

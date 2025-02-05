@@ -642,7 +642,7 @@ const handleDragEnd = (result) => {
                                                 PDF
                                                 </button>
                                             </div>
-                                            </div>
+                                          </div>
 
                                             {slide.content.inputType === 'manual' ? (
                                             <div className="space-y-4">

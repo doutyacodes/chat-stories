@@ -31,8 +31,7 @@ export default function NavBar() {
      {/* Desktop and Mobile Top Navigation */}
      <div className="relative">
         <div className={`
-          md:absolute md:top-0 md:left-0 md:right-0 md:z-50 
-          ${isTransparent ? 'md:bg-black/85' : 'bg-black'}
+          ${isTransparent ? 'md:absolute md:top-0 md:left-0 md:right-0 md:z-50 md:bg-black/85' : 'bg-black'}
           ${!isTransparent ? 'bg-black' : 'bg-black md:bg-black/85'}
         `}>
           <div className={`${isTransparent ? 'md:h-24' : ''} md:py-4`}>

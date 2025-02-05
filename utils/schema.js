@@ -70,17 +70,6 @@ export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
     updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
   });
 
-  export const EPISODE_DETAILS = mysqlTable("episode_details", {
-    id: int("id").primaryKey().autoincrement(),
-    episode_id: int("episode_id").notNull().references(() => EPISODES.id),
-    media_type: varchar("media_type", { length: 50 }).notNull(), // "image" or "video"
-    media_url: varchar("media_url", { length: 255 }).notNull(), // URL for the image or video
-    description: text("description"), // Details about the scene
-    order: int("order").notNull().default(1), // Order for display
-    position: mysqlEnum('position', ['before', 'after']).notNull().default("before"),
-    created_at: timestamp("created_at").defaultNow(),
-    updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
-  });
 
   export const CHARACTERS = mysqlTable("characters", {
     id: int("id").primaryKey().autoincrement(),
@@ -92,15 +81,6 @@ export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
     created_at: timestamp("created_at").defaultNow(),
   });
 
-// export const CHAT_MESSAGES = mysqlTable("chat_messages", {
-//   id: int("id").primaryKey().autoincrement(),
-//   story_id: int("story_id").notNull().references(() => STORIES.id),
-//   episode_id: int("episode_id").notNull().references(() => EPISODES.id), // Now mandatory
-//   character_id: int("character_id").notNull().references(() => CHARACTERS.id),
-//   message: text("message").notNull(),
-//   sequence: int("sequence").notNull(),
-//   created_at: timestamp("created_at").defaultNow(),
-// });
 
 export const STORY_CONTENT = mysqlTable("story_content", {
   id: int("id").primaryKey().autoincrement(),
@@ -193,11 +173,10 @@ export const QUIZZES = mysqlTable("quizzes", {
   slide_id: int("slide_id").notNull().references(() => SLIDES.id),
   question: text("question").notNull(),
   answer_type: mysqlEnum("answer_type", ["text", "multiple_choice"]).notNull(), // Determines input type
-  correct_answer: text("correct_answer").notNull(), // For text-based answers
+  correct_answer: text("correct_answer").notNull(), 
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
-
 
 export const QUIZ_OPTIONS = mysqlTable("quiz_options", {
   id: int("id").primaryKey().autoincrement(),
@@ -206,6 +185,27 @@ export const QUIZ_OPTIONS = mysqlTable("quiz_options", {
   is_correct: boolean("is_correct").default(false),
   created_at: timestamp("created_at").defaultNow(),
 });
+
+export const ADS = mysqlTable("ads", {
+  id: int("id").primaryKey().autoincrement(),
+  media_type: mysqlEnum("media_type", ["image", "video"]).notNull(), // Type of ad
+  media_url: varchar("media_url", { length: 255 }).notNull(), // URL of the ad
+  duration: int("duration").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+
+// export const EPISODE_DETAILS = mysqlTable("episode_details", {
+//   id: int("id").primaryKey().autoincrement(),
+//   episode_id: int("episode_id").notNull().references(() => EPISODES.id),
+//   media_type: varchar("media_type", { length: 50 }).notNull(), // "image" or "video"
+//   media_url: varchar("media_url", { length: 255 }).notNull(), // URL for the image or video
+//   description: text("description"), // Details about the scene
+//   order: int("order").notNull().default(1), // Order for display
+//   position: mysqlEnum('position', ['before', 'after']).notNull().default("before"),
+//   created_at: timestamp("created_at").defaultNow(),
+//   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+// });
 
 // export const EPISODE_BRANCHES = mysqlTable("episode_branches", {
 //   id: int("id").primaryKey().autoincrement(),
