@@ -22,14 +22,38 @@ const SlideContainer = ({
     setHasSubmittedAnswer
     }) => {
 
+        // const [slideDirection, setSlideDirection] = useState('right');
+
+        // useEffect(() => {
+        //     if (currentSlideIndex > previousSlideIndex) {
+        //         setSlideDirection('left');
+        //     } else if (currentSlideIndex < previousSlideIndex) {
+        //         setSlideDirection('right');
+        //     }
+        // }, [currentSlideIndex, previousSlideIndex]);
+    
+        // const slideVariants = {
+        //     enter: (direction) => ({
+        //         x: direction === 'left' ? 1000 : -1000,
+        //         opacity: 0
+        //     }),
+        //     center: {
+        //         x: 0,
+        //         opacity: 1
+        //     }
+        // };
+
     const [slideDirection, setSlideDirection] = useState('right');
 
+    
     useEffect(() => {
-        // Explicitly check if moving forward or backward
+        // Update slide direction whenever currentSlideIndex changes
         if (currentSlideIndex > previousSlideIndex) {
-            setSlideDirection('left');
-        } else if (currentSlideIndex < previousSlideIndex) {
+            // Moving forward - content should enter from right
             setSlideDirection('right');
+        } else if (currentSlideIndex < previousSlideIndex) {
+            // Moving backward - content should enter from left
+            setSlideDirection('left');
         }
     }, [currentSlideIndex, previousSlideIndex]);
 
@@ -51,62 +75,36 @@ const SlideContainer = ({
     const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
     const BASE_VIDEO_URL = 'https://wowfy.in/testusr/videos/';
 
-    // useEffect(() => {
-    //     setHasSubmittedAnswer(false);
-    //   }, [userAnswer]);
 
-    //   const handleTextInput = (e) => {
-    //     setUserAnswer(e.target.value);
-    //     setShowError(false);
-    //     setHasSubmittedAnswer(false);
-    //   };
-      
-    //   const handleQuizAnswer = () => {
-    //     setHasSubmittedAnswer(true);
-    //     if (quizData.quiz.answer_type === 'multiple_choice') {
-    //       const isCorrect = quizData.quiz.options.find(opt => 
-    //         opt.id === userAnswer && opt.is_correct
-    //       );
-    //       setIsAnswerCorrect(!!isCorrect);
-    //     } else {
-    //       setIsAnswerCorrect(userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim());
-    //     }
-    //   };
-
-      const handleQuizAnswer = (answer) => {
+    const handleQuizAnswer = (answer) => {
         setUserAnswer(answer);
         setShowError(false);
         
         if (quizData.quiz.answer_type === 'multiple_choice') {
-        const isCorrect = quizData.quiz.options.find(opt => 
-            opt.id === answer && opt.is_correct
-        );
-        setIsAnswerCorrect(!!isCorrect);
+            const isCorrect = quizData.quiz.options.find(opt => 
+                opt.id === answer && opt.is_correct
+            );
+            setIsAnswerCorrect(!!isCorrect);
         } else {
         setIsAnswerCorrect(answer === quizData.quiz.correct_answer);
         }
     };
 
-    const handleTextInput = (e) => {
-        e.preventDefault();  // Prevent default behavior
+      const handleTextInput = (e) => {
         const value = e.target.value;
         setUserAnswer(value);  // Update the input value directly
-      };
+    };
       
       const handleSubmit = (e) => {
         e.preventDefault();  // Prevent form submission default behavior
         setHasSubmittedAnswer(true);
+        console.log("the dagger", userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim())
+
+        setIsAnswerCorrect(userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim());
         
-        if (quizData.quiz.answer_type === 'multiple_choice') {
-          const isCorrect = quizData.quiz.options.find(opt => 
-            opt.id === userAnswer && opt.is_correct
-          );
-          setIsAnswerCorrect(!!isCorrect);
-        } else {
-          setIsAnswerCorrect(userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim());
-        }
       };
-      
+
+
 
     const PlaceholderSlide = ({ type }) => {
         switch(type) {
@@ -310,12 +308,13 @@ const SlideContainer = ({
               <>
                 <form onSubmit={handleSubmit}>
                     <input
-                    type="text"
-                    value={userAnswer}
-                    onChange={handleTextInput}
-                    className="w-full p-2 bg-gray-700/80 rounded-lg text-white text-sm mb-4"
-                    placeholder="Type your answer here..."
-                    autoComplete="off"  // Prevent browser autocomplete
+                        type="text"
+                        value={userAnswer}
+                        onChange={handleTextInput}
+                        className="w-full p-2 bg-gray-700/80 rounded-lg text-white text-sm mb-4"
+                        placeholder="Type your answer here..."
+                        autoComplete="off"
+                        autoFocus  // Added this to automatically focus the input
                     />
                     <button
                     type="submit"
@@ -379,35 +378,66 @@ const SlideContainer = ({
         );
     };
 
+    // return (
+    //     <div className="relative h-full overflow-hidden">
+    //         <AnimatePresence initial={false} mode="wait" custom={slideDirection}>
+    //             <motion.div
+    //                 // key={loading ? 'loading' : currentSlide?.id} 
+    //                 key={currentSlide?.id || 'loading'}
+    //                 custom={slideDirection}
+    //                 variants={slideVariants}
+    //                 initial="enter"
+    //                 animate="center"
+    //                 exit="exit"
+    //                 transition={{
+    //                     x: { type: "spring", stiffness: 300, damping: 30 },
+    //                     opacity: { duration: 0.2 }
+    //                 }}
+    //                 className="absolute w-full h-full"
+    //             >
+    //                 {loading && (
+    //                     <PlaceholderSlide type={nextSlideType} />
+    //                 ) }
+                     
+    //             </motion.div>
+    //         </AnimatePresence>
+    //         {/* <> */}
+    //             {currentSlide?.slide_type === 'image' && slideContent && <DetailView />}
+    //             {currentSlide?.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
+    //             {currentSlide?.slide_type === 'quiz' && quizData && <QuizView />}
+    //         {/* </> */}
+    //     </div>
+    // );
+
     return (
         <div className="relative h-full overflow-hidden">
-            <AnimatePresence initial={false} custom={slideDirection}>
-                <motion.div
-                    key={loading ? 'loading' : currentSlide?.id}
-                    custom={slideDirection}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                        x: { type: "spring", stiffness: 300, damping: 30 },
-                        opacity: { duration: 0.2 }
-                    }}
-                    className="absolute w-full h-full"
-                >
-                    {/* {loading ? (
+            {/* Sliding Placeholder with no exit animation */}
+            <AnimatePresence mode="wait">
+                {loading && (
+                    <motion.div
+                        key={`loading-${currentSlide?.id}`}
+                        custom={slideDirection}
+                        variants={slideVariants}
+                        initial="enter"
+                        animate="center"
+                        // No exit animation - will instantly disappear
+                        className="absolute w-full h-full"
+                    >
                         <PlaceholderSlide type={nextSlideType} />
-                    ) : ( */}
-                        <>
-                            {currentSlide?.slide_type === 'image' && slideContent && <DetailView />}
-                            {currentSlide?.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
-                            {currentSlide?.slide_type === 'quiz' && quizData && <QuizView />}
-                        </>
-                    {/* )} */}
-                </motion.div>
+                    </motion.div>
+                )}
             </AnimatePresence>
+
+            {/* Content that just appears */}
+            {!loading && (
+                <div className="absolute w-full h-full">
+                    {currentSlide?.slide_type === 'image' && slideContent && <DetailView />}
+                    {currentSlide?.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
+                    {currentSlide?.slide_type === 'quiz' && quizData && <QuizView />}
+                </div>
+            )}
         </div>
     );
-};
+};;
 
 export default SlideContainer;

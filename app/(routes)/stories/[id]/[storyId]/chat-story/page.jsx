@@ -13,6 +13,7 @@ const StorySlides = () => {
   const { storyId, id:episodeId } = useParams();
   const [slides, setSlides] = useState([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [previousSlideIndex, setPreviousSlideIndex] = useState(0);
   const [slideContent, setSlideContent] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatAudio, setChatAudio] = useState(null);
@@ -36,11 +37,12 @@ const StorySlides = () => {
   const audioRef = useRef(null);
 
   // const [isLoading, setIsLoading] = useState(false);
-  const [previousSlideIndex, setPreviousSlideIndex] = useState(0);
+  
   const [nextSlideType, setNextSlideType] = useState(null);
 
   const [showWrongAnswerModal, setShowWrongAnswerModal] = useState(false);
-  const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
+  const [showCorrectAnswerModal, setShowCorrectAnswerModal] = useState(false);
+    const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
 
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
@@ -110,10 +112,19 @@ const StorySlides = () => {
     }
   }, [isMuted]);
 
-  useEffect(() => {
-    validateAnswer()
-  }, [hasSubmittedAnswer]);
+  // useEffect(() => {
+  //   validateAnswer()
+  // }, [hasSubmittedAnswer]);
 
+  useEffect(() => {
+    if (hasSubmittedAnswer) {
+      if (isAnswerCorrect) {
+        setShowCorrectAnswerModal(true);
+      } else {
+        validateAnswer(); 
+      }
+    }
+  }, [hasSubmittedAnswer, isAnswerCorrect]);
 
   const fetchSlideContent = async (slideId, slideType) => {
     console.log("log4 slideType",slideId, slideType);
@@ -271,7 +282,13 @@ const StorySlides = () => {
   //   }
   // };
 
+
+  console.log("hasSubmittedAnswer", hasSubmittedAnswer);
+
   const validateAnswer = () => {
+
+    console.log("in the cv=alideator");
+    
     
     if (!userAnswer || !hasSubmittedAnswer) {
       setShowError(true);
@@ -279,6 +296,8 @@ const StorySlides = () => {
     }
     
     if (!isAnswerCorrect) {
+      console.log("in the not corrcet");
+
       setShowWrongAnswerModal(true);
       return false;
     }
@@ -287,16 +306,16 @@ const StorySlides = () => {
   };
 
   const handleSlideChange = async (direction) => {
-
-    // Set the next slide type before loading
+    setHasSubmittedAnswer(false);
+    setPreviousSlideIndex(currentSlideIndex);
+  
+    // Set next slide type
+      //   // Set the next slide type before loading
     if (direction === 'next' && currentSlideIndex < slides.length - 1) {
       setNextSlideType(slides[currentSlideIndex + 1].slide_type);
     } else if (direction === 'previous' && currentSlideIndex > 0) {
       setNextSlideType(slides[currentSlideIndex - 1].slide_type);
     }
-
-    setLoading(true);
-    setPreviousSlideIndex(currentSlideIndex);
     
     try {
       if (direction === 'next') {
@@ -304,10 +323,35 @@ const StorySlides = () => {
       } else {
         await handlePreviousSlide();
       }
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Error changing slide:', error);
     }
   };
+
+  // const handleSlideChange = async (direction) => {
+
+  //   setHasSubmittedAnswer(false)/* clearing this  */
+
+  //   // Set the next slide type before loading
+  //   if (direction === 'next' && currentSlideIndex < slides.length - 1) {
+  //     setNextSlideType(slides[currentSlideIndex + 1].slide_type);
+  //   } else if (direction === 'previous' && currentSlideIndex > 0) {
+  //     setNextSlideType(slides[currentSlideIndex - 1].slide_type);
+  //   }
+
+  //   setLoading(true);
+  //   setPreviousSlideIndex(currentSlideIndex);
+    
+  //   try {
+  //     if (direction === 'next') {
+  //       await handleNextSlide();
+  //     } else {
+  //       await handlePreviousSlide();
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleNextSlide = async () => {
     // Stop current audio immediately
@@ -321,23 +365,30 @@ const StorySlides = () => {
     }
 
     const nextIndex = currentSlideIndex + 1;
-    
-    if (nextIndex < slides.length) {      
-      await fetchSlideContent(slides[nextIndex].id, slides[nextIndex].slide_type);
-      setCurrentSlideIndex(nextIndex);
-    } else {
-      try {
-        console.log("log3");
-        const nextEpisodeResponse = await fetch(`/api/next-episode/${storyId}/${episodeId}`);
-        if (nextEpisodeResponse.ok) {
-          const nextEpisodeData = await nextEpisodeResponse.json();
-          setNextEpisode(nextEpisodeData);
-        }
-      } catch (err) {
-        console.error('Error fetching next episode:', err);
+
+    // Check if this is the last slide
+  if (nextIndex === slides.length - 1) {
+    // Fetch next episode data
+    try {
+      const nextEpisodeResponse = await fetch(`/api/next-episode/${storyId}/${episodeId}`);
+      if (nextEpisodeResponse.ok) {
+        const nextEpisodeData = await nextEpisodeResponse.json();
+        setNextEpisode(nextEpisodeData);
       }
-      setIsLastSlide(true);
+    } catch (err) {
+      console.error('Error fetching next episode:', err);
     }
+  }
+
+  
+  if (nextIndex < slides.length) {
+    setLoading(true);
+    await fetchSlideContent(slides[nextIndex].id, slides[nextIndex].slide_type);
+    setCurrentSlideIndex(nextIndex);
+    setIsLastSlide(nextIndex === slides.length - 1);
+    setLoading(false);
+  }
+
   };
 
   const handlePreviousSlide = async () => {
@@ -358,6 +409,7 @@ const StorySlides = () => {
   };
 
   const handleNextEpisode = () => {
+    setHasSubmittedAnswer(false)
     if (nextEpisode) {
       setShowAd(true);
       // router.push(`/stories/${nextEpisode.id}/${storyId}/chat-story`);
@@ -425,6 +477,28 @@ const StorySlides = () => {
     );
   };
 
+  const CorrectAnswerModal = ({ isOpen, onContinue }) => {
+    if (!isOpen) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
+        <div className="bg-green-800 p-6 rounded-lg max-w-sm w-full mx-4">
+          <h3 className="text-xl font-bold mb-4 text-white">Correct Answer!</h3>
+          <p className="mb-6 text-gray-200">You&apos;ve successfully answered the quiz. You can now proceed to the next slide.</p>
+          <div className="flex justify-center">
+            <button
+              onClick={onContinue}
+              className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-white"
+            >
+              Continue to Next Slide
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+
   // Updated Navigation component
  
   const Navigation = ({ 
@@ -455,9 +529,9 @@ const StorySlides = () => {
           {!isLastSlide ? (
             <button 
               onClick={onNext}
-              disabled={loading || (currentSlide?.slide_type === 'quiz' && !isAnswerCorrect)}
+              disabled={loading || (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer)) }
               className={`pointer-events-auto ml-auto p-4 rounded-full transition-colors shadow-lg backdrop-blur-sm ${
-                loading || (currentSlide?.slide_type === 'quiz' && !isAnswerCorrect)
+                loading || (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer))
                   ? 'bg-green-600/80 opacity-50 cursor-not-allowed'
                   : 'bg-green-600/80 hover:bg-green-700/80'
               }`}
@@ -554,6 +628,14 @@ const StorySlides = () => {
         isOpen={showWrongAnswerModal}
         onRestart={handleRestart}
         onWatchAd={handleWatchAdForRetry}
+      />
+
+      <CorrectAnswerModal 
+        isOpen={showCorrectAnswerModal}
+        onContinue={() => {
+          setShowCorrectAnswerModal(false);
+          handleSlideChange('next');
+        }}
       />
 
     </div>
