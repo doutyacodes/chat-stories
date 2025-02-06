@@ -445,108 +445,205 @@ const handleMediaUpload = async (index, file) => {
     }
   };
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setIsSubmitting(true);
+// const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setError("");
+//     setIsSubmitting(true);
   
-    // Basic validation
-    if (!episodeData.name.trim()) {
-      setError("Episode name is required");
-      return;
-    }
+//     // Basic validation
+//     if (!episodeData.name.trim()) {
+//       setError("Episode name is required");
+//       return;
+//     }
   
-    try {
-      // First, upload all files
-      const slidesWithUploadedFiles = await Promise.all(episodeData.slides.map(async (slide, index) => {
-        const updatedSlide = { ...slide };
+//     try {
+//       // First, upload all files
+//       const slidesWithUploadedFiles = await Promise.all(episodeData.slides.map(async (slide, index) => {
+//         const updatedSlide = { ...slide };
   
-        // Upload Audio
-        if (slide.content.audio?.file) {
-          const audioFileName = await uploadAudioToCPanel(slide.content.audio.file);
-          updatedSlide.content.audio = audioFileName ? { name: audioFileName } : null;
-        }
+//         // Upload Audio
+//         if (slide.content.audio?.file) {
+//           const audioFileName = await uploadAudioToCPanel(slide.content.audio.file);
+//           updatedSlide.content.audio = audioFileName ? { name: audioFileName } : null;
+//         }
   
-        // Upload Image for Image and Quiz slides
-        // if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.file) {
-        //   const imageFileName = await uploadImageToCPanel(slide.content.media.file);
-        //   updatedSlide.content.media = imageFileName ? { preview: slide.content.media.preview, name: imageFileName } : null;
-        // }
 
-        // In handleSubmit function, replace uploadImageToCPanel with:
-        if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.file) {
-          const mediaFileName = await uploadMediaToCPanel(slide.content.media.file);
-          updatedSlide.content.media = mediaFileName ? { 
-            ...slide.content.media,
-            name: mediaFileName 
-          } : null;
-        }
+//         // In handleSubmit function, replace uploadImageToCPanel with:
+//         if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.file) {
+//           const mediaFileName = await uploadMediaToCPanel(slide.content.media.file);
+//           updatedSlide.content.media = mediaFileName ? { 
+//             ...slide.content.media,
+//             name: mediaFileName 
+//           } : null;
+//         }
           
-        return updatedSlide;
-      }));
+//         return updatedSlide;
+//       }));
   
-      // Create a new episodeData with uploaded file names
-      const updatedEpisodeData = {
-        ...episodeData,
-        slides: slidesWithUploadedFiles
-      };
+//       // Create a new episodeData with uploaded file names
+//       const updatedEpisodeData = {
+//         ...episodeData,
+//         slides: slidesWithUploadedFiles
+//       };
   
-      const formData = new FormData();
-      formData.append('storyId', storyId);
-      formData.append('name', updatedEpisodeData.name);
-      formData.append('synopsis', updatedEpisodeData.synopsis);
-      formData.append('slides', JSON.stringify(updatedEpisodeData.slides));
-      formData.append('characters', JSON.stringify(
-        updatedEpisodeData.slides
-          .filter(slide => slide.type === 'chat')
-          .flatMap(slide => slide.content.characters)
-      ));
+//       const formData = new FormData();
+//       formData.append('storyId', storyId);
+//       formData.append('name', updatedEpisodeData.name);
+//       formData.append('synopsis', updatedEpisodeData.synopsis);
+//       formData.append('slides', JSON.stringify(updatedEpisodeData.slides));
+//       formData.append('characters', JSON.stringify(
+//         updatedEpisodeData.slides
+//           .filter(slide => slide.type === 'chat')
+//           .flatMap(slide => slide.content.characters)
+//       ));
 
-      episodeData.slides.forEach((slide, index) => {
+//       episodeData.slides.forEach((slide, index) => {
 
-        if (slide.type === 'chat' && slide.content.pdfFile) {
-          formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
-        } 
-        if (slide.type === 'quiz') {
-          if (!slide.content.question.trim()) {
-            setError('Quiz question is required');
-            setIsSubmitting(false);
-            throw new Error('Validation failed');
-          }
-          if (slide.content.quizType === 'multiple') {
-            if (slide.content.options.some(opt => !opt.text.trim())) {
-              setError('All quiz options must have text');
-              setIsSubmitting(false);
-              throw new Error('Validation failed');
-            }
-            if (!slide.content.options.some(opt => opt.is_correct)) {
-              setError('Please select a correct answer for quiz');
-              setIsSubmitting(false);
-              throw new Error('Validation failed');
-            }
-          } else if (!slide.content.answer.trim()) {
-            setError('Answer is required for normal quiz');
-            setIsSubmitting(false);
-            throw new Error('Validation failed');
-          }
+//         if (slide.type === 'chat' && slide.content.pdfFile) {
+//           formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
+//         } 
+//         if (slide.type === 'quiz') {
+//           if (!slide.content.question.trim()) {
+//             setError('Quiz question is required');
+//             setIsSubmitting(false);
+//             throw new Error('Validation failed');
+//           }
+//           if (slide.content.quizType === 'multiple') {
+//             if (slide.content.options.some(opt => !opt.text.trim())) {
+//               setError('All quiz options must have text');
+//               setIsSubmitting(false);
+//               throw new Error('Validation failed');
+//             }
+//             if (!slide.content.options.some(opt => opt.is_correct)) {
+//               setError('Please select a correct answer for quiz');
+//               setIsSubmitting(false);
+//               throw new Error('Validation failed');
+//             }
+//           } else if (!slide.content.answer.trim()) {
+//             setError('Answer is required for normal quiz');
+//             setIsSubmitting(false);
+//             throw new Error('Validation failed');
+//           }
+//         }
+//       });
+  
+//       const response = await fetch('/api/stories/story-slides', {
+//         method: 'POST',
+//         body: formData,
+//       });
+  
+//       if (!response.ok) throw new Error('Failed to create episode');
+  
+//       router.push('/your-stories');
+//     } catch (error) {
+//       setError("Failed to create episode. Please try again.");
+//       console.error(error);
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setIsSubmitting(true);
+
+  // Basic validation
+  if (!episodeData.name.trim()) {
+    setError("Episode name is required");
+    return;
+  }
+
+  try {
+    // First, upload all files and clean up media data
+    const slidesWithUploadedFiles = await Promise.all(episodeData.slides.map(async (slide, index) => {
+      const updatedSlide = { ...slide };
+
+      // Upload Audio
+      if (slide.content.audio?.file) {
+        const audioFileName = await uploadAudioToCPanel(slide.content.audio.file);
+        updatedSlide.content.audio = audioFileName ? { name: audioFileName } : null;
+      }
+
+      // Handle media uploads and clean up preview data
+      if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.file) {
+        const mediaFileName = await uploadMediaToCPanel(slide.content.media.file);
+        // Only include the necessary media data, excluding preview
+        updatedSlide.content.media = mediaFileName ? {
+          name: mediaFileName,
+          type: slide.content.media.type // Keep only essential metadata
+        } : null;
+      }
+
+      return updatedSlide;
+    }));
+
+    // Create a new episodeData with uploaded file names and cleaned up media data
+    const updatedEpisodeData = {
+      ...episodeData,
+      slides: slidesWithUploadedFiles
+    };
+
+    // Validate quiz slides before submission
+    updatedEpisodeData.slides.forEach((slide, index) => {
+      if (slide.type === 'quiz') {
+        if (!slide.content.question.trim()) {
+          setError('Quiz question is required');
+          setIsSubmitting(false);
+          throw new Error('Validation failed');
         }
-      });
-  
-      const response = await fetch('/api/stories/story-slides', {
-        method: 'POST',
-        body: formData,
-      });
-  
-      if (!response.ok) throw new Error('Failed to create episode');
-  
-      router.push('/your-stories');
-    } catch (error) {
-      setError("Failed to create episode. Please try again.");
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        if (slide.content.quizType === 'multiple') {
+          if (slide.content.options.some(opt => !opt.text.trim())) {
+            setError('All quiz options must have text');
+            setIsSubmitting(false);
+            throw new Error('Validation failed');
+          }
+          if (!slide.content.options.some(opt => opt.is_correct)) {
+            setError('Please select a correct answer for quiz');
+            setIsSubmitting(false);
+            throw new Error('Validation failed');
+          }
+        } else if (!slide.content.answer.trim()) {
+          setError('Answer is required for normal quiz');
+          setIsSubmitting(false);
+          throw new Error('Validation failed');
+        }
+      }
+    });
+
+    const formData = new FormData();
+    formData.append('storyId', storyId);
+    formData.append('name', updatedEpisodeData.name);
+    formData.append('synopsis', updatedEpisodeData.synopsis);
+    formData.append('slides', JSON.stringify(updatedEpisodeData.slides));
+    formData.append('characters', JSON.stringify(
+      updatedEpisodeData.slides
+        .filter(slide => slide.type === 'chat')
+        .flatMap(slide => slide.content.characters)
+    ));
+
+    // Handle PDF files separately
+    updatedEpisodeData.slides.forEach((slide, index) => {
+      if (slide.type === 'chat' && slide.content.pdfFile) {
+        formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
+      }
+    });
+
+    const response = await fetch('/api/stories/story-slides', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('Failed to create episode');
+
+    router.push('/your-stories');
+  } catch (error) {
+    setError("Failed to create episode. Please try again.");
+    console.error(error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8 md:pt-28">
