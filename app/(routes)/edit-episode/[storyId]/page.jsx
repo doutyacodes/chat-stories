@@ -548,11 +548,19 @@ const EditEpisode = () => {
       for (const slide of modifiedSlides) {
         if (slide.content.media?.file) {
           const mediaPath = await uploadMediaToCPanel(slide.content.media.file);
-          slide.content.media.file = mediaPath; // Update file path
+          // slide.content.media.file = mediaPath; // Update file path
+          slide.content.media = {
+            file: mediaPath,  // Only send file name
+            type: slide.content.media.type, // Keep the type
+          };
         }
         if (slide.content.audio?.file) {
           const audioPath = await uploadAudioToCPanel(slide.content.audio.file);
-          slide.content.audio.file = audioPath; // Update file path
+          // slide.content.audio.file = audioPath; // Update file path
+          slide.content.media = {
+            file: mediaPath,  // Only send file name
+            type: slide.content.media.type, // Keep the type
+          };
         }
       }
   
