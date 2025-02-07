@@ -138,17 +138,16 @@ const CreateEpisode = () => {
         const width = img.width;
         const height = img.height;
   
-        // Validate 4:5 aspect ratio for any type
+        // Validate 9:16 aspect ratio for any type
         const aspectRatio = width / height;
-        const expectedRatio = 4 / 5;
+        const expectedRatio = 9 / 16;
         const tolerance = 0.1; // 10% tolerance
   
         if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-          reject("Image must have a 4:5 aspect ratio (recommended: 1080x1350px)");
-        } else if (width < 1080 || height < 1350) {
-          reject("Image resolution is too low. Recommended: 1080x1350px");
+          reject("Image must have a 9:16 aspect ratio (recommended: 1080x1920px)");
+        } else if (width < 1080 || height < 1920) {
+          reject("Image resolution is too low. Recommended: 1080x1920px");
         }
-  
         resolve(true);
       };
   
@@ -773,7 +772,7 @@ const handleSubmit = async (e) => {
                                   <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
                                   {slide.content.media?.file && !slide.content.media.file.type.startsWith('video/') && (
                                     <span className="text-xs text-gray-400 mt-1">
-                                      4:5 aspect ratio required
+                                      9:16 aspect ratio required
                                     </span>
                                   )}
                                 </label>
@@ -1000,7 +999,7 @@ const handleSubmit = async (e) => {
                                     <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
                                     {slide.content.media?.file && !slide.content.media.file.type.startsWith('video/') && (
                                       <span className="text-xs text-gray-400 mt-1">
-                                        4:5 aspect ratio required
+                                        9:16 aspect ratio required
                                       </span>
                                     )}
                                   </label>
