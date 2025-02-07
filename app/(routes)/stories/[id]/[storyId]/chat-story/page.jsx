@@ -146,7 +146,8 @@ const StorySlides = () => {
         const contentData = await contentResponse.json();
         setSlideContent(contentData);
       } else if (slideType === 'chat') {
-        const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}`);
+        // const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}`);
+        const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}?slideId=${slideId}`);
         if (!chatResponse.ok) throw new Error('Failed to fetch chat messages');
         const chatData = await chatResponse.json();
         setChatMessages(chatData.chatMessages);

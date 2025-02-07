@@ -137,6 +137,7 @@ export const CHAT_MESSAGES = mysqlTable("chat_messages", {
   id: int("id").primaryKey().autoincrement(),
   story_id: int("story_id").notNull().references(() => STORIES.id),
   episode_id: int("episode_id").notNull().references(() => EPISODES.id),
+  slide_id: int("slide_id").notNull().references(() => SLIDES.id), // NEW FIELD
   character_id: int("character_id").notNull().references(() => CHARACTERS.id),
   message: text("message").notNull(),
   sequence: int("sequence").notNull(),

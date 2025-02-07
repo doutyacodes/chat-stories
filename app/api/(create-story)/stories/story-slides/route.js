@@ -112,6 +112,7 @@
                 await db.insert(CHAT_MESSAGES).values({
                   story_id: storyId,
                   episode_id: episodeId,
+                  slide_id: slideId,
                   character_id: characterId,
                   message: line.line,
                   sequence
@@ -131,6 +132,7 @@
                 await db.insert(CHAT_MESSAGES).values({
                   story_id: storyId,
                   episode_id: episodeId,
+                  slide_id: slideId,
                   character_id: characterId,
                   message,
                   sequence
