@@ -63,7 +63,7 @@ const ViewAllPage = () => {
         sort: sortBy,
         category: selectedCategory,
         search: currentQuery,
-        type: 'chat'
+        type: 'game'
       });
       
       const endpoint = `/api/view-all/stories?${queryParams}`;

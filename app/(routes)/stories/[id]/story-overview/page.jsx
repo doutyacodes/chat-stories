@@ -40,7 +40,7 @@ const StoryOverview = () => {
     const handleClick = () => {
       if (isEpisode) {
         router.push(
-          story.story_type === 'chat'
+          (story.story_type === 'chat' || story.story_type === 'game')
             ? `/stories/${storyData.id}/${id}/chat-story`
             : `/stories/${id}/normal-story`
         );
@@ -57,8 +57,9 @@ const StoryOverview = () => {
         {isEpisode ? (
           <div className="w-full h-28 md:h-44 bg-gray-800 rounded-2xl border-[6px] border-white mb-2 flex items-center justify-center">
             <span className="text-white text-xl"> 
-              { hasEpisode ? `Episode ${storyData.episodeNumber}`
-              : 'Full Story'}
+              {/* { hasEpisode ? `Episode ${storyData.episodeNumber}`
+              : 'Full Story'} */}
+              { `Episode ${storyData.episodeNumber}`}
             </span>
           </div>
         ) : (
@@ -69,7 +70,8 @@ const StoryOverview = () => {
           />
         )}
         <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
-          {isEpisode ? storyData.name : storyData.title}
+          {/* {isEpisode ? storyData.name : storyData.title} */}
+          {storyData.name}
         </p>
       </div>
     );
@@ -86,41 +88,6 @@ const StoryOverview = () => {
   return (
     <div className="min-h-screen bg-black pb-16">
       <div className="w-full max-w-[1920px] mx-auto">
-         {/* Back Button */}
-        {/* <div className="md:px-7 pt-4 md:pt-8">
-          <button 
-            onClick={() => window.history.back()} 
-            className="text-white flex items-center gap-2 hover:opacity-80 transition-opacity"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              width="24" 
-              height="24" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="m15 18-6-6 6-6"/>
-            </svg>
-            <span className="text-sm font-medium">Back</span>
-          </button>
-        </div> */}
-
-        {/* Cover Image */}
-        {/* <div className="relative mx-auto h-[250px] md:h-[600px] overflow-hidden md:rounded-3xl mb-4"> */}
-        {/* <div className="relative mx-auto h-[300px] md:h-[95vh] overflow-hidden">
-
-          <div className="relative h-full w-full">
-            <img
-              src={`${BASE_IMAGE_URL}${story?.cover_img}`}
-              alt={story?.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div> */}
             <div className="relative mx-auto h-[300px] md:h-[95vh] overflow-hidden">
               <div className="relative h-full w-full"> 
                 <img
@@ -161,7 +128,8 @@ const StoryOverview = () => {
           {/* Episodes Section */}
           <div className="mb-8">
             <h2 className="text-base md:text-2xl text-white font-medium mb-4 px-4">
-            {story?.has_episodes ? 'Episodes' : 'Full Story'}
+            {/* {story?.has_episodes ? 'Episodes' : 'Full Story'} */}
+            Episodes
             </h2>
             <div className="flex overflow-x-auto scrollbar-hide px-4 space-x-4 pb-4">
               {episodes.map((episode) => (

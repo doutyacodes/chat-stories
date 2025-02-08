@@ -9,6 +9,7 @@ export async function GET(request) {
   const sortBy = searchParams.get('sort') || 'latest';
   const category = searchParams.get('category') || 'all';
   const search = searchParams.get('search') || '';
+  const storyType = searchParams.get('type') || '';
 
   try {
     // Base query structure
@@ -37,6 +38,8 @@ export async function GET(request) {
           eq(STORIES.is_published, true),
           // Add category filter if not 'all'
           category !== 'all' ? eq(STORIES.category_id, Number(category)) : undefined,
+          // Add search filter if search string exists
+          storyType ? eq(STORIES.story_type, storyType) : undefined,
           // Add search filter if search string exists
           search ? 
             or(

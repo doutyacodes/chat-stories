@@ -64,7 +64,7 @@ export default function NavBar() {
 
                     <li 
                       className="text-white hover:text-gray-300 cursor-pointer transition-colors"
-                      // onClick={() => router.push('/stories')}
+                      onClick={() => router.push('/games')}
                     >
                       Games
                     </li>

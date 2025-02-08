@@ -58,15 +58,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.pexels.com',
-        pathname: '**',
-      },
-      {
-        protocol: 'https',
         hostname: 'wowfy.in',
-        pathname: '**',
+        pathname: "/testusr/images/**", // Match all images in this folder
       },
     ],
+    unoptimized: true, // Disable Next.js optimization
   },
   webpack: (config, { isServer }) => {
     // Add node-loader to handle .node files (e.g., ssh2)
