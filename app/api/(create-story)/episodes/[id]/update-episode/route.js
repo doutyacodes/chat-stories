@@ -156,6 +156,7 @@ export async function PUT(request, { params }) {
           })
           .where(eq(EPISODES.id, episodeId));
       }
+      console.log("log 1")
 
       const modifiedSlides = JSON.parse(formData.get('modifiedSlides') || '[]');
       const deletedSlideIds = formData.get('deletedSlides') ? JSON.parse(formData.get('deletedSlides')) : [];
@@ -181,6 +182,8 @@ export async function PUT(request, { params }) {
               audio_url: slide.content.audio?.file || null,
               description: slide.content.description || ''
             });
+            console.log("log 2")
+
 
           } else if (slide.type === 'chat') {
             await processChat(trx, slide, slideId, storyId, episodeId, formData);
@@ -244,7 +247,7 @@ export async function PUT(request, { params }) {
               }
               
               if (slide.changes.audioModified) {
-                updateData.audio_url = slide.content.audio?.file || null;
+                updateData.audio_url = slide.content.audio?.name || null;
               }
               
               await trx
