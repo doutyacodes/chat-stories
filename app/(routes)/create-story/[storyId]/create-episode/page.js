@@ -1,9 +1,12 @@
 "use client"
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Plus, X, Upload } from "lucide-react";
 import axios from 'axios'; // Make sure to install axios
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import { Alert } from '@/components/ui/alert';
 
 const CreateEpisode = () => {
   const router = useRouter();
@@ -11,8 +14,20 @@ const CreateEpisode = () => {
   const [error, setError] = useState("");
   const [characters, setCharacters] = useState([]);
   const [fetchedCharacters, setFetchedCharacters] = useState([]); // Store fetched characters
+  const [storyType, setStoryType] = useState(null);
   const [slides, setSlides] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(null);
+  const imgRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [crop, setCrop] = useState({
+    unit: '%',
+    width: 90,
+    aspect: 9 / 16 // Note: Changed to 9:16 ratio
+  });
+  const [completedCrop, setCompletedCrop] = useState(null);
 
   const [ episodeData, setEpisodeData] = useState({
     name: "",
@@ -26,7 +41,7 @@ const CreateEpisode = () => {
   const slideTypes = [
     { value: "image", label: "Image Slide" },
     { value: "chat", label: "Chat Slide" },
-    { value: "quiz", label: "Quiz Slide" }
+    ...(storyType === "game" ? [{ value: "quiz", label: "Quiz Slide" }] : [])
   ];
 
     useEffect(() => {
@@ -39,10 +54,24 @@ const CreateEpisode = () => {
         if (!response.ok) throw new Error('Failed to fetch characters');
         const data = await response.json();
         setFetchedCharacters(data.characters); // Store fetched characters in state
+        setStoryType(data.storyType); // Store fetched characters in state
         } catch (error) {
         setError("Failed to load characters");
         console.error(error);
         }
+    };
+
+    // Add these new utility functions
+    const setFieldError = (field, message) => {
+      setErrors(prev => ({ ...prev, [field]: message }));
+    };
+
+    const clearFieldError = (field) => {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     };
 
     const handleAddSlide = (type) => {
@@ -353,28 +382,57 @@ const CreateEpisode = () => {
   };
   
 // Update your handler function name if needed
+// const handleMediaUpload = async (index, file) => {
+//   if (file) {
+//     try {
+//       const slideType = episodeData.slides[index].type;
+      
+//       // Only validate images (skip validation for videos/gifs)
+//       if (file.type.startsWith('image/') && !file.type.includes('gif')) {
+//         await validateImage(file, slideType);
+//       }
+
+//       const reader = new FileReader();
+//       reader.onloadend = () => {
+//         handleImageSlideChange(index, 'media', {
+//           file: file,
+//           preview: reader.result,
+//           type: file.type.split('/')[0] // 'image' or 'video'
+//         });
+//       };
+//       reader.readAsDataURL(file);
+//     } catch (error) {
+//       setError(error);
+//       setTimeout(() => setError(''), 5000);
+//     }
+//   }
+// };
+
 const handleMediaUpload = async (index, file) => {
   if (file) {
-    try {
-      const slideType = episodeData.slides[index].type;
-      
-      // Only validate images (skip validation for videos/gifs)
-      if (file.type.startsWith('image/') && !file.type.includes('gif')) {
-        await validateImage(file, slideType);
-      }
-
+    if (file.type.startsWith('video/')) {
+      // Handle video directly without cropping
       const reader = new FileReader();
       reader.onloadend = () => {
         handleImageSlideChange(index, 'media', {
           file: file,
           preview: reader.result,
-          type: file.type.split('/')[0] // 'image' or 'video'
+          type: 'video'
         });
       };
       reader.readAsDataURL(file);
-    } catch (error) {
-      setError(error);
-      setTimeout(() => setError(''), 5000);
+    } else if (file.type.startsWith('image/')) {
+      setCurrentSlideIndex(index);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleImageSlideChange(index, 'media', {
+          file: file,
+          preview: reader.result,
+          type: 'image'
+        });
+        setShowCropModal(true);
+      };
+      reader.readAsDataURL(file);
     }
   }
 };
@@ -402,27 +460,92 @@ const handleMediaUpload = async (index, file) => {
     }
   };
 
-  const uploadImageToCPanel = async (file, type) => {
-    const formData = new FormData();
-    formData.append('coverImage', file);
-  
-    try {
-      const response = await axios.post('https://wowfy.in/testusr/upload.php', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-  
-      if (response.data.success) {
-        return response.data.filePath;
-      } else {
-        throw new Error(response.data.error);
-      }
-    } catch (error) {
-      console.error('Image upload error:', error);
-      setError('Failed to upload image');
-      return null;
-    }
+  // Add these new image cropping related functions
+const onImageLoad = (image) => {
+  imgRef.current = image.target;
+  const { width, height } = image.target;
+  const crop = {
+    unit: '%',
+    width: 90,
+    x: 5,
+    y: 5,
+    aspect: 9 / 16
   };
-  
+  setCrop(crop);
+};
+
+const getCroppedImg = async () => {
+  try {
+    const image = imgRef.current;
+    const canvas = document.createElement('canvas');
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    canvas.width = completedCrop.width;
+    canvas.height = completedCrop.height;
+    const ctx = canvas.getContext('2d');
+
+    ctx.drawImage(
+      image,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      completedCrop.width,
+      completedCrop.height
+    );
+
+    return new Promise((resolve) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            console.error('Canvas is empty');
+            return;
+          }
+          blob.name = 'cropped.jpeg';
+          resolve(blob);
+        },
+        'image/jpeg',
+        0.95
+      );
+    });
+  } catch (e) {
+    console.error('Error creating cropped image:', e);
+    return null;
+  }
+};
+
+const handleCropComplete = async () => {
+  try {
+    if (completedCrop?.width && completedCrop?.height) {
+      const croppedBlob = await getCroppedImg();
+      if (croppedBlob) {
+        const croppedFile = new File([croppedBlob], 'cropped-image.jpg', { 
+          type: 'image/jpeg' 
+        });
+        const previewUrl = URL.createObjectURL(croppedBlob);
+        handleImageSlideChange(currentSlideIndex, 'media', {
+          file: croppedFile,
+          preview: previewUrl,
+          type: 'image'
+        });
+      }
+    }
+  } catch (e) {
+    setFieldError(`slide${currentSlideIndex}Image`, "Failed to crop image. Please try again.");
+  }
+  setShowCropModal(false);
+};
+
+const handleModalClose = () => {
+  setShowCropModal(false);
+  handleImageSlideChange(currentSlideIndex, 'media', null);
+  if (fileInputRef.current) {
+    fileInputRef.current.value = '';
+  }
+};
+
   const uploadAudioToCPanel = async (file) => {
     const formData = new FormData();
     formData.append('audioFile', file);
@@ -550,6 +673,7 @@ const handleSubmit = async (e) => {
   // Basic validation
   if (!episodeData.name.trim()) {
     setError("Episode name is required");
+    setIsSubmitting(false);
     return;
   }
 
@@ -667,6 +791,11 @@ const handleSubmit = async (e) => {
                 className="w-full p-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-purple-600"
                 placeholder="Enter episode name"
               />
+              {errors.name && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertDescription>{errors.name}</AlertDescription>
+                </Alert>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Episode Synopsis</label>
@@ -676,6 +805,11 @@ const handleSubmit = async (e) => {
                 className="w-full p-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-purple-600 h-24"
                 placeholder="Brief description of the episode"
               />
+               {errors.name && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertDescription>{errors.name}</AlertDescription>
+                  </Alert>
+                )}
             </div>
           </div>
 
@@ -776,6 +910,11 @@ const handleSubmit = async (e) => {
                                     </span>
                                   )}
                                 </label>
+                                {errors.name && (
+                                  <Alert variant="destructive" className="mt-2">
+                                    <AlertDescription>{errors.name}</AlertDescription>
+                                  </Alert>
+                                )}
                               </div>
                             {/* {slide.content.media && (
                                 <div className="w-32 h-32">
@@ -803,6 +942,11 @@ const handleSubmit = async (e) => {
                                     className="w-full h-full object-cover rounded-lg" 
                                   />
                                 )}
+                                 {errors.name && (
+                                    <Alert variant="destructive" className="mt-2">
+                                      <AlertDescription>{errors.name}</AlertDescription>
+                                    </Alert>
+                                  )}
                               </div>
                             )}
                             </div>
@@ -977,7 +1121,7 @@ const handleSubmit = async (e) => {
                         </div>
                         )}
 
-                        {slide.type === 'quiz' && (
+                        {(slide.type === 'quiz' && storyType == 'game') && (
                           <div className="space-y-4">
                             {/* Image Upload (same as image slide) */}
                             <div className="flex items-center gap-4">
@@ -1003,6 +1147,11 @@ const handleSubmit = async (e) => {
                                       </span>
                                     )}
                                   </label>
+                                  {errors.name && (
+                                    <Alert variant="destructive" className="mt-2">
+                                      <AlertDescription>{errors.name}</AlertDescription>
+                                    </Alert>
+                                  )}
                                 </div>
 
                                   {/* {slide.content.media && (
@@ -1174,6 +1323,45 @@ const handleSubmit = async (e) => {
           </button>
         </form>
       </div>
+      {showCropModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-4xl w-full">
+            <h3 className="text-xl font-semibold mb-4">Adjust Image (Recommended: 9:16 ratio)</h3>
+            <div className="relative max-h-[60vh] overflow-auto mb-4">
+              <ReactCrop
+                crop={crop}
+                onChange={c => setCrop(c)}
+                onComplete={c => setCompletedCrop(c)}
+                aspect={9/16}
+              >
+                <img
+                  ref={imgRef}
+                  src={episodeData.slides[currentSlideIndex]?.content?.media?.preview}
+                  alt="Crop Preview"
+                  onLoad={onImageLoad}
+                  className="max-w-full"
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={handleModalClose}
+                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCropComplete}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors"
+              >
+                Apply Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

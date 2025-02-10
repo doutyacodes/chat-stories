@@ -46,7 +46,7 @@ export async function POST(request) {
       title: data.name,
       synopsis: data.synopsis,
       category_id: parseInt(data.category),
-      story_type: 'chat', // Hardcoded as per original code
+      story_type: data.storyType, // Hardcoded as per original code
       user_id: userId,
       cover_img: data.coverImagePath, // Use the filename from cPanel upload
       is_published: false,

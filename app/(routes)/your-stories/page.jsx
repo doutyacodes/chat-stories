@@ -62,11 +62,12 @@ const YourStoriesPage = () => {
   };
 
   const navigateToContent = (story) => {
-    if (story.type === 'chat') {
-      router.push(`/create-story/${story.id}/create-episode`); // Route for chat stories
-    } else {
-      // router.push(`/create-story/${story.id}/normal-content`); // Route for normal stories
-    }
+    // if (story.type === 'chat') {
+    //   router.push(`/create-story/${story.id}/create-episode`); // Route for chat stories
+    // } else {
+    //   // router.push(`/create-story/${story.id}/normal-content`); // Route for normal stories
+    // }
+    router.push(`/create-story/${story.id}/create-episode`); // Route for chat stories
   };
 
   // Helper function to get story type label and style
@@ -198,7 +199,7 @@ const YourStoriesPage = () => {
                           className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-2xl
                             flex items-center gap-2 text-xs"
                         >
-                          {story.type === 'chat' ? (
+                          {/* {story.type === 'chat' ? (
                             <>
                               <MessageSquare className="h-4 w-4" />
                               Add Chat
@@ -208,7 +209,8 @@ const YourStoriesPage = () => {
                               <BookOpen className="h-4 w-4" />
                               Add Story
                             </>
-                          )}
+                          )} */}
+                          Add Chat
                         </button>
 
                         {/* New Edit Story Button */}

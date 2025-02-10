@@ -29,7 +29,6 @@ const EditEpisode = () => {
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
   const BASE_VIDEO_URL = 'https://wowfy.in/testusr/videos/';
-  const BASE_AUDIO_URL = 'https://wowfy.in/testusr/audio/';
 
   useEffect(() => {
     fetchEpisodes();
@@ -463,67 +462,6 @@ const EditEpisode = () => {
     }
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setError("");
-  //   setLoading(true);
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("storyId", storyId);
-  //     formData.append("episodeId", episodeData.id);
-  //     if (modifications.nameModified) formData.append("name", episodeData.name);
-  //     if (modifications.synopsisModified) formData.append("synopsis", episodeData.synopsis);
-
-  //     const modifiedSlides = Object.entries(modifications.slides)
-  //       .filter(([_, changes]) => Object.values(changes).some((v) => v))
-  //       .map(([slideId, changes]) => ({
-  //         id: slideId,
-  //         changes,
-  //         ...episodeData.slides.find((s) => s.id === slideId),
-  //       }));
-
-  //     formData.append("modifiedSlides", JSON.stringify(modifiedSlides));
-
-  //     for (const slide of modifiedSlides) {
-  //       if (slide.content.media?.file) {
-  //         const mediaPath = await uploadMediaToCPanel(slide.content.media.file);
-  //         console.log("niggera", mediaPath)
-  //         slide.content.media = { ...slide.content.media, file: mediaPath };
-  //       }
-  //       if (slide.content.audio?.file) {
-  //         const audioPath = await uploadAudioToCPanel(slide.content.audio.file);
-  //         slide.content.audio = { ...slide.content.audio, file: audioPath };
-  //       }
-  //       if (slide.content.pdfFile) {
-  //         formData.append(`slides.${slide.id}.pdfFile`, slide.content.pdfFile);
-  //       }
-  //     }
-
-  //     // console.log('submittede formData', formData)
-  //     const formObject = {};
-  //     formData.forEach((value, key) => {
-  //       if (formObject[key]) {
-  //         formObject[key] = [].concat(formObject[key], value); // Convert to array if multiple values exist
-  //       } else {
-  //         formObject[key] = value;
-  //       }
-  //     });
-  //     console.log('submittede formData',formObject);
-
-  //     const response = await fetch(`/api/episodes/${episodeData.id}/update-episode`, {
-  //       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-  //       method: "PUT",
-  //       body: formData,
-  //     });
-  //     if (!response.ok) throw new Error("Failed to update episode");
-  //     // router.push("/your-stories");
-  //   } catch (error) {
-  //     setError("Failed to update episode. Please try again.");
-  //     console.error(error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -558,7 +496,7 @@ const EditEpisode = () => {
           const audioPath = await uploadAudioToCPanel(slide.content.audio.file);
           // slide.content.audio.file = audioPath; // Update file path
           slide.content.media = {
-            file: mediaPath,  // Only send file name
+            file: audioPath,  // Only send file name
             type: slide.content.media.type, // Keep the type
           };
         }

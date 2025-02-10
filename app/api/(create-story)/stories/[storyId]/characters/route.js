@@ -1,7 +1,7 @@
 // API Route: /api/stories/[storyId]/data.js
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
-import { CHARACTERS, EPISODES } from '../../../../../../utils/schema';
+import { CHARACTERS, EPISODES, STORIES } from '../../../../../../utils/schema';
 import { db } from '../../../../../../utils';
 
 export async function GET(request, { params }) {
@@ -14,8 +14,15 @@ export async function GET(request, { params }) {
                     .from(CHARACTERS)
                     .where(eq(CHARACTERS.story_id, storyId))
 
+
+    const storyType = await db
+      .select({storyType: STORIES.story_type})
+      .from(STORIES)
+      .where(eq(STORIES.id, storyId))
+
     return NextResponse.json({
-      characters
+      characters,
+      storyType
     });
   } catch (error) {
     console.error("Error fetching story data:", error);
