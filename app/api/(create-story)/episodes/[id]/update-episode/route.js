@@ -223,18 +223,6 @@ export async function PUT(request, { params }) {
               .where(eq(SLIDES.id, slide.id));
           }
 
-          // if (slide.type === 'image') {
-          //   if (slide.changes.mediaModified || slide.changes.descriptionModified || slide.changes.audioModified) {
-          //     await trx
-          //       .update(SLIDE_CONTENT)
-          //       .set({
-          //         media_url: slide.content.media?.name || null,
-          //         audio_url: slide.content.audio?.name || null,
-          //         description: slide.content.description
-          //       })
-          //       .where(eq(SLIDE_CONTENT.slide_id, slide.id));
-          //   }
-          // Update the image slide handling section
           if (slide.type === 'image') {
             if (slide.changes.mediaModified || slide.changes.descriptionModified || slide.changes.audioModified) {
               const updateData = {

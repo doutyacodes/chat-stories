@@ -4,6 +4,8 @@ import { useRouter, useParams } from "next/navigation";
 import { Plus, X, Upload, ArrowUp, ArrowDown } from "lucide-react";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 const EditEpisode = () => {
   const router = useRouter();
@@ -23,6 +25,18 @@ const EditEpisode = () => {
     nameModified: false,
     synopsisModified: false,
     slides: {},
+  });
+
+  const [cropState, setCropState] = useState({
+    slideIndex: null,
+    showCropModal: false,
+    imgSrc: null,
+    crop: {
+      unit: '%',
+      width: 90,
+      aspect: 9 / 16
+    },
+    completedCrop: null
   });
 
   console.log('modifications', modifications)
@@ -149,37 +163,6 @@ const EditEpisode = () => {
     }
   };
 
-  // const handleDragEnd = (result) => {
-  //   if (!result.destination) return;
-    
-  //   const items = Array.from(episodeData.slides);
-  //   const [reorderedItem] = items.splice(result.source.index, 1);
-  //   items.splice(result.destination.index, 0, reorderedItem);
-    
-  //   const updatedSlides = items.map((slide, index) => ({ 
-  //     ...slide, 
-  //     position: index 
-  //   }));
-    
-  //   setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-    
-  //   // Track position changes for all affected slides
-  //   const newModifications = { ...modifications };
-  //   const startIdx = Math.min(result.source.index, result.destination.index);
-  //   const endIdx = Math.max(result.source.index, result.destination.index);
-    
-  //   updatedSlides.slice(startIdx, endIdx + 1).forEach((slide) => {
-  //     newModifications.slides[slide.id] = {
-  //       ...newModifications.slides[slide.id],
-  //       positionModified: true,
-  //       previousPosition: result.source.index,
-  //       newPosition: slide.position
-  //     };
-  //   });
-    
-  //   setModifications(newModifications);
-  // };
-
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     
@@ -277,31 +260,6 @@ const EditEpisode = () => {
     setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
   };
 
-  // const handleMediaUpload = async (index, file) => {
-  //   if (file) {
-  //     try {
-  //       const reader = new FileReader();
-  //       reader.onloadend = () => {
-  //         const updatedSlides = [...episodeData.slides];
-  //         updatedSlides[index].content.media = {
-  //           file: file,
-  //           preview: reader.result,
-  //           type: file.type.split("/")[0],
-  //         };
-  //         setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-  //         setModifications((prev) => ({
-  //           ...prev,
-  //           slides: { ...prev.slides, [updatedSlides[index].id]: { mediaModified: true } },
-  //         }));
-  //       };
-  //       reader.readAsDataURL(file);
-  //     } catch (error) {
-  //       setError("Failed to upload media");
-  //       console.error(error);
-  //     }
-  //   }
-  // };
-
   const validateImage = (file) => {
     if (file.type.startsWith("video/")) return true; // Skip validation for videos
   
@@ -385,6 +343,95 @@ const EditEpisode = () => {
         // console.error(error);
       }
     }
+  };
+
+  const handleMediaUploadWithCrop = async (index, file) => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCropState(prev => ({
+          ...prev,
+          slideIndex: index,
+          showCropModal: true,
+          imgSrc: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const getCroppedImg = async () => {
+    const image = document.createElement('img');
+    image.src = cropState.imgSrc;
+    
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
+      
+      canvas.width = cropState.completedCrop.width;
+      canvas.height = cropState.completedCrop.height;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(
+        image,
+        cropState.completedCrop.x * scaleX,
+        cropState.completedCrop.y * scaleY,
+        cropState.completedCrop.width * scaleX,
+        cropState.completedCrop.height * scaleY,
+        0,
+        0,
+        cropState.completedCrop.width,
+        cropState.completedCrop.height
+      );
+  
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          console.error('Canvas is empty');
+          return;
+        }
+        const croppedFile = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+        resolve(croppedFile);
+      }, 'image/jpeg', 0.95);
+    });
+  };
+  
+  const handleCropComplete = async () => {
+    if (cropState.completedCrop?.width && cropState.completedCrop?.height) {
+      const croppedFile = await getCroppedImg();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const updatedSlides = [...episodeData.slides];
+        const currentSlide = updatedSlides[cropState.slideIndex];
+        
+        currentSlide.content.media = {
+          file: croppedFile,
+          preview: reader.result,
+          type: croppedFile.type.split("/")[0],
+        };
+        
+        setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+        
+        setModifications((prev) => ({
+          ...prev,
+          slides: { 
+            ...prev.slides, 
+            [currentSlide.id]: { 
+              mediaModified: true,
+              fileChanged: true
+            } 
+          },
+        }));
+      };
+      reader.readAsDataURL(croppedFile);
+    }
+    
+    setCropState(prev => ({
+      ...prev,
+      showCropModal: false,
+      slideIndex: null,
+      completedCrop: null
+    }));
   };
 
   const handleQuizOptionChange = (slideIndex, optionIndex, field, value) => {
@@ -693,10 +740,17 @@ const EditEpisode = () => {
                               <>
                                 <div className="flex items-center gap-4 mb-4">
                                   <div className="flex-1">
-                                    <input
+                                    {/* <input
                                       type="file"
                                       accept="image/*, video/*, image/gif"
                                       onChange={(e) => handleMediaUpload(index, e.target.files[0])}
+                                      className="hidden"
+                                      id={`mediaUpload-${index}`}
+                                    /> */}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleMediaUploadWithCrop(index, e.target.files[0])}
                                       className="hidden"
                                       id={`mediaUpload-${index}`}
                                     />
@@ -706,9 +760,15 @@ const EditEpisode = () => {
                                     >
                                       <Upload className="mr-2 h-5 w-5" />
                                       <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
-                                      {!slide.content.media?.type?.startsWith('video/') && (
+                                      {/* {!slide.content.media?.type?.startsWith('video/') && (
                                         <span className="text-xs text-gray-400 mt-1">
                                           9:16 aspect ratio required
+                                        </span>
+                                      )} */}
+
+                                      {!slide.content.media?.type?.startsWith('video/') && (
+                                        <span className="text-xs text-gray-400 mt-1">
+                                          Recommended: 1080x1920px (9:16 aspect ratio)
                                         </span>
                                       )}
                                     </label>
@@ -928,10 +988,18 @@ const EditEpisode = () => {
                               <>
                               <div className="flex items-center gap-4 mb-4">
                                 <div className="flex-1">
-                                <input
+                                {/* <input
                                   type="file"
                                   accept="image/*, video/*, image/gif"
                                   onChange={(e) => handleMediaUpload(index, e.target.files[0])}
+                                  className="hidden"
+                                  id={`mediaUpload-${index}`}
+                                /> */}
+
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleMediaUploadWithCrop(index, e.target.files[0])}
                                   className="hidden"
                                   id={`mediaUpload-${index}`}
                                 />
@@ -941,9 +1009,15 @@ const EditEpisode = () => {
                                 >
                                   <Upload className="mr-2 h-5 w-5" />
                                   <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
-                                  {!slide.content.media?.type?.startsWith('video/') && (
+                                  {/* {!slide.content.media?.type?.startsWith('video/') && (
                                     <span className="text-xs text-gray-400 mt-1">
                                       9:16 aspect ratio required
+                                    </span>
+                                    
+                                  )} */}
+                                  {!slide.content.media?.type?.startsWith('video/') && (
+                                    <span className="text-xs text-gray-400 mt-1">
+                                      Recommended: 1080x1920px (9:16 aspect ratio)
                                     </span>
                                   )}
                                 </label>
@@ -1049,32 +1123,6 @@ const EditEpisode = () => {
                               </>
                             )}
 
-                            {/* <input
-                              type="file"
-                              onChange={(e) => handleAudioUpload(index, e.target.files[0])}
-                              className="hidden"
-                              id={`audioUpload-${index}`}
-                            />
-                            <label htmlFor={`audioUpload-${index}`} className="cursor-pointer">
-                              Upload Audio
-                            </label>
-                            {slide.content.audio && (
-                              <div>
-                                <p>{slide.content.audio.name}</p>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const updatedSlides = [...episodeData.slides];
-                                    updatedSlides[index].content.audio = null;
-                                    setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-                                  }}
-                                  className="text-red-400 hover:text-red-300"
-                                >
-                                  Remove Audio
-                                </button>
-                              </div>
-                            )} */}
-
                             <div className="mb-6">
                               <label className="block text-sm font-medium mb-2">Audio (Optional)</label>
                               <div className="flex items-center gap-4">
@@ -1134,6 +1182,49 @@ const EditEpisode = () => {
 
         {loading && <p>Loading episode details...</p>}
       </div>
+
+      {cropState.showCropModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-4xl w-full">
+            <h3 className="text-xl font-semibold mb-4">Adjust Image Crop</h3>
+            <div className="relative max-h-[60vh] overflow-auto mb-4">
+              <ReactCrop
+                crop={cropState.crop}
+                onChange={(c) => setCropState(prev => ({ ...prev, crop: c }))}
+                onComplete={(c) => setCropState(prev => ({ ...prev, completedCrop: c }))}
+                aspect={9 / 16}
+              >
+                <img
+                  src={cropState.imgSrc}
+                  alt="Crop Preview"
+                  className="max-w-full"
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={() => setCropState(prev => ({ 
+                  ...prev, 
+                  showCropModal: false, 
+                  slideIndex: null,
+                  completedCrop: null 
+                }))}
+                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCropComplete}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors"
+              >
+                Apply Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
