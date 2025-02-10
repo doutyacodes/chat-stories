@@ -196,17 +196,17 @@ export const ADS = mysqlTable("ads", {
 });
 
 
-// export const EPISODE_DETAILS = mysqlTable("episode_details", {
-//   id: int("id").primaryKey().autoincrement(),
-//   episode_id: int("episode_id").notNull().references(() => EPISODES.id),
-//   media_type: varchar("media_type", { length: 50 }).notNull(), // "image" or "video"
-//   media_url: varchar("media_url", { length: 255 }).notNull(), // URL for the image or video
-//   description: text("description"), // Details about the scene
-//   order: int("order").notNull().default(1), // Order for display
-//   position: mysqlEnum('position', ['before', 'after']).notNull().default("before"),
-//   created_at: timestamp("created_at").defaultNow(),
-//   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
-// });
+export const EPISODE_DETAILS = mysqlTable("episode_details", {
+  id: int("id").primaryKey().autoincrement(),
+  episode_id: int("episode_id").notNull().references(() => EPISODES.id),
+  media_type: varchar("media_type", { length: 50 }).notNull(), // "image" or "video"
+  media_url: varchar("media_url", { length: 255 }).notNull(), // URL for the image or video
+  description: text("description"), // Details about the scene
+  order: int("order").notNull().default(1), // Order for display
+  position: mysqlEnum('position', ['before', 'after']).notNull().default("before"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
 
 // export const EPISODE_BRANCHES = mysqlTable("episode_branches", {
 //   id: int("id").primaryKey().autoincrement(),
