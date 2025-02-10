@@ -6,7 +6,8 @@ import { Plus, X, Upload } from "lucide-react";
 import axios from 'axios'; // Make sure to install axios
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
-import { Alert } from '@/components/ui/alert';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
 
 const CreateEpisode = () => {
   const router = useRouter();
