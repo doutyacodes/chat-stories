@@ -30,7 +30,7 @@ const CreateEpisode = () => {
     aspect: 9 / 16 // Note: Changed to 9:16 ratio
   });
   const [completedCrop, setCompletedCrop] = useState(null);
-
+console.log(storyType)
   const [ episodeData, setEpisodeData] = useState({
     name: "",
     synopsis: "",
@@ -56,7 +56,7 @@ const CreateEpisode = () => {
         if (!response.ok) throw new Error('Failed to fetch characters');
         const data = await response.json();
         setFetchedCharacters(data.characters); // Store fetched characters in state
-        setStoryType(data.storyType); // Store fetched characters in state
+        setStoryType(data.storyType[0].storyType); // Store fetched characters in state
         } catch (error) {
         setError("Failed to load characters");
         console.error(error);
