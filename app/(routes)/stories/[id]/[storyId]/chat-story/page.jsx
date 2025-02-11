@@ -597,7 +597,7 @@ const StorySlides = () => {
 
   return (
     <div className="h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row overflow-hidden">
-      <div className="absolute top-16 right-4 z-50">
+      {/* <div className="absolute top-16 right-4 z-50">
         <button 
           onClick={() => setIsMuted(!isMuted)}
           className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
@@ -609,7 +609,7 @@ const StorySlides = () => {
             <FaVolumeUp className="text-white w-6 h-6" />
           )}
         </button>
-      </div>
+      </div> */}
 
       <div className="absolute top-4 right-4 z-50">
         <button 
