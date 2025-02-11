@@ -33,6 +33,7 @@
       const storyId = parseInt(formData.get('storyId'));
       const name = formData.get('name');
       const synopsis = formData.get('synopsis');
+      const episode_audio_url = formData.get('episodeAudio');
       const slides = JSON.parse(formData.get('slides') || '[]');
 
       // Validate quiz slides
@@ -72,7 +73,8 @@
         story_id: storyId,
         name,
         synopsis,
-        episode_number: nextEpisodeNumber
+        episode_number: nextEpisodeNumber,
+        audio_url: episode_audio_url
       });
 
       const episodeId = episodeResult[0].insertId;

@@ -66,6 +66,7 @@ export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
     synopsis: text("synopsis"),
     episode_number: int("episode_number").notNull(),
     // has_choices: boolean("has_choices").notNull().default(false),
+    audio_url: varchar("audio_url", { length: 255 }).default(null), // Added with default NULL
     created_at: timestamp("created_at").defaultNow(),
     updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
   });

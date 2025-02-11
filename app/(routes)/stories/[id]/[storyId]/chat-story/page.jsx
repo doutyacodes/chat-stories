@@ -18,6 +18,7 @@ const StorySlides = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatAudio, setChatAudio] = useState(null);
   const [storyData, setStoryData] = useState([]);
+  const [episodeAudio, setEpisodeAudio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isLastSlide, setIsLastSlide] = useState(false);
@@ -36,6 +37,10 @@ const StorySlides = () => {
   const [currentAudio, setCurrentAudio] = useState(null); 
   const audioRef = useRef(null);
 
+  const [isEpisodeMuted, setIsEpisodeMuted] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const episodeAudioRef = useRef(null);
+
   // const [isLoading, setIsLoading] = useState(false);
   
   const [nextSlideType, setNextSlideType] = useState(null);
@@ -50,7 +55,7 @@ const StorySlides = () => {
 
   const currentSlide = slides[currentSlideIndex];
 
-  console.log('slideContent',slideContent, 'currentSlideIndex', currentSlideIndex)
+  console.log('ismuted',isMuted,)
 
   useEffect(() => {
     const handleResize = () => {
@@ -126,6 +131,66 @@ const StorySlides = () => {
     }
   }, [hasSubmittedAnswer, isAnswerCorrect]);
 
+  /* episode audio */
+  useEffect(() => {
+    // Clean up previous episode audio
+    if (episodeAudioRef.current) {
+      episodeAudioRef.current.pause();
+    }
+  console.log("episodeAudio", episodeAudio)
+    if (episodeAudio) {
+      console.log("inside iff")
+      // Create new episode audio instance
+      const newAudio = new Audio(`https://wowfy.in/testusr/audio/${episodeAudio}`);
+      newAudio.volume = isEpisodeMuted ? 0 : 1;
+      newAudio.loop = true; // Make it loop throughout the episode
+      
+      episodeAudioRef.current = newAudio;
+  
+      // Add play attempt after user interaction
+      const handleFirstInteraction = () => {
+        newAudio.play().catch(console.error);
+        document.removeEventListener('click', handleFirstInteraction);
+      };
+  
+      // Try to play automatically if possible
+      newAudio.play().catch(() => {
+        console.log('Episode autoplay blocked, waiting for user interaction...');
+        document.addEventListener('click', handleFirstInteraction);
+      });
+  
+      // Cleanup audio on unmount
+      return () => {
+        if (episodeAudioRef.current) {
+          episodeAudioRef.current.pause();
+          episodeAudioRef.current = null;
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+      };
+    }
+  }, [episodeAudio]);
+  
+  // Update episode audio volume when mute state changes
+  useEffect(() => {
+    if (episodeAudioRef.current) {
+      episodeAudioRef.current.volume = isEpisodeMuted ? 0 : 1;
+    }
+  }, [isEpisodeMuted]);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isSettingsOpen && !event.target.closest('.settings-menu')) {
+        setIsSettingsOpen(false);
+      }
+    };
+  
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSettingsOpen]);
+
+  /* episode audio  end*/
+
   const fetchSlideContent = async (slideId, slideType) => {
     console.log("log4 slideType",slideId, slideType);
 
@@ -175,7 +240,7 @@ const StorySlides = () => {
         const slidesData = await slidesResponse.json();
         setSlides(slidesData.slides);
         setStoryData(slidesData.story)
-  
+        setEpisodeAudio(slidesData.episode_audio)
         // Fetch content for the first slide using existing function
         if (slidesData.slides.length > 0) {
           const firstSlide = slidesData.slides[0];
@@ -269,21 +334,6 @@ const StorySlides = () => {
     }
   };
   
-  // const handleQuizAnswer = (answer) => {
-  //   setUserAnswer(answer);
-  //   setShowError(false);
-    
-  //   if (quizData.quiz.answer_type === 'multiple_choice') {
-  //     const isCorrect = quizData.quiz.options.find(opt => 
-  //       opt.id === answer && opt.is_correct
-  //     );
-  //     setIsAnswerCorrect(!!isCorrect);
-  //   } else {
-  //     setIsAnswerCorrect(answer === quizData.quiz.correct_answer);
-  //   }
-  // };
-
-
   console.log("hasSubmittedAnswer", hasSubmittedAnswer);
 
   const validateAnswer = () => {
@@ -328,31 +378,6 @@ const StorySlides = () => {
       console.error('Error changing slide:', error);
     }
   };
-
-  // const handleSlideChange = async (direction) => {
-
-  //   setHasSubmittedAnswer(false)/* clearing this  */
-
-  //   // Set the next slide type before loading
-  //   if (direction === 'next' && currentSlideIndex < slides.length - 1) {
-  //     setNextSlideType(slides[currentSlideIndex + 1].slide_type);
-  //   } else if (direction === 'previous' && currentSlideIndex > 0) {
-  //     setNextSlideType(slides[currentSlideIndex - 1].slide_type);
-  //   }
-
-  //   setLoading(true);
-  //   setPreviousSlideIndex(currentSlideIndex);
-    
-  //   try {
-  //     if (direction === 'next') {
-  //       await handleNextSlide();
-  //     } else {
-  //       await handlePreviousSlide();
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleNextSlide = async () => {
     // Stop current audio immediately
@@ -572,7 +597,7 @@ const StorySlides = () => {
 
   return (
     <div className="h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row overflow-hidden">
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-16 right-4 z-50">
         <button 
           onClick={() => setIsMuted(!isMuted)}
           className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
@@ -584,6 +609,70 @@ const StorySlides = () => {
             <FaVolumeUp className="text-white w-6 h-6" />
           )}
         </button>
+      </div>
+
+      <div className="absolute top-4 right-4 z-50">
+        <button 
+          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+          className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors settings-menu"
+        >
+          <FaEllipsisV className="text-white w-6 h-6" />
+        </button>
+
+        {/* Settings Dropdown */}
+        {isSettingsOpen && (
+          <div className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-lg shadow-lg p-2 border border-gray-700 settings-menu">
+            <div className="space-y-3">
+              {/* Episode Audio Control */}
+              <div className="flex items-center justify-between p-2 hover:bg-gray-700 rounded">
+                <span className="text-sm">Episode Audio</span>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEpisodeMuted(!isEpisodeMuted);
+                  }}
+                  className={`p-2 rounded-full transition-colors ${
+                    episodeAudio 
+                      ? 'hover:bg-gray-600 bg-gray-700' 
+                      : 'bg-gray-600 opacity-50 cursor-not-allowed'
+                  }`}
+                  disabled={!episodeAudio}
+                  title={!episodeAudio ? 'No episode audio available' : ''}
+                >
+                  {isEpisodeMuted ? (
+                    <FaVolumeMute className="text-white w-4 h-4" />
+                  ) : (
+                    <FaVolumeUp className="text-white w-4 h-4" />
+                  )}
+                </button>
+              </div>
+
+              {/* Slide Audio Control */}
+              <div className="flex items-center justify-between p-2 hover:bg-gray-700 rounded">
+                <span className="text-sm">Slide Audio</span>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMuted(!isMuted);
+                  }}
+                  className={`p-2 rounded-full transition-colors ${
+                    (slideContent?.audio_url || chatAudio || quizData?.audio_url)
+                      ? 'hover:bg-gray-600 bg-gray-700'
+                      : 'bg-gray-600 opacity-50 cursor-not-allowed'
+                  }`}
+                  disabled={!(slideContent?.audio_url || chatAudio || quizData?.audio_url)}
+                  title={!(slideContent?.audio_url || chatAudio || quizData?.audio_url) ? 'No slide audio available' : ''}
+                >
+                  {isMuted ? (
+                    <FaVolumeMute className="text-white w-4 h-4" />
+                  ) : (
+                    <FaVolumeUp className="text-white w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}

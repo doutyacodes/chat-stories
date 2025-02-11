@@ -27,6 +27,8 @@ const EditEpisode = () => {
     slides: {},
   });
 
+  console.log("episodeData", episodeData)
+
   const [cropState, setCropState] = useState({
     slideIndex: null,
     showCropModal: false,
@@ -544,7 +546,8 @@ const EditEpisode = () => {
           // slide.content.audio.file = audioPath; // Update file path
           slide.content.media = {
             file: audioPath,  // Only send file name
-            type: slide.content.media.type, // Keep the type
+            type: 'audio' // Keep the type
+            // type: slide.content.media.type,
           };
         }
       }

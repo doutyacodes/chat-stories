@@ -13,40 +13,12 @@ async function processChat(trx, slide, slideId, storyId, episodeId, formData) {
     const characters = slide.content.characters;
     const characterIds = await processCharacters(trx, storyId, characters);
 
-    // await trx
-    //   .delete(CHAT_MESSAGES)
-    //   .where(
-    //     and(
-    //       eq(CHAT_MESSAGES.story_id, storyId),
-    //       eq(CHAT_MESSAGES.episode_id, episodeId),
-    //       eq(CHAT_MESSAGES.slide_id, slideId)
-    //     )
-    //   );
-
-    // for (let [index, line] of slide.content.storyLines.entries()) {
-    //   const characterId = characterIds.find(c => c.name === line.character)?.id;
-    //   if (characterId) {
-    //     await trx.insert(CHAT_MESSAGES).values({
-    //       story_id: storyId,
-    //       episode_id: episodeId,
-    //       slide_id: slideId,
-    //       character_id: characterId,
-    //       message: line.line,
-    //       sequence: index
-    //     });
-    //   }
-    // }
-
-    // await trx.update(SLIDE_CONTENT).values({
-    //   audio_url: slide.content.audio?.name || null
-    // }).where(eq(SLIDE_CONTENT.slide_id, slideId));
-
     // Update the chat section in the processChat function
     if (slide.changes.contentModified || slide.changes.audioModified) {
       const updateData = {};
       
       if (slide.changes.audioModified) {
-        updateData.audio_url = slide.content.audio?.name || null;
+        updateData.audio_url = slide.content.media?.file || null;
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -179,7 +151,7 @@ export async function PUT(request, { params }) {
               slide_id: slideId,
               media_type: slide.content.media?.type || 'image',
               media_url: slide.content.media?.file || null,
-              audio_url: slide.content.audio?.file || null,
+              audio_url: slide.content.media?.file || null,
               description: slide.content.description || ''
             });
             console.log("log 2")
@@ -203,7 +175,7 @@ export async function PUT(request, { params }) {
               slide_id: slideId,
               media_type: slide.content.media?.type || 'image',
               media_url: slide.content.media?.file || null,
-              audio_url: slide.content.audio?.file || null,
+              audio_url: slide.content.media?.file || null,
               quiz_id: quizId
             });
 
@@ -235,7 +207,7 @@ export async function PUT(request, { params }) {
               }
               
               if (slide.changes.audioModified) {
-                updateData.audio_url = slide.content.audio?.name || null;
+                updateData.audio_url = slide.content.media?.file || null;
               }
               
               await trx
@@ -260,7 +232,7 @@ export async function PUT(request, { params }) {
               }
               
               if (slide.changes.audioModified) {
-                updateData.audio_url = slide.content.audio?.file || null;
+                updateData.audio_url = slide.content.media?.file || null;
               }
           
               if (Object.keys(updateData).length > 0) {

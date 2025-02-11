@@ -21,6 +21,7 @@ const CreateEpisode = () => {
   const [errors, setErrors] = useState({});
   const [showCropModal, setShowCropModal] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(null);
+  const [episodeAudio, setEpisodeAudio] = useState(null);
   const imgRef = useRef(null);
   const fileInputRef = useRef(null);
   const [crop, setCrop] = useState({
@@ -352,6 +353,25 @@ const CreateEpisode = () => {
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
 
+  /* episode audio */
+
+  const handleEpisodeAudioUpload = (file) => {
+    if (file) {
+      if (!file.type.startsWith('audio/')) {
+        setError('Please upload an audio file (MP3, WAV, etc.)');
+        return;
+      }
+      setEpisodeAudio({
+        file: file,
+        name: file.name
+      });
+    }
+  };
+  
+  const handleRemoveEpisodeAudio = () => {
+    setEpisodeAudio(null);
+  };
+
   // Remove Option
   const handleRemoveOption = (slideIndex, optionIndex) => {
     const updatedSlides = [...episodeData.slides];
@@ -568,104 +588,6 @@ const handleModalClose = () => {
     }
   };
 
-// const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setError("");
-//     setIsSubmitting(true);
-  
-//     // Basic validation
-//     if (!episodeData.name.trim()) {
-//       setError("Episode name is required");
-//       return;
-//     }
-  
-//     try {
-//       // First, upload all files
-//       const slidesWithUploadedFiles = await Promise.all(episodeData.slides.map(async (slide, index) => {
-//         const updatedSlide = { ...slide };
-  
-//         // Upload Audio
-//         if (slide.content.audio?.file) {
-//           const audioFileName = await uploadAudioToCPanel(slide.content.audio.file);
-//           updatedSlide.content.audio = audioFileName ? { name: audioFileName } : null;
-//         }
-  
-
-//         // In handleSubmit function, replace uploadImageToCPanel with:
-//         if ((slide.type === 'image' || slide.type === 'quiz') && slide.content.media?.file) {
-//           const mediaFileName = await uploadMediaToCPanel(slide.content.media.file);
-//           updatedSlide.content.media = mediaFileName ? { 
-//             ...slide.content.media,
-//             name: mediaFileName 
-//           } : null;
-//         }
-          
-//         return updatedSlide;
-//       }));
-  
-//       // Create a new episodeData with uploaded file names
-//       const updatedEpisodeData = {
-//         ...episodeData,
-//         slides: slidesWithUploadedFiles
-//       };
-  
-//       const formData = new FormData();
-//       formData.append('storyId', storyId);
-//       formData.append('name', updatedEpisodeData.name);
-//       formData.append('synopsis', updatedEpisodeData.synopsis);
-//       formData.append('slides', JSON.stringify(updatedEpisodeData.slides));
-//       formData.append('characters', JSON.stringify(
-//         updatedEpisodeData.slides
-//           .filter(slide => slide.type === 'chat')
-//           .flatMap(slide => slide.content.characters)
-//       ));
-
-//       episodeData.slides.forEach((slide, index) => {
-
-//         if (slide.type === 'chat' && slide.content.pdfFile) {
-//           formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
-//         } 
-//         if (slide.type === 'quiz') {
-//           if (!slide.content.question.trim()) {
-//             setError('Quiz question is required');
-//             setIsSubmitting(false);
-//             throw new Error('Validation failed');
-//           }
-//           if (slide.content.quizType === 'multiple') {
-//             if (slide.content.options.some(opt => !opt.text.trim())) {
-//               setError('All quiz options must have text');
-//               setIsSubmitting(false);
-//               throw new Error('Validation failed');
-//             }
-//             if (!slide.content.options.some(opt => opt.is_correct)) {
-//               setError('Please select a correct answer for quiz');
-//               setIsSubmitting(false);
-//               throw new Error('Validation failed');
-//             }
-//           } else if (!slide.content.answer.trim()) {
-//             setError('Answer is required for normal quiz');
-//             setIsSubmitting(false);
-//             throw new Error('Validation failed');
-//           }
-//         }
-//       });
-  
-//       const response = await fetch('/api/stories/story-slides', {
-//         method: 'POST',
-//         body: formData,
-//       });
-  
-//       if (!response.ok) throw new Error('Failed to create episode');
-  
-//       router.push('/your-stories');
-//     } catch (error) {
-//       setError("Failed to create episode. Please try again.");
-//       console.error(error);
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
@@ -680,6 +602,12 @@ const handleSubmit = async (e) => {
 
   try {
     // First, upload all files and clean up media data
+
+    let episodeAudioFileName = null;
+    if (episodeAudio?.file) {
+      episodeAudioFileName = await uploadAudioToCPanel(episodeAudio.file);
+    }
+
     const slidesWithUploadedFiles = await Promise.all(episodeData.slides.map(async (slide, index) => {
       const updatedSlide = { ...slide };
 
@@ -739,6 +667,7 @@ const handleSubmit = async (e) => {
     formData.append('storyId', storyId);
     formData.append('name', updatedEpisodeData.name);
     formData.append('synopsis', updatedEpisodeData.synopsis);
+    formData.append('episodeAudio', episodeAudioFileName);
     formData.append('slides', JSON.stringify(updatedEpisodeData.slides));
     formData.append('characters', JSON.stringify(
       updatedEpisodeData.slides
@@ -812,6 +741,40 @@ const handleSubmit = async (e) => {
                   </Alert>
                 )}
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Episode Audio (Optional)</label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => handleEpisodeAudioUpload(e.target.files[0])}
+                  className="hidden"
+                  id="episode-audio"
+                />
+                <label 
+                  htmlFor="episode-audio"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500 cursor-pointer"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span>Upload Episode Audio</span>
+                </label>
+                
+                {episodeAudio && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{episodeAudio.name}</span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveEpisodeAudio}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
 
           {/* Slide Types Selector */}

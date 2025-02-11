@@ -43,10 +43,19 @@ export async function GET(request, { params }) {
       )
       .orderBy(SLIDES.position);
 
+    // Fetch Episode audio
+    const episode = await db
+    .select({
+      episode_audio: EPISODES.audio_url,
+    })
+    .from(EPISODES)
+    .where(eq(EPISODES.id, episodeId))
+
     // Combine story and slides in the response
     return NextResponse.json({
       story: story[0], // Get the first (and only) story
       slides,
+      episode_audio: episode[0].episode_audio
     });
   } catch (error) {
     console.error('Slides Fetch Error:', error);
