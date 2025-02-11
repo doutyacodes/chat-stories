@@ -95,15 +95,6 @@ const SlideContainer = ({
         setUserAnswer(value);  // Update the input value directly
     };
       
-    //   const handleSubmit = (e) => {
-    //     e.preventDefault();  // Prevent form submission default behavior
-    //     setHasSubmittedAnswer(true);
-    //     console.log("the dagger", userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim())
-
-    //     setIsAnswerCorrect(userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim());
-        
-    //   };
-
     const handleSubmit = (e) => {
         e.preventDefault();
         setHasSubmittedAnswer(true);
@@ -129,7 +120,7 @@ const SlideContainer = ({
             <div className="flex-1 h-full bg-gray-900 relative">
                 <div className="max-w-[500px] mx-auto h-full relative">
                 <div className="w-full h-full bg-gray-800 animate-pulse" />
-                <div className="absolute bottom-0 left-0 right-0 h-[37.5%]">
+                <div className="absolute bottom-0 left-0 right-0">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute inset-0 backdrop-blur-sm bg-black/30" />
                     <div className="relative h-full p-6 flex items-center">
@@ -145,7 +136,7 @@ const SlideContainer = ({
             <div className="flex-1 h-full bg-gray-900 relative">
                 <div className="max-w-[500px] mx-auto h-full relative">
                 <div className="w-full h-full bg-gray-800 animate-pulse" />
-                <div className="absolute bottom-0 left-0 right-0 h-[37.5%]">
+                <div className="absolute bottom-0 left-0 right-0">
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute inset-0 backdrop-blur-sm bg-black/30" />
                     <div className="relative h-full p-6">
@@ -262,7 +253,8 @@ const SlideContainer = ({
                 />
                 )}
                 {slideContent.description && (
-                <div className="absolute bottom-0 left-0 right-0 h-[37.5%]"> {/* 75% of bottom half */}
+                // <div className="absolute bottom-0 left-0 right-0 h-[37.5%]"> {/* 75% of bottom half */}
+                <div className="absolute bottom-0 left-0 right-0 "> 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute inset-0 backdrop-blur-sm bg-black/30" />
                     <div className="relative h-full p-6 flex items-center">
@@ -371,7 +363,7 @@ const SlideContainer = ({
                     className="w-full h-full object-cover"
                     />
                 )}
-                    <div className="absolute bottom-0 left-0 right-0 h-[37.5%]">
+                    <div className="absolute bottom-0 left-0 right-0">
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                         <div className="absolute inset-0 backdrop-blur-sm bg-black/30" />
                         <div className="relative h-full p-6">
@@ -393,37 +385,6 @@ const SlideContainer = ({
         </div>
         );
     };
-
-    // return (
-    //     <div className="relative h-full overflow-hidden">
-    //         <AnimatePresence initial={false} mode="wait" custom={slideDirection}>
-    //             <motion.div
-    //                 // key={loading ? 'loading' : currentSlide?.id} 
-    //                 key={currentSlide?.id || 'loading'}
-    //                 custom={slideDirection}
-    //                 variants={slideVariants}
-    //                 initial="enter"
-    //                 animate="center"
-    //                 exit="exit"
-    //                 transition={{
-    //                     x: { type: "spring", stiffness: 300, damping: 30 },
-    //                     opacity: { duration: 0.2 }
-    //                 }}
-    //                 className="absolute w-full h-full"
-    //             >
-    //                 {loading && (
-    //                     <PlaceholderSlide type={nextSlideType} />
-    //                 ) }
-                     
-    //             </motion.div>
-    //         </AnimatePresence>
-    //         {/* <> */}
-    //             {currentSlide?.slide_type === 'image' && slideContent && <DetailView />}
-    //             {currentSlide?.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
-    //             {currentSlide?.slide_type === 'quiz' && quizData && <QuizView />}
-    //         {/* </> */}
-    //     </div>
-    // );
 
     return (
         <div className="relative h-full overflow-hidden">

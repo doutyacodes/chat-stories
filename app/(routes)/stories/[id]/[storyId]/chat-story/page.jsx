@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaCompressAlt, FaEllipsisV, FaExpandAlt, FaPhone, FaVideo, FaVolumeMute, FaVolumeUp, FaTimes  } from 'react-icons/fa';
 import { useParams, useRouter } from 'next/navigation';
 import AdDisplay from '@/app/components/AdDisplay';
 import SlideContainer from '../../../_components/SlideContainer';
@@ -47,7 +47,9 @@ const StorySlides = () => {
 
   const [showWrongAnswerModal, setShowWrongAnswerModal] = useState(false);
   const [showCorrectAnswerModal, setShowCorrectAnswerModal] = useState(false);
-    const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
+  const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(true);
 
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
@@ -55,7 +57,29 @@ const StorySlides = () => {
 
   const currentSlide = slides[currentSlideIndex];
 
-  console.log('ismuted',isMuted,)
+
+  // Add these functions after your state declarations
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        // Enter fullscreen
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          await document.documentElement.webkitRequestFullscreen();
+        }
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.error('Error toggling fullscreen:', err);
+    }
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -267,6 +291,19 @@ const StorySlides = () => {
     }
   }, [storyId, episodeId]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement || document.webkitFullscreenElement));
+    };
+  
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+  
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const trackStoryView = async (storyId) => {
     let sessionId = null;
@@ -595,6 +632,30 @@ const StorySlides = () => {
     </div>
   );
 
+  // Add this component within your file, before your main component
+  const FullscreenPrompt = ({ onAccept, onDecline }) => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+      <div className="bg-gray-800 p-6 rounded-lg max-w-sm mx-4">
+        <h3 className="text-lg font-semibold mb-2">Enter Fullscreen Mode?</h3>
+        <p className="text-gray-300 mb-4">For the best experience, we recommend viewing this story in fullscreen mode.</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onAccept}
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors"
+          >
+            Enter Fullscreen
+          </button>
+          <button
+            onClick={onDecline}
+            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded transition-colors"
+          >
+            Continue Normal
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row overflow-hidden">
       {/* <div className="absolute top-16 right-4 z-50">
@@ -670,6 +731,26 @@ const StorySlides = () => {
                   )}
                 </button>
               </div>
+
+              <div className="flex items-center justify-between p-2 hover:bg-gray-700 rounded">
+                <span className="text-sm">
+                  {isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+                </span>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFullscreen();
+                  }}
+                  className="p-2 rounded-full hover:bg-gray-600 bg-gray-700 transition-colors"
+                >
+                  {isFullscreen ? (
+                    <FaCompressAlt className="text-white w-4 h-4" />
+                  ) : (
+                    <FaExpandAlt className="text-white w-4 h-4" />
+                  )}
+                </button>
+              </div>
+
             </div>
           </div>
         )}
@@ -751,6 +832,17 @@ const StorySlides = () => {
       isLastSlide={isLastSlide}
       nextEpisode={nextEpisode}
     />
+      {showFullscreenPrompt && (
+        <FullscreenPrompt 
+          onAccept={() => {
+            toggleFullscreen();
+            setShowFullscreenPrompt(false);
+          }}
+          onDecline={() => {
+            setShowFullscreenPrompt(false);
+          }}
+        />
+      )}
 
     </div>
   );
