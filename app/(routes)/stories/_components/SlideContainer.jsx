@@ -95,14 +95,30 @@ const SlideContainer = ({
         setUserAnswer(value);  // Update the input value directly
     };
       
-      const handleSubmit = (e) => {
-        e.preventDefault();  // Prevent form submission default behavior
-        setHasSubmittedAnswer(true);
-        console.log("the dagger", userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim())
+    //   const handleSubmit = (e) => {
+    //     e.preventDefault();  // Prevent form submission default behavior
+    //     setHasSubmittedAnswer(true);
+    //     console.log("the dagger", userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim())
 
-        setIsAnswerCorrect(userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim());
+    //     setIsAnswerCorrect(userAnswer.toLowerCase().trim() === quizData.quiz.correct_answer.toLowerCase().trim());
         
-      };
+    //   };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setHasSubmittedAnswer(true);
+        
+        // Normalize both strings: convert to lowercase, trim spaces, and normalize apostrophes
+        const normalizeString = (str) => {
+            return str
+                .toLowerCase()
+                .trim()
+                .replace(/[\u2018\u2019']/g, "'"); // Replace all types of apostrophes with a simple one
+        };
+        
+        const isCorrect = normalizeString(userAnswer) === normalizeString(quizData.quiz.correct_answer);
+        setIsAnswerCorrect(isCorrect);
+    };
 
 
 
