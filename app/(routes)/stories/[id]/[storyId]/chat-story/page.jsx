@@ -39,10 +39,7 @@ const StorySlides = () => {
 
   const [isEpisodeMuted, setIsEpisodeMuted] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const episodeAudioRef = useRef(null);
-
-  // const [isLoading, setIsLoading] = useState(false);
-  
+  const episodeAudioRef = useRef(null);  
   const [nextSlideType, setNextSlideType] = useState(null);
 
   const [showWrongAnswerModal, setShowWrongAnswerModal] = useState(false);
@@ -50,6 +47,10 @@ const StorySlides = () => {
   const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(true);
+
+  const [pedometerData, setPedometerData] = useState(null);
+  const [currentSteps, setCurrentSteps] = useState(0);
+  const [isPedometerStarted, setIsPedometerStarted] = useState(false);
 
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
@@ -246,6 +247,13 @@ const StorySlides = () => {
         if (!quizResponse.ok) throw new Error('Failed to fetch quiz content');
         const quizData = await quizResponse.json();
         setQuizData(quizData);
+      } else if (slideType === 'pedometer') {
+        const pedometerResponse = await fetch(`/api/pedometer-content/${slideId}`);
+        if (!pedometerResponse.ok) throw new Error('Failed to fetch pedometer content');
+        const pedometerData = await pedometerResponse.json();
+        setPedometerData(pedometerData);
+        setCurrentSteps(0);
+        setIsPedometerStarted(false);
       }
       
       setLoading(false);
@@ -264,7 +272,9 @@ const StorySlides = () => {
         const slidesData = await slidesResponse.json();
         setSlides(slidesData.slides);
         setStoryData(slidesData.story)
-        setEpisodeAudio(slidesData.episode_audio)
+        if(!slidesData.episode_audio === 'null'){
+          setEpisodeAudio(slidesData.episode_audio)
+        }
         // Fetch content for the first slide using existing function
         if (slidesData.slides.length > 0) {
           const firstSlide = slidesData.slides[0];
@@ -658,20 +668,6 @@ const StorySlides = () => {
 
   return (
     <div className="h-screen relative bg-gray-900 text-white flex flex-col sm:flex-row overflow-hidden">
-      {/* <div className="absolute top-16 right-4 z-50">
-        <button 
-          onClick={() => setIsMuted(!isMuted)}
-          className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors"
-          aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-        >
-          {isMuted ? (
-            <FaVolumeMute className="text-white w-6 h-6" />
-          ) : (
-            <FaVolumeUp className="text-white w-6 h-6" />
-          )}
-        </button>
-      </div> */}
-
       <div className="absolute top-4 right-4 z-50">
         <button 
           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
@@ -798,6 +794,11 @@ const StorySlides = () => {
                 setShowError={setShowError}
                 hasSubmittedAnswer={hasSubmittedAnswer}
                 setHasSubmittedAnswer={setHasSubmittedAnswer}
+                pedometerData={pedometerData}
+                currentSteps={currentSteps}
+                setCurrentSteps={setCurrentSteps}
+                isPedometerStarted={isPedometerStarted}
+                setIsPedometerStarted={setIsPedometerStarted}
               />
             <Navigation 
               onNext={() => handleSlideChange('next')}

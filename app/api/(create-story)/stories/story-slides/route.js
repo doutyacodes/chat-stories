@@ -4,7 +4,7 @@
   import path from 'path';
   import Client from 'ssh2-sftp-client';
   import { db } from '@/utils';
-  import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, QUIZ_OPTIONS, QUIZZES } from '@/utils/schema';
+  import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, QUIZ_OPTIONS, QUIZZES, PEDOMETER_TASKS } from '@/utils/schema';
   import { authenticate } from '@/lib/jwtMiddleware';
   import { eq, and, desc } from 'drizzle-orm';
 
@@ -54,6 +54,18 @@
             if (!slide.content.answer?.trim()) {
               throw new Error('Answer is required for normal quiz');
             }
+          }
+        }
+      }
+
+     // Validate pedometer slides
+      for (const slide of slides) {
+        if (slide.type === 'pedometer') {
+          if (!slide.content.description?.trim()) {
+            throw new Error('Pedometer task description is required');
+          }
+          if (!slide.content.targetSteps || slide.content.targetSteps <= 0) {
+            throw new Error('Valid number of steps is required for pedometer task');
           }
         }
       }
@@ -182,6 +194,19 @@
               });
             }
           }
+        } else if (slide.type === 'pedometer') {
+          // Create pedometer task entry
+          await db.insert(PEDOMETER_TASKS).values({
+            slide_id: slideId,
+            required_steps: slide.content.targetSteps,
+            description: slide.content.description
+          });
+        
+          // Insert slide content for audio
+          await db.insert(SLIDE_CONTENT).values({
+            slide_id: slideId,
+            audio_url: slide.content.audio?.name || null,
+          });
         }
       }
       return NextResponse.json({ 

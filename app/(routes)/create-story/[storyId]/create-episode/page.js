@@ -43,7 +43,10 @@ console.log(storyType)
   const slideTypes = [
     { value: "image", label: "Image Slide" },
     { value: "chat", label: "Chat Slide" },
-    ...(storyType === "game" ? [{ value: "quiz", label: "Quiz Slide" }] : [])
+    ...(storyType === "game" ? [
+      { value: "quiz", label: "Quiz Slide" },
+      { value: "pedometer", label: "Step Challenge" }
+    ] : [])
   ];
 
     useEffect(() => {
@@ -118,7 +121,11 @@ console.log(storyType)
               description: "",
               audio: null // Add audio field
               }
-            : {
+          : type === "pedometer" ? {
+            description: "",
+            targetSteps: 0,
+            audio: null
+          } : {
                 characters: mergedCharacters,
                 inputType: "manual",
                 storyLines: [{ character: "", line: "" }],
@@ -1266,6 +1273,49 @@ const handleSubmit = async (e) => {
                             )}
                           </div>
                         )}
+
+                        {(slide.type === 'pedometer' && storyType === 'game') && (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Challenge Description</label>
+                              <textarea
+                                value={slide.content.description}
+                                onChange={(e) => setEpisodeData(prev => ({
+                                  ...prev,
+                                  slides: prev.slides.map((s, i) => 
+                                    i === index ? {
+                                      ...s,
+                                      content: { ...s.content, description: e.target.value }
+                                    } : s
+                                  )
+                                }))}
+                                className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
+                                placeholder="Describe the step challenge (e.g., 'Walk around your house')"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Target Steps</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={slide.content.targetSteps}
+                                onChange={(e) => setEpisodeData(prev => ({
+                                  ...prev,
+                                  slides: prev.slides.map((s, i) => 
+                                    i === index ? {
+                                      ...s,
+                                      content: { ...s.content, targetSteps: parseInt(e.target.value) || 0 }
+                                    } : s
+                                  )
+                                }))}
+                                className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                placeholder="Enter number of steps required"
+                              />
+                            </div>
+                          </div>
+                        )}
+
                     </div>
                 </React.Fragment>
             ))}

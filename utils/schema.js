@@ -65,7 +65,6 @@ export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
     name: varchar("name", { length: 255 }).notNull(),
     synopsis: text("synopsis"),
     episode_number: int("episode_number").notNull(),
-    // has_choices: boolean("has_choices").notNull().default(false),
     audio_url: varchar("audio_url", { length: 255 }).default(null), // Added with default NULL
     created_at: timestamp("created_at").defaultNow(),
     updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
@@ -92,46 +91,6 @@ export const STORY_CONTENT = mysqlTable("story_content", {
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
 
-export const STORY_VIEWS = mysqlTable("story_views", {
-  id: int("id").primaryKey().autoincrement(),
-  story_id: int("story_id").notNull().references(() => STORIES.id),
-  user_id: int("user_id", { mode: 'nullable' }).references(() => USERS.id), // Correctly defining as nullable
-  session_id: varchar("session_id", { length: 255 }),  // Unique session ID for non-logged-in users
-  viewed_at: timestamp("viewed_at").defaultNow(),
-  last_viewed_at: timestamp("last_viewed_at").defaultNow(),
-});
-
-export const STORY_LIKES = mysqlTable("story_likes", {
-  id: int("id").primaryKey().autoincrement(),
-  story_id: int("story_id").notNull().references(() => STORIES.id),
-  user_id: int("user_id").notNull().references(() => USERS.id),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const STORY_SUBSCRIPTIONS = mysqlTable("story_subscriptions", {
-  id: int("id").primaryKey().autoincrement(),
-  subscriber_id: int("subscriber_id").notNull().references(() => USERS.id), // User subscribing
-  author_id: int("author_id").notNull().references(() => USERS.id), // Author being subscribed to
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const STORY_SAVED = mysqlTable("story_saved", {
-  id: int("id").primaryKey().autoincrement(),
-  story_id: int("story_id").notNull().references(() => STORIES.id), // Story saved
-  user_id: int("user_id").notNull().references(() => USERS.id), // User saving the story
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export const USER_LAST_READ = mysqlTable("user_last_read", {
-  id: int("id").primaryKey().autoincrement(),
-  user_id: int("user_id").notNull().references(() => USERS.id),
-  user_id: int("user_id", { mode: 'nullable' }).references(() => USERS.id), // Correctly defining as nullable
-  session_id: varchar("session_id", { length: 255 }),  // Unique session ID for non-logged-in users
-  story_id: int("story_id").notNull().references(() => STORIES.id),
-  last_read_at: timestamp("last_read_at").defaultNow(), // Timestamp for sorting
-});
-
-
 /* ---------------------------------------------------------- */
 
 export const CHAT_MESSAGES = mysqlTable("chat_messages", {
@@ -150,7 +109,7 @@ export const SLIDES = mysqlTable("slides", {
   id: int("id").primaryKey().autoincrement(),
   story_id: int("story_id").notNull().references(() => STORIES.id),
   episode_id: int("episode_id").references(() => EPISODES.id), // Optional for slide-based episodes
-  slide_type: mysqlEnum("slide_type", ["image", "chat", "quiz"]).notNull(),
+  slide_type: mysqlEnum("slide_type", ["image", "chat", "quiz", "pedometer"]).notNull(),
   position: int("position").notNull(), // Order of the slide
   is_locked: boolean("is_locked").notNull().default(false), // Determines if a slide is gated by a quiz
   created_at: timestamp("created_at").defaultNow(),
@@ -196,7 +155,6 @@ export const ADS = mysqlTable("ads", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-
 export const EPISODE_DETAILS = mysqlTable("episode_details", {
   id: int("id").primaryKey().autoincrement(),
   episode_id: int("episode_id").notNull().references(() => EPISODES.id),
@@ -207,6 +165,53 @@ export const EPISODE_DETAILS = mysqlTable("episode_details", {
   position: mysqlEnum('position', ['before', 'after']).notNull().default("before"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+
+export const STORY_VIEWS = mysqlTable("story_views", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  user_id: int("user_id", { mode: 'nullable' }).references(() => USERS.id), // Correctly defining as nullable
+  session_id: varchar("session_id", { length: 255 }),  // Unique session ID for non-logged-in users
+  viewed_at: timestamp("viewed_at").defaultNow(),
+  last_viewed_at: timestamp("last_viewed_at").defaultNow(),
+});
+
+export const STORY_LIKES = mysqlTable("story_likes", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  user_id: int("user_id").notNull().references(() => USERS.id),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const STORY_SUBSCRIPTIONS = mysqlTable("story_subscriptions", {
+  id: int("id").primaryKey().autoincrement(),
+  subscriber_id: int("subscriber_id").notNull().references(() => USERS.id), // User subscribing
+  author_id: int("author_id").notNull().references(() => USERS.id), // Author being subscribed to
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const STORY_SAVED = mysqlTable("story_saved", {
+  id: int("id").primaryKey().autoincrement(),
+  story_id: int("story_id").notNull().references(() => STORIES.id), // Story saved
+  user_id: int("user_id").notNull().references(() => USERS.id), // User saving the story
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const USER_LAST_READ = mysqlTable("user_last_read", {
+  id: int("id").primaryKey().autoincrement(),
+  user_id: int("user_id").notNull().references(() => USERS.id),
+  user_id: int("user_id", { mode: 'nullable' }).references(() => USERS.id), // Correctly defining as nullable
+  session_id: varchar("session_id", { length: 255 }),  // Unique session ID for non-logged-in users
+  story_id: int("story_id").notNull().references(() => STORIES.id),
+  last_read_at: timestamp("last_read_at").defaultNow(), // Timestamp for sorting
+});
+
+export const PEDOMETER_TASKS = mysqlTable("pedometer_tasks", {
+  id: int("id").primaryKey().autoincrement(),
+  slide_id: int("slide_id").notNull().references(() => SLIDES.id), // Linked to a pedometer slide
+  required_steps: int("required_steps").notNull(), // Number of steps needed to proceed
+  description: text("description").notNull(), // field for additional details
+  created_at: timestamp("created_at").defaultNow(),
 });
 
 // export const EPISODE_BRANCHES = mysqlTable("episode_branches", {
