@@ -656,19 +656,31 @@ const SlideContainer = ({
           let lastAccel = 0;
           let steps = 0;
           let lastStepTime = Date.now();
+          let gravity = { x: 0, y: 0, z: 0 }; // Gravity values initialized
           
           const handleMotion = (event) => {
             const currentTime = Date.now();
             // Prevent counting steps too quickly (minimum 250ms between steps)
-            if (currentTime - lastStepTime < 200) return;
+            if (currentTime - lastStepTime < 250) return;
       
             if (!event.accelerationIncludingGravity) return;
             
-            const { x = 0, y = 0, z = 0 } = event.accelerationIncludingGravity;
+            let { x = 0, y = 0, z = 0 } = event.accelerationIncludingGravity;
+
+            // Apply low-pass filter to separate gravity
+            gravity.x = 0.9 * gravity.x + 0.1 * x;
+            gravity.y = 0.9 * gravity.y + 0.1 * y;
+            gravity.z = 0.9 * gravity.z + 0.1 * z;
+
+            // Remove gravity from acceleration
+            x -= gravity.x;
+            y -= gravity.y;
+            z -= gravity.z;
+
             const acceleration = Math.sqrt(x * x + y * y + z * z);
             
             // Adjusted threshold and added minimum acceleration requirement
-            const threshold = 7; // Adjusted threshold for better accuracy
+            const threshold = 4; // Adjusted threshold for better accuracy
             const minAcceleration = 8; // Minimum acceleration to count as a step
             
             if (acceleration > minAcceleration && Math.abs(acceleration - lastAccel) > threshold) {
