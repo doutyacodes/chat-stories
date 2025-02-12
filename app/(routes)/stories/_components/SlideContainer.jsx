@@ -580,35 +580,6 @@ const SlideContainer = ({
           checkDeviceSupport();
         }, []);
       
-        // const checkDeviceSupport = () => {
-        //   // First check if we're on a mobile device
-        //   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-          
-        //   if (!isMobile) {
-        //     setDeviceSupport({
-        //       isSupported: false,
-        //       isChecking: false,
-        //       errorMessage: 'Please open this on a mobile device to count steps.'
-        //     });
-        //     return;
-        //   }
-      
-        //   // Check for device motion support
-        //   if (window.DeviceMotionEvent !== undefined) {
-        //     setDeviceSupport({
-        //       isSupported: true,
-        //       isChecking: false,
-        //       errorMessage: ''
-        //     });
-        //   } else {
-        //     setDeviceSupport({
-        //       isSupported: false,
-        //       isChecking: false,
-        //       errorMessage: 'Your device does not support motion detection.'
-        //     });
-        //   }
-        // };
-
         const checkDeviceSupport = () => {
             // Add debugging logs
             console.log('Checking device support...');
@@ -689,7 +660,7 @@ const SlideContainer = ({
           const handleMotion = (event) => {
             const currentTime = Date.now();
             // Prevent counting steps too quickly (minimum 250ms between steps)
-            if (currentTime - lastStepTime < 250) return;
+            if (currentTime - lastStepTime < 200) return;
       
             if (!event.accelerationIncludingGravity) return;
             
@@ -697,8 +668,8 @@ const SlideContainer = ({
             const acceleration = Math.sqrt(x * x + y * y + z * z);
             
             // Adjusted threshold and added minimum acceleration requirement
-            const threshold = 12; // Adjusted threshold for better accuracy
-            const minAcceleration = 15; // Minimum acceleration to count as a step
+            const threshold = 7; // Adjusted threshold for better accuracy
+            const minAcceleration = 8; // Minimum acceleration to count as a step
             
             if (acceleration > minAcceleration && Math.abs(acceleration - lastAccel) > threshold) {
               steps++;
