@@ -771,13 +771,13 @@ const SlideContainer = ({
       
                 {isComplete && (
                   <div className="text-green-500 text-center">
-                    <p className="text-xl font-bold">Great job! You've completed the required steps!</p>
+                    <p className="text-xl font-bold">Great job! You&apos;ve completed the required steps!</p>
                   </div>
                 )}
       
                 {isPedometerStarted && !isComplete && (
                   <div className="text-blue-500 text-center">
-                    <p>Keep walking! You're doing great!</p>
+                    <p>Keep walking! You&apos;re doing great!</p>
                   </div>
                 )}
               </div>
