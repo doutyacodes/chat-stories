@@ -25,6 +25,7 @@ const SlideContainer = ({
     setCurrentSteps,
     isPedometerStarted,
     setIsPedometerStarted,
+    setPedometerCompleted
     }) => {
 
     const [slideDirection, setSlideDirection] = useState('right');
@@ -383,191 +384,6 @@ const SlideContainer = ({
         );
     };
 
-    // const PedometerView = () => {
-    //     const requestPermission = async () => {
-    //         if (typeof DeviceMotionEvent.requestPermission === 'function') {
-    //         try {
-    //             const permissionState = await DeviceMotionEvent.requestPermission();
-    //             if (permissionState === 'granted') {
-    //             startPedometer();
-    //             }
-    //         } catch (error) {
-    //             console.error('Error requesting permission:', error);
-    //         }
-    //         } else {
-    //         startPedometer();
-    //         }
-    //     };
-
-    //     const startPedometer = () => {
-    //         setIsPedometerStarted(true);
-    //         // Initialize step detection logic here
-    //         let lastAccel = 0;
-    //         let steps = 0;
-            
-    //         window.addEventListener('devicemotion', (event) => {
-    //             const acceleration = Math.sqrt(
-    //             Math.pow(event.accelerationIncludingGravity.x, 2) +
-    //             Math.pow(event.accelerationIncludingGravity.y, 2) +
-    //             Math.pow(event.accelerationIncludingGravity.z, 2)
-    //             );
-        
-    //             if (Math.abs(acceleration - lastAccel) > 10) { // Threshold for step detection
-    //             steps++;
-    //             setCurrentSteps(steps);
-    //             }
-    //             lastAccel = acceleration;
-    //         });
-    //     };
-    
-    //     const progress = (currentSteps / pedometerData.required_steps) * 100;
-    //     const isComplete = currentSteps >= pedometerData.required_steps;
-    
-    //     return (
-    //     <div className="flex-1 h-full bg-gray-900 relative">
-    //         <div className="max-w-[500px] mx-auto h-full flex flex-col p-6">
-    //         <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-    //             <h2 className="text-2xl font-bold text-center">{pedometerData.description}</h2>
-                
-    //             <div className="w-full max-w-md bg-gray-800 rounded-full h-6 overflow-hidden">
-    //             <div 
-    //                 className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-    //                 style={{ width: `${progress}%` }}
-    //             />
-    //             </div>
-                
-    //             <div className="text-center">
-    //             <p className="text-xl font-bold">{currentSteps} / {pedometerData.required_steps} steps</p>
-    //             </div>
-    
-    //             {!isPedometerStarted && (
-    //             <button
-    //                 onClick={requestPermission}
-    //                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
-    //             >
-    //                 Start Walking
-    //             </button>
-    //             )}
-    
-    //             {isComplete && (
-    //             <div className="text-green-500 text-center">
-    //                 <p className="text-xl font-bold">Great job! You've completed the required steps!</p>
-    //             </div>
-    //             )}
-    //         </div>
-    //         </div>
-    //     </div>
-    //     );
-    // };
-
-
-    // const PedometerView = () => {
-    //     const requestPermission = async () => {
-    //       try {
-    //         // Check if we're on iOS 13+ (where permission is required)
-    //         if (window.DeviceMotionEvent && typeof window.DeviceMotionEvent.requestPermission === 'function') {
-    //           const permissionState = await window.DeviceMotionEvent.requestPermission();
-    //           if (permissionState === 'granted') {
-    //             startPedometer();
-    //           } else {
-    //             console.log('Permission denied for motion sensors');
-    //           }
-    //         } else {
-    //           // For non-iOS devices or older iOS versions
-    //           if (window.DeviceMotionEvent) {
-    //             startPedometer();
-    //           } else {
-    //             console.log('Device motion not supported on this device');
-    //             // Optionally show a message to the user
-    //             alert('Step counting is not supported on this device. Please try on a mobile device with motion sensors.');
-    //           }
-    //         }
-    //       } catch (error) {
-    //         console.error('Error requesting motion permission:', error);
-    //         // Handle error gracefully
-    //         alert("Unable to access motion sensors. Please ensure you're using a supported mobile device.");
-    //       }
-    //     };
-      
-    //     const startPedometer = () => {
-    //       setIsPedometerStarted(true);
-    //       let lastAccel = 0;
-    //       let steps = 0;
-          
-    //       const handleMotion = (event) => {
-    //         if (!event.accelerationIncludingGravity) {
-    //           console.log('No acceleration data available');
-    //           return;
-    //         }
-      
-    //         const { x, y, z } = event.accelerationIncludingGravity;
-    //         const acceleration = Math.sqrt(
-    //           Math.pow(x || 0, 2) +
-    //           Math.pow(y || 0, 2) +
-    //           Math.pow(z || 0, 2)
-    //         );
-      
-    //         if (Math.abs(acceleration - lastAccel) > 10) { // Threshold for step detection
-    //           steps++;
-    //           setCurrentSteps(steps);
-    //         }
-    //         lastAccel = acceleration;
-    //       };
-      
-    //       window.addEventListener('devicemotion', handleMotion);
-      
-    //       // Clean up function
-    //       return () => {
-    //         window.removeEventListener('devicemotion', handleMotion);
-    //       };
-    //     };
-      
-    //     const progress = (currentSteps / pedometerData.required_steps) * 100;
-    //     const isComplete = currentSteps >= pedometerData.required_steps;
-      
-    //     return (
-    //       <div className="flex-1 h-full bg-gray-900 relative">
-    //         <div className="max-w-[500px] mx-auto h-full flex flex-col p-6">
-    //           <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-    //             <h2 className="text-2xl font-bold text-center">{pedometerData.description}</h2>
-                
-    //             <div className="w-full max-w-md bg-gray-800 rounded-full h-6 overflow-hidden">
-    //               <div 
-    //                 className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-    //                 style={{ width: `${Math.min(progress, 100)}%` }}
-    //               />
-    //             </div>
-                
-    //             <div className="text-center">
-    //               <p className="text-xl font-bold">{currentSteps} / {pedometerData.required_steps} steps</p>
-    //             </div>
-      
-    //             {!isPedometerStarted && (
-    //               <button
-    //                 onClick={requestPermission}
-    //                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
-    //               >
-    //                 Start Walking
-    //               </button>
-    //             )}
-      
-    //             {isComplete && (
-    //               <div className="text-green-500 text-center">
-    //                 <p className="text-xl font-bold">Great job! You've completed the required steps!</p>
-    //               </div>
-    //             )}
-      
-    //             {isPedometerStarted && !isComplete && (
-    //               <div className="text-blue-500 text-center">
-    //                 <p>Keep walking! You're doing great!</p>
-    //               </div>
-    //             )}
-    //           </div>
-    //         </div>
-    //       </div>
-    //     );
-    //   };
-
     const PedometerView = () => {
         const [deviceSupport, setDeviceSupport] = useState({
           isSupported: false,
@@ -657,11 +473,15 @@ const SlideContainer = ({
           let steps = 0;
           let lastStepTime = Date.now();
           let gravity = { x: 0, y: 0, z: 0 }; // Gravity values initialized
+          const requiredSteps = pedometerData.required_steps;
           
           const handleMotion = (event) => {
+            // Stop counting if already completed
+            if (steps >= requiredSteps) return;
+
             const currentTime = Date.now();
             // Prevent counting steps too quickly (minimum 250ms between steps)
-            if (currentTime - lastStepTime < 250) return;
+            if (currentTime - lastStepTime < 300) return;
       
             if (!event.accelerationIncludingGravity) return;
             
@@ -680,13 +500,19 @@ const SlideContainer = ({
             const acceleration = Math.sqrt(x * x + y * y + z * z);
             
             // Adjusted threshold and added minimum acceleration requirement
-            const threshold = 4; // Adjusted threshold for better accuracy
-            const minAcceleration = 8; // Minimum acceleration to count as a step
+            const threshold = 3; // Adjusted threshold for better accuracy
+            const minAcceleration = 5; // Minimum acceleration to count as a step
             
             if (acceleration > minAcceleration && Math.abs(acceleration - lastAccel) > threshold) {
-              steps++;
+            //   steps++;
+              steps = Math.min(steps + 1, requiredSteps); // Ensure steps don't exceed required
               setCurrentSteps(steps);
               lastStepTime = currentTime;
+
+              // Update completion status
+                if (steps >= requiredSteps) {
+                    setPedometerCompleted(true);
+                }
             }
             lastAccel = acceleration;
           };
@@ -727,20 +553,36 @@ const SlideContainer = ({
         const isComplete = currentSteps >= pedometerData.required_steps;
       
         return (
-          <div className="flex-1 h-full bg-gray-900 relative">
+        //   <div className="flex-1 h-full bg-gray-900 relative">
+           <div className="flex-1 h-full bg-gradient-to-br from-blue-900/50 to-green-900/50 relative">
             <div className="max-w-[500px] mx-auto h-full flex flex-col p-6">
-              <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-                <h2 className="text-2xl font-bold text-center">{pedometerData.description}</h2>
+              <div className="flex-1 flex flex-col items-center justify-center space-y-6 backdrop-blur-sm">
+                <h2 className="text-2xl font-bold text-center text-white drop-shadow-md">
+                    {pedometerData.description}
+                </h2>
                 
-                <div className="w-full max-w-md bg-gray-800 rounded-full h-6 overflow-hidden">
+                {/* <div className="w-full max-w-md bg-gray-800 rounded-full h-6 overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
                     style={{ width: `${Math.min(progress, 100)}%` }}
                   />
+                </div> */}
+
+                <div className="w-full max-w-md bg-gray-800/80 rounded-full h-6 overflow-hidden backdrop-blur-sm">
+                    <div 
+                    className="h-full bg-gradient-to-r from-blue-400 to-green-400 transition-all duration-300"
+                    style={{ width: `${Math.min(progress, 100)}%` }}
+                    />
                 </div>
                 
-                <div className="text-center">
-                  <p className="text-xl font-bold">{currentSteps} / {pedometerData.required_steps} steps</p>
+                {/* Steps text */}
+                <div className="text-center space-y-2">
+                    <p className="text-xl font-bold text-white drop-shadow-md">
+                    {currentSteps} / {pedometerData.required_steps} steps
+                    </p>
+                    {isPedometerStarted && !isComplete && (
+                    <p className="text-blue-200 text-sm">Keep walking! Steps remaining: {pedometerData.required_steps - currentSteps}</p>
+                    )}
                 </div>
       
                 {!isPedometerStarted && (

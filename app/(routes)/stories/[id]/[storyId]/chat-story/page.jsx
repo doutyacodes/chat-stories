@@ -51,6 +51,7 @@ const StorySlides = () => {
   const [pedometerData, setPedometerData] = useState(null);
   const [currentSteps, setCurrentSteps] = useState(0);
   const [isPedometerStarted, setIsPedometerStarted] = useState(false);
+  const [pedometerCompleted, setPedometerCompleted] = useState(false);
 
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
@@ -406,6 +407,7 @@ const StorySlides = () => {
   const handleSlideChange = async (direction) => {
     setHasSubmittedAnswer(false);
     setPreviousSlideIndex(currentSlideIndex);
+    setPedometerCompleted(false);
   
     // Set next slide type
       //   // Set the next slide type before loading
@@ -620,7 +622,8 @@ const StorySlides = () => {
           {!isLastSlide ? (
             <button 
               onClick={onNext}
-              disabled={loading || (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer)) }
+              disabled={loading || (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer)) ||
+                (currentSlide?.slide_type === 'pedometer' && !pedometerCompleted) }
               className={`pointer-events-auto ml-auto p-4 rounded-full transition-colors shadow-lg backdrop-blur-sm ${
                 loading || (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer))
                   ? 'bg-green-600/80 opacity-50 cursor-not-allowed'
@@ -799,6 +802,7 @@ const StorySlides = () => {
                 setCurrentSteps={setCurrentSteps}
                 isPedometerStarted={isPedometerStarted}
                 setIsPedometerStarted={setIsPedometerStarted}
+                setPedometerCompleted={setPedometerCompleted}
               />
             <Navigation 
               onNext={() => handleSlideChange('next')}
