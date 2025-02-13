@@ -170,64 +170,64 @@ console.log(storyType)
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
 
-  const validateImage = (file) => {
-    if (file.type.startsWith("video/")) return true; // Skip validation for videos
+  // const validateImage = (file) => {
+  //   if (file.type.startsWith("video/")) return true; // Skip validation for videos
   
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
+  //   return new Promise((resolve, reject) => {
+  //     const img = new Image();
+  //     img.src = URL.createObjectURL(file);
   
-      img.onload = () => {
-        URL.revokeObjectURL(img.src);
-        const width = img.width;
-        const height = img.height;
+  //     img.onload = () => {
+  //       URL.revokeObjectURL(img.src);
+  //       const width = img.width;
+  //       const height = img.height;
   
-        // Validate 9:16 aspect ratio for any type
-        const aspectRatio = width / height;
-        const expectedRatio = 9 / 16;
-        const tolerance = 0.1; // 10% tolerance
+  //       // Validate 9:16 aspect ratio for any type
+  //       const aspectRatio = width / height;
+  //       const expectedRatio = 9 / 16;
+  //       const tolerance = 0.1; // 10% tolerance
   
-        if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-          reject("Image must have a 9:16 aspect ratio (recommended: 1080x1920px)");
-        } else if (width < 1080 || height < 1920) {
-          reject("Image resolution is too low. Recommended: 1080x1920px");
-        }
-        resolve(true);
-      };
+  //       if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
+  //         reject("Image must have a 9:16 aspect ratio (recommended: 1080x1920px)");
+  //       } else if (width < 1080 || height < 1920) {
+  //         reject("Image resolution is too low. Recommended: 1080x1920px");
+  //       }
+  //       resolve(true);
+  //     };
   
-      img.onerror = () => {
-        URL.revokeObjectURL(img.src);
-        reject("Error loading image");
-      };
-    });
-  };
+  //     img.onerror = () => {
+  //       URL.revokeObjectURL(img.src);
+  //       reject("Error loading image");
+  //     };
+  //   });
+  // };
   
 
-  const handleImageUpload = async (index, file) => {
-    if (file) {
-      try {
-        // Get the slide type for validation
-        const slideType = episodeData.slides[index].type;
+  // const handleImageUpload = async (index, file) => {
+  //   if (file) {
+  //     try {
+  //       // Get the slide type for validation
+  //       const slideType = episodeData.slides[index].type;
         
-        // Validate the image
-        await validateImage(file, slideType);
+  //       // Validate the image
+  //       await validateImage(file, slideType);
         
-        // If validation passes, proceed with upload
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          handleImageSlideChange(index, 'media', {
-            file: file,
-            preview: reader.result
-          });
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        setError(error);
-        // Clear the error after 5 seconds
-        setTimeout(() => setError(''), 5000);
-      }
-    }
-  };
+  //       // If validation passes, proceed with upload
+  //       const reader = new FileReader();
+  //       reader.onloadend = () => {
+  //         handleImageSlideChange(index, 'media', {
+  //           file: file,
+  //           preview: reader.result
+  //         });
+  //       };
+  //       reader.readAsDataURL(file);
+  //     } catch (error) {
+  //       setError(error);
+  //       // Clear the error after 5 seconds
+  //       setTimeout(() => setError(''), 5000);
+  //     }
+  //   }
+  // };
 
   const handleAddCharacter = (slideIndex) => {
     const updatedSlides = [...episodeData.slides];

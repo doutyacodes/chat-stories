@@ -1,6 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
+const QuitDialog = ({ isOpen, onClose, onConfirm }) => {
+  return (
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent className="bg-gray-800 border-gray-700">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-white">Quit Challenge?</AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-300">
+            Are you sure you want to quit? You can continue this challenge later.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-red-600 text-white hover:bg-red-700"
+          >
+            Yes, Quit Challenge
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
 
 const SlideContainer = ({ 
     currentSlide, 
@@ -33,6 +60,8 @@ const SlideContainer = ({
     }) => {
 
     const [slideDirection, setSlideDirection] = useState('right');
+    const [showQuitDialog, setShowQuitDialog] = useState(false);
+
 
     useEffect(() => {
         // Update slide direction whenever currentSlideIndex changes
@@ -641,12 +670,117 @@ const SlideContainer = ({
     // }
 
     // Add LocationView component in SlideContainer.js
+    
+    // const LocationView = () => {
+    //   const formatDistance = (meters) => {
+    //     if (meters >= 1000) {
+    //       return `${(meters / 1000).toFixed(1)} km (${meters.toFixed(0)}m)`;
+    //     }
+    //     return `${meters.toFixed(0)} meters`;
+    //   };
+    
+    //   if (locationPermissionDenied) {
+    //     return (
+    //       <div className="flex-1 h-full bg-gray-900 relative">
+    //         <div className="max-w-[500px] bg-gradient-to-br from-blue-900/50 to-green-900/50 mx-auto h-full flex flex-col items-center justify-center p-6">
+    //           <div className="text-center space-y-4">
+    //             <div className="w-16 h-16 mx-auto mb-4">
+    //               <svg className="w-full h-full text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    //               </svg>
+    //             </div>
+    //             <h3 className="text-xl font-bold text-red-500">Location Access Required</h3>
+    //             <p className="text-gray-300">This challenge requires access to your device&apos;s location. Please enable location services and reload the page.</p>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     );
+    //   }
+    
+    //   const distance = userLocation ? calculateDistance(
+    //     userLocation.latitude,
+    //     userLocation.longitude,
+    //     locationData.latitude,
+    //     locationData.longitude
+    //   ) : null;
+
+    //   // console.log("locationView distant",distance);
+    //   // console.log("radius", locationData.radius)
+    //   // console.log("the percent", Math.min(100, (1 - (distance / (locationData.radius * 2))) * 100))
+    //   // const percentage = Math.max(0, Math.min(100, (1 - (distance / locationData.radius)) * 100));
+
+    
+    //   return (
+    //     <div className="flex-1 h-full bg-gray-900 relative">
+    //       <div className="max-w-[500px] bg-gradient-to-br from-blue-900/50 to-green-900/50 mx-auto h-full flex flex-col items-center justify-center p-6">
+    //         <div className="text-center space-y-6 w-full">
+    //           <h2 className="text-2xl font-bold mb-4">{locationData.description}</h2>
+              
+    //           {userLocation ? (
+    //             <div className="space-y-6">
+    //               <div className="grid grid-cols-2 gap-4 text-sm">
+    //                 <div className="bg-gray-800 p-4 rounded-lg">
+    //                   <p className="text-gray-400 mb-1">Target Location</p>
+    //                   <p className="font-mono">
+    //                     {/* {locationData.latitude.toFixed(6)}, {locationData.longitude.toFixed(6)} */}
+    //                     {locationData.latitude}, {locationData.longitude}
+    //                   </p>
+    //                 </div>
+    //                 <div className="bg-gray-800 p-4 rounded-lg">
+    //                   <p className="text-gray-400 mb-1">Your Location</p>
+    //                   <p className="font-mono">
+    //                     {/* {userLocation.latitude.toFixed(6)}, {userLocation.longitude.toFixed(6)} */}
+    //                     {userLocation.latitude}, {userLocation.longitude}
+    //                   </p>
+    //                 </div>
+    //               </div>
+    
+    //               <div className="bg-gray-800 p-4 rounded-lg">
+    //                 <p className="text-gray-400 mb-2">Distance Remaining</p>
+    //                 <div className="space-y-2">
+    //                   <p className="text-xl font-bold">{formatDistance(distance)}</p>
+    //                   {/* <div className="w-full bg-gray-700 rounded-full h-2">
+    //                     <div 
+    //                       className="bg-green-600 h-3 rounded-full transition-all duration-500"
+    //                       style={{ 
+    //                         // width: `${Math.min(100, (1 - (distance / (locationData.radius * 2))) * 100)}%`
+    //                         width: `${Math.max(0, Math.min(100, (1 - (distance / locationData.radius)) * 100))}%`
+    //                       }}
+    //                     />
+    //                   </div> */}
+    //                   <p className="text-sm text-gray-400">
+    //                     Target radius: {formatDistance(locationData.radius)}
+    //                   </p>
+    //                 </div>
+    //               </div>
+    //             </div>
+    //           ) : (
+    //             <div className="text-gray-300 animate-pulse">Getting your location...</div>
+    //           )}
+    //         </div>
+    //       </div>
+    //     </div>
+    //   );
+    // };
+
+// Move the AlertDialog to a separate stable component
+
     const LocationView = () => {
+    
       const formatDistance = (meters) => {
         if (meters >= 1000) {
           return `${(meters / 1000).toFixed(1)} km (${meters.toFixed(0)}m)`;
         }
         return `${meters.toFixed(0)} meters`;
+      };
+    
+      const handleQuit = () => {
+        setShowQuitDialog(true);
+      };
+    
+      const handleConfirmQuit = () => {
+        // Handle navigation back - replace with your navigation logic
+        window.history.back();
       };
     
       if (locationPermissionDenied) {
@@ -666,20 +800,14 @@ const SlideContainer = ({
           </div>
         );
       }
-    
-      const distance = userLocation ? calculateDistance(
+
+     const distance = userLocation ? calculateDistance(
         userLocation.latitude,
         userLocation.longitude,
         locationData.latitude,
         locationData.longitude
       ) : null;
 
-      console.log("locationView distant",distance);
-      console.log("radius", locationData.radius)
-      console.log("the percent", Math.min(100, (1 - (distance / (locationData.radius * 2))) * 100))
-      const percentage = Math.max(0, Math.min(100, (1 - (distance / locationData.radius)) * 100));
-
-    console.log('percentage', percentage);
     
       return (
         <div className="flex-1 h-full bg-gray-900 relative">
@@ -689,47 +817,38 @@ const SlideContainer = ({
               
               {userLocation ? (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-gray-800 p-4 rounded-lg">
-                      <p className="text-gray-400 mb-1">Target Location</p>
-                      <p className="font-mono">
-                        {/* {locationData.latitude.toFixed(6)}, {locationData.longitude.toFixed(6)} */}
-                        {locationData.latitude}, {locationData.longitude}
-                      </p>
-                    </div>
-                    <div className="bg-gray-800 p-4 rounded-lg">
-                      <p className="text-gray-400 mb-1">Your Location</p>
-                      <p className="font-mono">
-                        {/* {userLocation.latitude.toFixed(6)}, {userLocation.longitude.toFixed(6)} */}
-                        {userLocation.latitude}, {userLocation.longitude}
-                      </p>
-                    </div>
-                  </div>
-    
                   <div className="bg-gray-800 p-4 rounded-lg">
                     <p className="text-gray-400 mb-2">Distance Remaining</p>
                     <div className="space-y-2">
                       <p className="text-xl font-bold">{formatDistance(distance)}</p>
-                      {/* <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-green-600 h-3 rounded-full transition-all duration-500"
-                          style={{ 
-                            // width: `${Math.min(100, (1 - (distance / (locationData.radius * 2))) * 100)}%`
-                            width: `${Math.max(0, Math.min(100, (1 - (distance / locationData.radius)) * 100))}%`
-                          }}
-                        />
-                      </div> */}
                       <p className="text-sm text-gray-400">
                         Target radius: {formatDistance(locationData.radius)}
                       </p>
                     </div>
                   </div>
+    
+                  <button
+                    onClick={handleQuit}
+                    className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white font-medium"
+                  >
+                    Quit Challenge
+                  </button>
                 </div>
               ) : (
                 <div className="text-gray-300 animate-pulse">Getting your location...</div>
               )}
             </div>
           </div>
+
+          <QuitDialog 
+            isOpen={showQuitDialog}
+            onClose={() => setShowQuitDialog(false)}
+            onConfirm={() => {
+              window.history.back();
+              setShowQuitDialog(false);
+            }}
+          />
+
         </div>
       );
     };

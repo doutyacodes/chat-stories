@@ -15,6 +15,8 @@ const EditEpisode = () => {
   const [error, setError] = useState("");
   const [fetchedCharacters, setFetchedCharacters] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [storyType, setStoryType] = useState(null);
+  const [episodeAudio, setEpisodeAudio] = useState(null);
   const [episodeData, setEpisodeData] = useState({
     id: "",
     name: "",
@@ -27,8 +29,6 @@ const EditEpisode = () => {
     slides: {},
   });
 
-  console.log("episodeData", episodeData)
-
   const [cropState, setCropState] = useState({
     slideIndex: null,
     showCropModal: false,
@@ -40,8 +40,6 @@ const EditEpisode = () => {
     },
     completedCrop: null
   });
-
-  console.log('modifications', modifications)
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
   const BASE_VIDEO_URL = 'https://wowfy.in/testusr/videos/';
@@ -72,6 +70,14 @@ const EditEpisode = () => {
       });
       if (!response.ok) throw new Error("Failed to fetch episode details");
       const data = await response.json();
+
+      // Handle episode audio if it exists
+      if (data.audio) {
+        setEpisodeAudio({
+          name: data.audio.name,
+          preview: data.audio.preview // Assuming the audio URL is stored here
+        });
+      }
 
       const processedSlides = data.slides.map((slide) => ({
         id: String(slide.id),
@@ -123,8 +129,19 @@ const EditEpisode = () => {
                   is_correct: !!option.is_correct,
                 })),
                 audio: slide.content.audio ? { name: slide.content.audio.name } : null
-              }
-            : {},
+              } : slide.type === "pedometer" ? {
+                description: slide.content.description || "",
+                targetSteps: slide.content.targetSteps || 0,
+                audio: slide.content.audio ? { name: slide.content.audio.name } : null
+              } :
+              slide.type === "location" ? {
+                description: slide.content.description || "",
+                latitude: slide.content.latitude || 0,
+                longitude: slide.content.longitude || 0,
+                radius: slide.content.radius || 0,
+                audio: slide.content.audio ? { name: slide.content.audio.name } : null
+              } :
+             {},
       }));
 
       setEpisodeData({
@@ -153,12 +170,41 @@ const EditEpisode = () => {
     }
   }, [selectedEpisodeId]);
 
+  // Add these handlers for episode audio
+const handleEpisodeAudioUpload = (file) => {
+  if (file) {
+    if (!file.type.startsWith('audio/')) {
+      setError('Please upload an audio file (MP3, WAV, etc.)');
+      return;
+    }
+    setEpisodeAudio({
+      file: file,
+      name: file.name
+    });
+    setModifications(prev => ({
+      ...prev,
+      episodeAudioModified: true
+    }));
+  }
+};
+
+const handleRemoveEpisodeAudio = () => {
+  setEpisodeAudio(null);
+  setModifications(prev => ({
+    ...prev,
+    episodeAudioModified: true,
+    episodeAudioRemoved: true
+  }));
+};
+
+
   const fetchCharacters = async () => {
     try {
       const response = await fetch(`/api/stories/${storyId}/characters`);
       if (!response.ok) throw new Error("Failed to fetch characters");
       const data = await response.json();
       setFetchedCharacters(data.characters);
+      setStoryType(data.storyType[0].storyType); // Add this line
     } catch (error) {
       setError("Failed to load characters");
       console.error(error);
@@ -218,6 +264,17 @@ const EditEpisode = () => {
               question: "",
               options: [{ text: "", is_correct: false }, { text: "", is_correct: false }],
               audio: null,
+            } : type === "pedometer" ? {
+              description: "",
+              targetSteps: 0,
+              audio: null
+            } :
+            type === "location" ? {
+              description: "",
+              latitude: 0,
+              longitude: 0,
+              radius: 0,
+              audio: null
             }
           : {
               characters: emptyCharacters,
@@ -262,103 +319,64 @@ const EditEpisode = () => {
     setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
   };
 
-  const validateImage = (file) => {
-    if (file.type.startsWith("video/")) return true; // Skip validation for videos
-  
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-  
-      img.onload = () => {
-        URL.revokeObjectURL(img.src);
-        const width = img.width;
-        const height = img.height;
 
-        // Validate 9:16 aspect ratio for any type
-        const aspectRatio = width / height;
-        const expectedRatio = 9 / 16;
-        const tolerance = 0.1; // 10% tolerance
+  // const handleMediaUploadWithCrop = async (index, file) => {
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setCropState(prev => ({
+  //         ...prev,
+  //         slideIndex: index,
+  //         showCropModal: true,
+  //         imgSrc: reader.result
+  //       }));
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
   
-        if (Math.abs(aspectRatio - expectedRatio) > tolerance) {
-          reject("Image must have a 9:16 aspect ratio (recommended: 1080x1920px)");
-        } else if (width < 1080 || height < 1350) {
-          reject("Image resolution is too low. Recommended: 1080x1920px");
-        }
-  
-        resolve(true);
-      };
-  
-      img.onerror = () => {
-        URL.revokeObjectURL(img.src);
-        reject("Error loading image");
-      };
-    });
-  };
-  
-
-  const handleMediaUpload = async (index, file) => {
+  const handleMediaUploadWithCrop = async (index, file) => {
     if (file) {
-
-      try {
-
-        // Only validate images (skip validation for videos/gifs)
-        if (file.type.startsWith('image/') && !file.type.includes('gif')) {
-          await validateImage(file);
-        }
-
+      if (file.type.startsWith('video/')) {
+        // Handle video directly without cropping
         const reader = new FileReader();
         reader.onloadend = () => {
           const updatedSlides = [...episodeData.slides];
           const currentSlide = updatedSlides[index];
-          const prevMediaType = currentSlide.content.media?.type;
-          const prevMediaPath = currentSlide.content.media?.preview;
-          const newMediaType = file.type.split("/")[0];
           
-          updatedSlides[index].content.media = {
+          currentSlide.content.media = {
             file: file,
             preview: reader.result,
-            type: newMediaType,
+            type: 'video'
           };
           
           setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
           
-          // Enhanced media modification tracking
           setModifications((prev) => ({
             ...prev,
             slides: { 
               ...prev.slides, 
               [currentSlide.id]: { 
-                ...prev.slides[currentSlide.id],
                 mediaModified: true,
-                mediaTypeChanged: prevMediaType !== newMediaType,
-                prevMediaType,
-                prevMediaPath,
-                newMediaType,
                 fileChanged: true
               } 
             },
           }));
         };
         reader.readAsDataURL(file);
-      } catch (error) {
-        setError(error);
-        // console.error(error);
+      } else {
+        // Existing image handling with crop
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setCropState(prev => ({
+            ...prev,
+            slideIndex: index,
+            showCropModal: true,
+            imgSrc: reader.result
+          }));
+        };
+        reader.readAsDataURL(file);
       }
-    }
-  };
-
-  const handleMediaUploadWithCrop = async (index, file) => {
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCropState(prev => ({
-          ...prev,
-          slideIndex: index,
-          showCropModal: true,
-          imgSrc: reader.result
-        }));
-      };
-      reader.readAsDataURL(file);
     }
   };
   
@@ -522,6 +540,18 @@ const EditEpisode = () => {
       formData.append("episodeId", episodeData.id);
       if (modifications.nameModified) formData.append("name", episodeData.name);
       if (modifications.synopsisModified) formData.append("synopsis", episodeData.synopsis);
+      if (modifications.episodeAudioModified) {
+        
+        formData.append("episodeAudioModified", true);
+
+        if (episodeAudio?.file) {
+          const audioUpload = await uploadAudioToCPanel(episodeAudio.file)
+          console.log("audioUpload", audioUpload)
+          formData.append("episodeAudio", audioUpload);
+        } else if (modifications.episodeAudioRemoved) {
+          formData.append("removeEpisodeAudio", "true");
+        }
+      }
   
       let modifiedSlides = Object.entries(modifications.slides)
         .filter(([_, changes]) => Object.values(changes).some((v) => v))
@@ -570,7 +600,6 @@ const EditEpisode = () => {
           formObject[key] = value;
         }
       });
-      console.log("Submitted FormData", formObject);
   
       // API Call
       const response = await fetch(`/api/episodes/${episodeData.id}/update-episode`, {
@@ -600,7 +629,6 @@ const EditEpisode = () => {
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      console.log("logger", response.data.success, response.data.filePath);
       
       if (response.data.success) return response.data.filePath;
       throw new Error(response.data.error);
@@ -693,6 +721,40 @@ const EditEpisode = () => {
               className="w-full p-3 rounded-lg bg-gray-700 focus:ring-2 focus:ring-purple-600 h-24"
             />
 
+            {/* Episode Audio */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Episode Audio (Optional)</label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => handleEpisodeAudioUpload(e.target.files[0])}
+                  className="hidden"
+                  id="episode-audio"
+                />
+                <label 
+                  htmlFor="episode-audio"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500 cursor-pointer"
+                >
+                  <Upload className="h-5 w-5" />
+                  <span>Upload Episode Audio</span>
+                </label>
+                
+                {episodeAudio && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">{episodeAudio.name}</span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveEpisodeAudio}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <button
               type="button"
               onClick={() => handleAddSlide("image")}
@@ -707,13 +769,31 @@ const EditEpisode = () => {
             >
               Add Chat Slide
             </button>
-            <button
-              type="button"
-              onClick={() => handleAddSlide("quiz")}
-              className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg"
-            >
-              Add Quiz Slide
-            </button>
+            {storyType === "game" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleAddSlide("quiz")}
+                  className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mr-2"
+                >
+                  Add Quiz Slide
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddSlide("pedometer")}
+                  className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mr-2"
+                >
+                  Add Step Task Slide
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddSlide("location")}
+                  className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg"
+                >
+                  Add Location Task Slide
+                </button>
+              </>
+            )}
 
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="slides">
@@ -743,16 +823,9 @@ const EditEpisode = () => {
                               <>
                                 <div className="flex items-center gap-4 mb-4">
                                   <div className="flex-1">
-                                    {/* <input
-                                      type="file"
-                                      accept="image/*, video/*, image/gif"
-                                      onChange={(e) => handleMediaUpload(index, e.target.files[0])}
-                                      className="hidden"
-                                      id={`mediaUpload-${index}`}
-                                    /> */}
                                     <input
                                       type="file"
-                                      accept="image/*"
+                                      accept="image/*, video/*, image/gif"
                                       onChange={(e) => handleMediaUploadWithCrop(index, e.target.files[0])}
                                       className="hidden"
                                       id={`mediaUpload-${index}`}
@@ -763,12 +836,7 @@ const EditEpisode = () => {
                                     >
                                       <Upload className="mr-2 h-5 w-5" />
                                       <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
-                                      {/* {!slide.content.media?.type?.startsWith('video/') && (
-                                        <span className="text-xs text-gray-400 mt-1">
-                                          9:16 aspect ratio required
-                                        </span>
-                                      )} */}
-
+                                      
                                       {!slide.content.media?.type?.startsWith('video/') && (
                                         <span className="text-xs text-gray-400 mt-1">
                                           Recommended: 1080x1920px (9:16 aspect ratio)
@@ -991,17 +1059,9 @@ const EditEpisode = () => {
                               <>
                               <div className="flex items-center gap-4 mb-4">
                                 <div className="flex-1">
-                                {/* <input
-                                  type="file"
-                                  accept="image/*, video/*, image/gif"
-                                  onChange={(e) => handleMediaUpload(index, e.target.files[0])}
-                                  className="hidden"
-                                  id={`mediaUpload-${index}`}
-                                /> */}
-
                                 <input
                                   type="file"
-                                  accept="image/*"
+                                  accept="image/*, video/*, image/gif"
                                   onChange={(e) => handleMediaUploadWithCrop(index, e.target.files[0])}
                                   className="hidden"
                                   id={`mediaUpload-${index}`}
@@ -1012,19 +1072,14 @@ const EditEpisode = () => {
                                 >
                                   <Upload className="mr-2 h-5 w-5" />
                                   <span>{slide.content.media ? 'Change Media' : 'Upload Image/GIF/Video'}</span>
-                                  {/* {!slide.content.media?.type?.startsWith('video/') && (
-                                    <span className="text-xs text-gray-400 mt-1">
-                                      9:16 aspect ratio required
-                                    </span>
-                                    
-                                  )} */}
+                                  
                                   {!slide.content.media?.type?.startsWith('video/') && (
                                     <span className="text-xs text-gray-400 mt-1">
                                       Recommended: 1080x1920px (9:16 aspect ratio)
                                     </span>
                                   )}
                                 </label>
-                                </div>
+                              </div>
                                 {slide.content.media && (
                                     <div className="w-32 h-32">
                                       {slide.content.media.type === 'video' ? (
@@ -1124,6 +1179,128 @@ const EditEpisode = () => {
                                   Add Option
                                 </button>
                               </>
+                            )}
+
+                            {slide.type === "pedometer" && (
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">Challenge Description</label>
+                                  <textarea
+                                    value={slide.content.description}
+                                    onChange={(e) => {
+                                      const updatedSlides = [...episodeData.slides];
+                                      updatedSlides[index].content.description = e.target.value;
+                                      setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      setModifications((prev) => ({
+                                        ...prev,
+                                        slides: { ...prev.slides, [slide.id]: { descriptionModified: true } },
+                                      }));
+                                    }}
+                                    className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
+                                    placeholder="Describe the step challenge"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">Target Steps</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={slide.content.targetSteps}
+                                    onChange={(e) => {
+                                      const updatedSlides = [...episodeData.slides];
+                                      updatedSlides[index].content.targetSteps = parseInt(e.target.value) || 0;
+                                      setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      setModifications((prev) => ({
+                                        ...prev,
+                                        slides: { ...prev.slides, [slide.id]: { targetStepsModified: true } },
+                                      }));
+                                    }}
+                                    className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                    placeholder="Enter number of steps required"
+                                  />
+                                </div>
+                              </div>
+                            )}
+
+                            {slide.type === "location" && (
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">Challenge Description</label>
+                                  <textarea
+                                    value={slide.content.description}
+                                    onChange={(e) => {
+                                      const updatedSlides = [...episodeData.slides];
+                                      updatedSlides[index].content.description = e.target.value;
+                                      setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      setModifications((prev) => ({
+                                        ...prev,
+                                        slides: { ...prev.slides, [slide.id]: { descriptionModified: true } },
+                                      }));
+                                    }}
+                                    className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
+                                    placeholder="Describe the location challenge"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-sm font-medium mb-2">Latitude</label>
+                                    <input
+                                      type="number"
+                                      step="0.000001"
+                                      value={slide.content.latitude}
+                                      onChange={(e) => {
+                                        const updatedSlides = [...episodeData.slides];
+                                        updatedSlides[index].content.latitude = parseFloat(e.target.value) || 0;
+                                        setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                        setModifications((prev) => ({
+                                          ...prev,
+                                          slides: { ...prev.slides, [slide.id]: { latitudeModified: true } },
+                                        }));
+                                      }}
+                                      className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                      placeholder="Enter latitude coordinate"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-medium mb-2">Longitude</label>
+                                    <input
+                                      type="number"
+                                      step="0.000001"
+                                      value={slide.content.longitude}
+                                      onChange={(e) => {
+                                        const updatedSlides = [...episodeData.slides];
+                                        updatedSlides[index].content.longitude = parseFloat(e.target.value) || 0;
+                                        setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                        setModifications((prev) => ({
+                                          ...prev,
+                                          slides: { ...prev.slides, [slide.id]: { longitudeModified: true } },
+                                        }));
+                                      }}
+                                      className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                      placeholder="Enter longitude coordinate"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">Radius (meters)</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={slide.content.radius}
+                                    onChange={(e) => {
+                                      const updatedSlides = [...episodeData.slides];
+                                      updatedSlides[index].content.radius = parseInt(e.target.value) || 0;
+                                      setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      setModifications((prev) => ({
+                                        ...prev,
+                                        slides: { ...prev.slides, [slide.id]: { radiusModified: true } },
+                                      }));
+                                    }}
+                                    className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                    placeholder="Enter radius in meters"
+                                  />
+                                </div>
+                              </div>
                             )}
 
                             <div className="mb-6">

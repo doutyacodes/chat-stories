@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/utils';
-import { EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, CHARACTERS, QUIZZES, QUIZ_OPTIONS } from '@/utils/schema';
+import { EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, CHARACTERS, QUIZZES, QUIZ_OPTIONS, PEDOMETER_TASKS, LOCATION_TASKS } from '@/utils/schema';
 import { authenticate } from '@/lib/jwtMiddleware';
 import { eq, and, gte, lt } from 'drizzle-orm';
 
@@ -119,15 +119,40 @@ export async function PUT(request, { params }) {
     const storyId = parseInt(formData.get('storyId'));
     
     await db.transaction(async (trx) => {
-      if (formData.has('name') || formData.has('synopsis')) {
+      // if (formData.has('name') || formData.has('synopsis')) {
+      //   await trx
+      //     .update(EPISODES)
+      //     .set({
+      //       name: formData.get('name'),
+      //       synopsis: formData.get('synopsis')
+      //     })
+      //     .where(eq(EPISODES.id, episodeId));
+      // }
+
+      if (formData.has('name') || formData.has('synopsis') || formData.get('episodeAudioModified')) {
+        const updateData = {};
+        if (formData.has('name')) updateData.name = formData.get('name');
+        if (formData.has('synopsis')) updateData.synopsis = formData.get('synopsis');
+        
+        // Handle episode audio
+        if (formData.get('episodeAudioModified')) {
+          if (formData.get('removeEpisodeAudio') === 'true') {
+            updateData.audio_url = null;
+          } else if (formData.get('episodeAudio')) {
+            const audioFile = formData.get('episodeAudio');
+            // Assuming you have a function to handle file upload and return the URL
+            console.log("audiofuile, ", audioFile);
+            
+            updateData.audio_url = audioFile;
+          }
+        }
+      
         await trx
           .update(EPISODES)
-          .set({
-            name: formData.get('name'),
-            synopsis: formData.get('synopsis')
-          })
+          .set(updateData)
           .where(eq(EPISODES.id, episodeId));
       }
+
       console.log("log 1")
 
       const modifiedSlides = JSON.parse(formData.get('modifiedSlides') || '[]');
@@ -186,6 +211,31 @@ export async function PUT(request, { params }) {
                 is_correct: option.is_correct
               });
             }
+          } else if (slide.type === 'pedometer') {
+            await trx.insert(SLIDE_CONTENT).values({
+              slide_id: slideId,
+              audio_url: slide.content.audio?.file || null,
+            });
+          
+            await trx.insert(PEDOMETER_TASKS).values({
+              slide_id: slideId,
+              required_steps: slide.content.targetSteps,
+              description: slide.content.description
+            });
+          }
+          else if (slide.type === 'location') {
+            await trx.insert(SLIDE_CONTENT).values({
+              slide_id: slideId,
+              audio_url: slide.content.audio?.file || null,
+            });
+          
+            await trx.insert(LOCATION_TASKS).values({
+              slide_id: slideId,
+              latitude: slide.content.latitude,
+              longitude: slide.content.longitude,
+              radius: slide.content.radius,
+              description: slide.content.description
+            });
           }
         } else {
           if (slide.changes.positionModified) {
@@ -219,8 +269,7 @@ export async function PUT(request, { params }) {
             if (slide.changes.contentModified || slide.changes.audioModified) {
               await processChat(trx, slide, slide.id, storyId, episodeId, formData);
             }
-          } else // Update the quiz modification section
-          if (slide.type === 'quiz') {
+          } else if (slide.type === 'quiz') {
             if (slide.changes.questionModified || slide.changes.optionsModified || 
                 slide.changes.mediaModified || slide.changes.audioModified) {
               
@@ -265,6 +314,44 @@ export async function PUT(request, { params }) {
                   }
                 }
               }
+            }
+          } else if (slide.type === 'pedometer') {
+            if (slide.changes.descriptionModified || slide.changes.targetStepsModified || slide.changes.audioModified) {
+              if (slide.changes.audioModified) {
+                await trx
+                  .update(SLIDE_CONTENT)
+                  .set({ audio_url: slide.content.audio?.file || null })
+                  .where(eq(SLIDE_CONTENT.slide_id, slide.id));
+              }
+          
+              await trx
+                .update(PEDOMETER_TASKS)
+                .set({
+                  required_steps: slide.content.targetSteps,
+                  description: slide.content.description
+                })
+                .where(eq(PEDOMETER_TASKS.slide_id, slide.id));
+            }
+          } else if (slide.type === 'location') {
+            if (slide.changes.descriptionModified || slide.changes.latitudeModified || 
+                slide.changes.longitudeModified || slide.changes.radiusModified || slide.changes.audioModified) {
+              
+              if (slide.changes.audioModified) {
+                await trx
+                  .update(SLIDE_CONTENT)
+                  .set({ audio_url: slide.content.audio?.file || null })
+                  .where(eq(SLIDE_CONTENT.slide_id, slide.id));
+              }
+          
+              await trx
+                .update(LOCATION_TASKS)
+                .set({
+                  latitude: slide.content.latitude,
+                  longitude: slide.content.longitude,
+                  radius: slide.content.radius,
+                  description: slide.content.description
+                })
+                .where(eq(LOCATION_TASKS.slide_id, slide.id));
             }
           }
         }
