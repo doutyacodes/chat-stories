@@ -660,7 +660,7 @@ const SlideContainer = ({
                   </svg>
                 </div>
                 <h3 className="text-xl font-bold text-red-500">Location Access Required</h3>
-                <p className="text-gray-300">This challenge requires access to your device's location. Please enable location services and reload the page.</p>
+                <p className="text-gray-300">This challenge requires access to your device&apos;s location. Please enable location services and reload the page.</p>
               </div>
             </div>
           </div>
