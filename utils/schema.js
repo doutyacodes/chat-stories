@@ -214,6 +214,16 @@ export const PEDOMETER_TASKS = mysqlTable("pedometer_tasks", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+export const LOCATION_TASKS = mysqlTable("location_tasks", {
+  id: int("id").primaryKey().autoincrement(),
+  slide_id: int("slide_id").notNull().references(() => SLIDES.id),
+  latitude: decimal("latitude", 10, 8).notNull(),
+  longitude: decimal("longitude", 11, 8).notNull(),
+  radius: int("radius").notNull(), // in meters
+  description: text("description").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
 // export const EPISODE_BRANCHES = mysqlTable("episode_branches", {
 //   id: int("id").primaryKey().autoincrement(),
 //   current_episode_id: int("current_episode_id").notNull().references(() => EPISODES.id),

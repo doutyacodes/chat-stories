@@ -45,7 +45,8 @@ console.log(storyType)
     { value: "chat", label: "Chat Slide" },
     ...(storyType === "game" ? [
       { value: "quiz", label: "Quiz Slide" },
-      { value: "pedometer", label: "Step Challenge" }
+      { value: "pedometer", label: "Step Task Slide" },
+      { value: "location", label: "Location Task Slide" }
     ] : [])
   ];
 
@@ -116,14 +117,19 @@ console.log(storyType)
           answer: "", // For normal quiz type
           audio: null // Add audio field
         } : type === "image"
-            ? { 
+          ? { 
               media: null, 
               description: "",
               audio: null // Add audio field
-              }
-          : type === "pedometer" ? {
+          } : type === "pedometer" ? {
             description: "",
             targetSteps: 0,
+            audio: null
+          } : type === "location" ? {
+            description: "",
+            latitude : 0,
+            longitude : 0,
+            radius : 0,
             audio: null
           } : {
                 characters: mergedCharacters,
@@ -1311,6 +1317,90 @@ const handleSubmit = async (e) => {
                                 }))}
                                 className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
                                 placeholder="Enter number of steps required"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {(slide.type === 'location' && storyType === 'game') && (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Challenge Description</label>
+                              <textarea
+                                value={slide.content.description}
+                                onChange={(e) => setEpisodeData(prev => ({
+                                  ...prev,
+                                  slides: prev.slides.map((s, i) => 
+                                    i === index ? {
+                                      ...s,
+                                      content: { ...s.content, description: e.target.value }
+                                    } : s
+                                  )
+                                }))}
+                                className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
+                                placeholder="Describe the location challenge (e.g., 'Find the historic statue in the park')"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium mb-2">Latitude</label>
+                                <input
+                                  type="number"
+                                  step="0.000001"
+                                  value={slide.content.latitude}
+                                  onChange={(e) => setEpisodeData(prev => ({
+                                    ...prev,
+                                    slides: prev.slides.map((s, i) => 
+                                      i === index ? {
+                                        ...s,
+                                        content: { ...s.content, latitude: parseFloat(e.target.value) || 0 }
+                                      } : s
+                                    )
+                                  }))}
+                                  className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                  placeholder="Enter latitude coordinate"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium mb-2">Longitude</label>
+                                <input
+                                  type="number"
+                                  step="0.000001"
+                                  value={slide.content.longitude}
+                                  onChange={(e) => setEpisodeData(prev => ({
+                                    ...prev,
+                                    slides: prev.slides.map((s, i) => 
+                                      i === index ? {
+                                        ...s,
+                                        content: { ...s.content, longitude: parseFloat(e.target.value) || 0 }
+                                      } : s
+                                    )
+                                  }))}
+                                  className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                  placeholder="Enter longitude coordinate"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-2">Radius (meters)</label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={slide.content.radius}
+                                onChange={(e) => setEpisodeData(prev => ({
+                                  ...prev,
+                                  slides: prev.slides.map((s, i) => 
+                                    i === index ? {
+                                      ...s,
+                                      content: { ...s.content, radius: parseInt(e.target.value) || 0 }
+                                    } : s
+                                  )
+                                }))}
+                                className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                placeholder="Enter radius in meters for the target area"
                               />
                             </div>
                           </div>

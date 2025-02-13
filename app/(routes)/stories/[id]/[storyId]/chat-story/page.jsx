@@ -52,6 +52,13 @@ const StorySlides = () => {
   const [currentSteps, setCurrentSteps] = useState(0);
   const [isPedometerStarted, setIsPedometerStarted] = useState(false);
   const [pedometerCompleted, setPedometerCompleted] = useState(false);
+  const [locationData, setLocationData] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
+  const [locationCompleted, setLocationCompleted] = useState(false);
+  const [watchId, setWatchId] = useState(null);
+
+  const [showLocationCompletedModal, setShowLocationCompletedModal] = useState(false);
 
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
@@ -59,6 +66,66 @@ const StorySlides = () => {
 
   const currentSlide = slides[currentSlideIndex];
 
+  // Define calculateDistance inside the component but outside any other functions
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
+  };
+
+  // Then define startLocationTracking, which can now access calculateDistance
+  const startLocationTracking = (locationData) => {
+    if (!navigator.geolocation) {
+      setLocationPermissionDenied(true);
+      return;
+    }
+    console.log("inside the latitude calculation");
+    
+    const id = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+          
+          // Calculate distance between user and target
+          const distance = calculateDistance(
+            position.coords.latitude,
+            position.coords.longitude,
+            locationData.latitude,
+            locationData.longitude
+          );
+
+          console.log("distance", distance)
+          
+          if (distance <= locationData.radius) {
+            setLocationCompleted(true);
+            setShowLocationCompletedModal(true);
+            clearInterval(id); // Stop tracking
+            setWatchId(null);
+          }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLocationPermissionDenied(true);
+        },
+        { enableHighAccuracy: true }
+      );
+    }, 3000);
+
+    setWatchId(id);
+  };
+  
 
   // Add these functions after your state declarations
   const toggleFullscreen = async () => {
@@ -217,53 +284,6 @@ const StorySlides = () => {
 
   /* episode audio  end*/
 
-  const fetchSlideContent = async (slideId, slideType) => {
-    console.log("log4 slideType",slideId, slideType);
-
-    try {
-
-      setSlideContent(null)
-      setChatMessages([])
-      setQuizData(null) /* clearning old  */
-
-      setLoading(true);
-      setUserAnswer('');
-      setIsAnswerCorrect(false);
-      setShowError(false);
-      
-      if (slideType === 'image') {
-        const contentResponse = await fetch(`/api/slide-content/${slideId}`);
-        if (!contentResponse.ok) throw new Error('Failed to fetch slide content');
-        const contentData = await contentResponse.json();
-        setSlideContent(contentData);
-      } else if (slideType === 'chat') {
-        // const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}`);
-        const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}?slideId=${slideId}`);
-        if (!chatResponse.ok) throw new Error('Failed to fetch chat messages');
-        const chatData = await chatResponse.json();
-        setChatMessages(chatData.chatMessages);
-        setChatAudio(chatData.audio_url);
-      } else if (slideType === 'quiz') {
-        const quizResponse = await fetch(`/api/quiz-content/${slideId}`);
-        if (!quizResponse.ok) throw new Error('Failed to fetch quiz content');
-        const quizData = await quizResponse.json();
-        setQuizData(quizData);
-      } else if (slideType === 'pedometer') {
-        const pedometerResponse = await fetch(`/api/pedometer-content/${slideId}`);
-        if (!pedometerResponse.ok) throw new Error('Failed to fetch pedometer content');
-        const pedometerData = await pedometerResponse.json();
-        setPedometerData(pedometerData);
-        setCurrentSteps(0);
-        setIsPedometerStarted(false);
-      }
-      
-      setLoading(false);
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     const fetchInitialSlides = async () => {
       try {
@@ -315,6 +335,151 @@ const StorySlides = () => {
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     };
   }, []);
+
+  const checkLocationPermission = async () => {
+    if (!navigator.geolocation) {
+      setLocationPermissionDenied(true);
+      return false;
+    }
+  
+    try {
+      const permission = await navigator.permissions.query({ name: 'geolocation' });
+      if (permission.state === 'denied') {
+        setLocationPermissionDenied(true);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Error checking location permission:', error);
+      return false;
+    }
+  };
+  
+  // const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  //   const R = 6371e3; // Earth's radius in meters
+  //   const φ1 = lat1 * Math.PI/180;
+  //   const φ2 = lat2 * Math.PI/180;
+  //   const Δφ = (lat2-lat1) * Math.PI/180;
+  //   const Δλ = (lon2-lon1) * Math.PI/180;
+
+  //   const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+  //           Math.cos(φ1) * Math.cos(φ2) *
+  //           Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  //   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  //   return R * c; // Distance in meters
+  // };
+
+  // // Add this function for continuous location tracking
+  // const startLocationTracking = (locationData) => {
+  //   if (!navigator.geolocation) {
+  //     setLocationPermissionDenied(true);
+  //     return;
+  //   }
+  //   console.log("inside the lattitude calculation");
+    
+  //   const id = setInterval(() => {
+  //     navigator.geolocation.getCurrentPosition(
+  //       (position) => {
+  //         setUserLocation({
+  //           latitude: position.coords.latitude,
+  //           longitude: position.coords.longitude
+  //         });
+          
+  //         // Calculate distance between user and target
+  //         const distance = calculateDistance(
+  //           position.coords.latitude,
+  //           position.coords.longitude,
+  //           locationData.latitude,
+  //           locationData.longitude
+  //         );
+          
+  //         if (distance <= locationData.radius) {
+  //           setLocationCompleted(true);
+  //           setShowLocationCompletedModal(true);
+  //           clearInterval(id); // Stop tracking
+  //           setWatchId(null);
+  //         }
+  //       },
+  //       (error) => {
+  //         console.error('Error getting location:', error);
+  //         setLocationPermissionDenied(true);
+  //       },
+  //       { enableHighAccuracy: true }
+  //     );
+  //   }, 3000); // Check every 3 seconds
+
+  //   setWatchId(id);
+  // };
+
+  const fetchSlideContent = async (slideId, slideType) => {
+    try {
+      setSlideContent(null)
+      setChatMessages([])
+      setQuizData(null) /* clearning old  */
+
+      setLoading(true);
+      setUserAnswer('');
+      setIsAnswerCorrect(false);
+      setShowError(false);
+      
+      if (slideType === 'image') {
+        const contentResponse = await fetch(`/api/slide-content/${slideId}`);
+        if (!contentResponse.ok) throw new Error('Failed to fetch slide content');
+        const contentData = await contentResponse.json();
+        setSlideContent(contentData);
+      } else if (slideType === 'chat') {
+        // const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}`);
+        const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}?slideId=${slideId}`);
+        if (!chatResponse.ok) throw new Error('Failed to fetch chat messages');
+        const chatData = await chatResponse.json();
+        setChatMessages(chatData.chatMessages);
+        setChatAudio(chatData.audio_url);
+      } else if (slideType === 'quiz') {
+        const quizResponse = await fetch(`/api/quiz-content/${slideId}`);
+        if (!quizResponse.ok) throw new Error('Failed to fetch quiz content');
+        const quizData = await quizResponse.json();
+        setQuizData(quizData);
+      } else if (slideType === 'pedometer') {
+        const pedometerResponse = await fetch(`/api/pedometer-content/${slideId}`);
+        if (!pedometerResponse.ok) throw new Error('Failed to fetch pedometer content');
+        const pedometerData = await pedometerResponse.json();
+        setPedometerData(pedometerData);
+        setCurrentSteps(0);
+        setIsPedometerStarted(false);
+      } else if (slideType === 'location') {
+        const locationResponse = await fetch(`/api/location-content/${slideId}`);
+        if (!locationResponse.ok) throw new Error('Failed to fetch location content');
+        console.log("log 1")
+        const locationData = await locationResponse.json();
+        console.log("log 2")
+        setLocationData(locationData);
+        console.log("log 3")
+        
+        const hasPermission = await checkLocationPermission();
+        if (hasPermission && locationData) {
+          startLocationTracking(locationData);
+        }
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  console.log('locationData', locationData)
+
+  // cleanup 
+  useEffect(() => {
+    return () => {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [watchId]);
+
 
   const trackStoryView = async (storyId) => {
     let sessionId = null;
@@ -594,6 +759,48 @@ const StorySlides = () => {
     );
   };
 
+  const LocationCompletedModal = ({ isOpen, onContinue, isLastSlide, nextEpisode }) => {
+    if (!isOpen) return null;
+    
+    const getModalContent = () => {
+      if (!isLastSlide) {
+        return {
+          message: "You've successfully reached the location! Ready to continue your journey?",
+          buttonText: "Continue to Next Slide"
+        };
+      } else if (nextEpisode) {
+        return {
+          message: "Location challenge completed! Ready to start the next episode?",
+          buttonText: "Go to Next Episode"
+        };
+      } else {
+        return {
+          message: "You've successfully completed this location challenge!",
+          buttonText: "Close"
+        };
+      }
+    };
+  
+    const { message, buttonText } = getModalContent();
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
+        <div className="bg-green-800 p-6 rounded-lg max-w-sm w-full mx-4">
+          <h3 className="text-xl font-bold mb-4 text-white">Location Reached!</h3>
+          <p className="mb-6 text-gray-200">{message}</p>
+          <div className="flex justify-center">
+            <button
+              onClick={onContinue}
+              className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-white"
+            >
+              {buttonText}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const Navigation = ({ 
     onNext, 
     onPrevious, 
@@ -803,6 +1010,11 @@ const StorySlides = () => {
                 isPedometerStarted={isPedometerStarted}
                 setIsPedometerStarted={setIsPedometerStarted}
                 setPedometerCompleted={setPedometerCompleted}
+                locationData={locationData}
+                userLocation={userLocation}
+                locationPermissionDenied={locationPermissionDenied}
+                calculateDistance={calculateDistance}
+                // locationCompleted={locationCompleted}
               />
             <Navigation 
               onNext={() => handleSlideChange('next')}
@@ -837,6 +1049,21 @@ const StorySlides = () => {
       isLastSlide={isLastSlide}
       nextEpisode={nextEpisode}
     />
+
+    <LocationCompletedModal 
+      isOpen={showLocationCompletedModal}
+      onContinue={() => {
+        setShowLocationCompletedModal(false);
+        if (!isLastSlide) {
+          handleSlideChange('next');
+        } else if (nextEpisode) {
+          handleNextEpisode();
+        }
+      }}
+      isLastSlide={isLastSlide}
+      nextEpisode={nextEpisode}
+    />
+
       {showFullscreenPrompt && (
         <FullscreenPrompt 
           onAccept={() => {

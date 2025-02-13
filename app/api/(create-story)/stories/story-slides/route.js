@@ -4,7 +4,7 @@
   import path from 'path';
   import Client from 'ssh2-sftp-client';
   import { db } from '@/utils';
-  import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, QUIZ_OPTIONS, QUIZZES, PEDOMETER_TASKS } from '@/utils/schema';
+  import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, QUIZ_OPTIONS, QUIZZES, PEDOMETER_TASKS, LOCATION_TASKS } from '@/utils/schema';
   import { authenticate } from '@/lib/jwtMiddleware';
   import { eq, and, desc } from 'drizzle-orm';
 
@@ -200,6 +200,21 @@
             slide_id: slideId,
             required_steps: slide.content.targetSteps,
             description: slide.content.description
+          });
+        
+          // Insert slide content for audio
+          await db.insert(SLIDE_CONTENT).values({
+            slide_id: slideId,
+            audio_url: slide.content.audio?.name || null,
+          });
+        } else if (slide.type === 'location') {
+          // Create pedometer task entry
+          await db.insert(LOCATION_TASKS).values({
+            slide_id: slideId,
+            description: slide.content.description,
+            latitude: slide.content.latitude,
+            longitude: slide.content.longitude,
+            radius: slide.content.radius
           });
         
           // Insert slide content for audio
