@@ -198,13 +198,12 @@ const ImageCarousel = () => {
             {/* Add this line */}
           <div className="border-b border-white/30 " />
 
-        <div className='p-7 pt-0 sm:p-0'>
-            {/* AI Story Creation Cards */}
+        {/* AI Story Creation Cards */}
+        {/* <div className='p-7 pt-0 sm:p-0'>
             <div className="space-y-2 my-8">
                 <StoryCardsSlider />
             </div>
-
-        </div>
+        </div> */}
 
         {/* Categories */}
         {/* <div className="space-y-8">
@@ -227,7 +226,7 @@ const ImageCarousel = () => {
         </div> */}
 
         {/* Categories */}
-        <div className="space-y-8 md:px-8">
+        <div className="space-y-8 md:px-8 mt-4">
           {categories.map((category) => (
             <div key={category.id} className="mb-8">
               <div className="flex items-center justify-between mb-4 px-4">

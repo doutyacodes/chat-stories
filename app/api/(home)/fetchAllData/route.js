@@ -76,7 +76,28 @@ export async function GET(request) {
       .where(
         and(
           userCondition,
-          eq(STORIES.is_published, true)
+          eq(STORIES.is_published, true),
+          eq(STORIES.story_type, 'chat')
+        )
+      )
+      .orderBy(desc(USER_LAST_READ.last_read_at))
+      .limit(10);
+
+    const continuePlayingGames = await db
+      .select({
+        story_id: STORIES.id,
+        title: STORIES.title,
+        cover_img: STORIES.cover_img,
+        story_type: STORIES.story_type,
+        last_read_at: USER_LAST_READ.last_read_at,
+      })
+      .from(USER_LAST_READ)
+      .innerJoin(STORIES, eq(USER_LAST_READ.story_id, STORIES.id))
+      .where(
+        and(
+          userCondition,
+          eq(STORIES.is_published, true),
+          eq(STORIES.story_type, 'game')
         )
       )
       .orderBy(desc(USER_LAST_READ.last_read_at))
@@ -95,10 +116,30 @@ export async function GET(request) {
       .leftJoin(STORY_VIEWS, eq(STORIES.id, STORY_VIEWS.story_id))
       .where(and(
         gte(STORIES.created_at, sevenDaysAgo),
-        eq(STORIES.is_published, true)
+        eq(STORIES.is_published, true),
+        eq(STORIES.story_type, 'chat')
       ))
       .groupBy(STORIES.id, STORIES.title, STORIES.cover_img)
       .orderBy(sql`views_count DESC`);
+
+  // Fetch Trending Games (include stories with zero views)
+    const trendingGames = await db
+    .select({
+      story_id: STORIES.id,
+      title: STORIES.title,
+      cover_img: STORIES.cover_img,
+      story_type: STORIES.story_type,
+      views_count: sql`IFNULL(COUNT(${STORY_VIEWS.id}), 0)`.as('views_count'),
+    })
+    .from(STORIES)
+    .leftJoin(STORY_VIEWS, eq(STORIES.id, STORY_VIEWS.story_id))
+    .where(and(
+      gte(STORIES.created_at, sevenDaysAgo),
+      eq(STORIES.is_published, true),
+      eq(STORIES.story_type, 'game')
+    ))
+    .groupBy(STORIES.id, STORIES.title, STORIES.cover_img)
+    .orderBy(sql`views_count DESC`);
 
     // Fetch Latest Stories
     const latestStories = await db
@@ -110,9 +151,33 @@ export async function GET(request) {
         created_at: STORIES.created_at,
       })
       .from(STORIES)
-      .where(eq(STORIES.is_published, true))
+      .where(
+        and(
+          eq(STORIES.is_published, true),
+          eq(STORIES.story_type, 'chat')
+        )
+      )
       .orderBy(desc(STORIES.created_at))
       .limit(10);
+
+  // Fetch Latest Stories
+    const latestGames = await db
+    .select({
+      story_id: STORIES.id,
+      title: STORIES.title,
+      cover_img: STORIES.cover_img,
+      story_type: STORIES.story_type,
+      created_at: STORIES.created_at,
+    })
+    .from(STORIES)
+    .where(
+      and(
+        eq(STORIES.is_published, true),
+        eq(STORIES.story_type, 'game')
+      )
+    )
+    .orderBy(desc(STORIES.created_at))
+    .limit(10);
 
     // Fetch Categories and Stories
     const categoriesData = await db
@@ -153,20 +218,37 @@ export async function GET(request) {
     const mergedCategories = [
       ...(continueReadingStories.length > 0
         ? [{
-            id: 'continue-reading',
+            id: 'continue-reading-story',
             title: 'Continue Reading',
             data: continueReadingStories,
           }]
         : []),
+      ...(continuePlayingGames.length > 0
+        ? [{
+            id: 'continue-reading-game',
+            title: 'Continue Reading',
+            data: continuePlayingGames,
+          }]
+        : []),
       {
-        id: 'trending',
+        id: 'trendingstory',
         title: 'Trending Stories',
         data: trendingStories,
       },
       {
-        id: 'latest',
+        id: 'trendingGame',
+        title: 'Trending Games',
+        data: trendingGames,
+      },
+      {
+        id: 'latestStory',
         title: 'Latest Stories',
         data: latestStories,
+      },
+      {
+        id: 'latestGame',
+        title: 'Latest Games',
+        data: latestGames,
       },
       ...categories,
     ];

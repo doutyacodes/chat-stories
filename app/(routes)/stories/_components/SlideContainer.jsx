@@ -810,46 +810,88 @@ const SlideContainer = ({
 
     
       return (
-        <div className="flex-1 h-full bg-gray-900 relative">
-          <div className="max-w-[500px] bg-gradient-to-br from-blue-900/50 to-green-900/50 mx-auto h-full flex flex-col items-center justify-center p-6">
-            <div className="text-center space-y-6 w-full">
-              <h2 className="text-2xl font-bold mb-4">{locationData.description}</h2>
+        // <div className="flex-1 h-full bg-gray-900 relative">
+        //   <div className="max-w-[500px] bg-gradient-to-br from-blue-900/50 to-green-900/50 mx-auto h-full flex flex-col items-center justify-center p-6">
+        //     <div className="text-center space-y-6 w-full">
+        //       <h2 className="text-2xl font-bold mb-4">{locationData.description}</h2>
               
-              {userLocation ? (
-                <div className="space-y-6">
-                  <div className="bg-gray-800 p-4 rounded-lg">
-                    <p className="text-gray-400 mb-2">Distance Remaining</p>
-                    <div className="space-y-2">
-                      <p className="text-xl font-bold">{formatDistance(distance)}</p>
-                      <p className="text-sm text-gray-400">
-                        Target radius: {formatDistance(locationData.radius)}
-                      </p>
-                    </div>
-                  </div>
+        //       {userLocation ? (
+        //         <div className="space-y-6">
+        //           <div className="bg-gray-800 p-4 rounded-lg">
+        //             <p className="text-gray-400 mb-2">Distance Remaining</p>
+        //             <div className="space-y-2">
+        //               <p className="text-xl font-bold">{formatDistance(distance)}</p>
+        //               <p className="text-sm text-gray-400">
+        //                 Target radius: {formatDistance(locationData.radius)}
+        //               </p>
+        //             </div>
+        //           </div>
     
-                  <button
-                    onClick={handleQuit}
-                    className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white font-medium"
-                  >
-                    Quit Challenge
-                  </button>
-                </div>
-              ) : (
-                <div className="text-gray-300 animate-pulse">Getting your location...</div>
-              )}
+        //           <button
+        //             onClick={handleQuit}
+        //             className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white font-medium"
+        //           >
+        //             Quit Challenge
+        //           </button>
+        //         </div>
+        //       ) : (
+        //         <div className="text-gray-300 animate-pulse">Getting your location...</div>
+        //       )}
+        //     </div>
+        //   </div>
+
+        //   <QuitDialog 
+        //     isOpen={showQuitDialog}
+        //     onClose={() => setShowQuitDialog(false)}
+        //     onConfirm={() => {
+        //       window.history.back();
+        //       setShowQuitDialog(false);
+        //     }}
+        //   />
+
+        // </div>
+        <div className="flex-1 h-full bg-gray-900 relative">
+  <div className="max-w-[500px] bg-gradient-to-br from-blue-900/50 to-green-900/50 mx-auto h-full flex flex-col items-center justify-center p-6">
+    <div className="text-center space-y-6 w-full">
+      <h2 className="text-2xl font-bold mb-4">{locationData.description}</h2>
+      
+      {userLocation ? (
+        <div className="space-y-6">
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <p className="text-gray-400 mb-2">Distance Remaining</p>
+            <div className="space-y-2">
+              <p className="text-xl font-bold">{formatDistance(distance)}</p>
+              <p className="text-sm text-gray-400">
+                Target radius: {formatDistance(locationData.radius)}
+              </p>
             </div>
           </div>
 
-          <QuitDialog 
-            isOpen={showQuitDialog}
-            onClose={() => setShowQuitDialog(false)}
-            onConfirm={() => {
-              window.history.back();
-              setShowQuitDialog(false);
-            }}
-          />
-
+          {/* Added mt-12 to create more space from the content above */}
+          <div className="mt-12">
+            <button
+              onClick={handleQuit}
+              className="py-2.5 px-6 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-gray-200 font-medium text-sm border border-gray-600"
+            >
+              Quit now & continue later
+            </button>
+          </div>
         </div>
+      ) : (
+        <div className="text-gray-300 animate-pulse">Getting your location...</div>
+      )}
+    </div>
+  </div>
+
+  <QuitDialog 
+    isOpen={showQuitDialog}
+    onClose={() => setShowQuitDialog(false)}
+    onConfirm={() => {
+      window.history.back();
+      setShowQuitDialog(false);
+    }}
+  />
+</div>
       );
     };
 
