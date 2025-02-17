@@ -17,13 +17,6 @@ export async function POST(request) {
   const localTempDir = os.tmpdir();
 
   try {
-    // const formData = await request.formData();
-    // const storyName = formData.get('name');
-    // const storySynopsis = formData.get('synopsis');
-    // const category = formData.get('category');
-    // // const coverImage = formData.get('coverImage');
-    // const coverImagePath = formData.get('coverImagePath');
-
     // Parse the JSON body instead of formData since we're sending JSON now
     const data = await request.json();
 
@@ -34,12 +27,7 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-  
 
-    // const storyType = 'chat'
-
-    // Generate unique filename for cover image
-    // const fileName = `${Date.now()}-${storyName.replace(/\s+/g, '-')}.png`;
 
     // Save story in database
     const storyRecord = await db.insert(STORIES).values({
@@ -51,17 +39,6 @@ export async function POST(request) {
       cover_img: data.coverImagePath, // Use the filename from cPanel upload
       is_published: false,
     });
-
-    // // Save story in database
-    // const storyRecord = await db.insert(STORIES).values({
-    //   title: storyName,
-    //   synopsis: storySynopsis,
-    //   category_id: parseInt(category),
-    //   story_type: storyType, // Supports 'chat', 'normal', and now 'interactive'
-    //   user_id: userId,
-    //   cover_img: coverImagePath,
-    //   is_published: false,
-    // });
 
     const storyId = storyRecord[0].insertId;
 

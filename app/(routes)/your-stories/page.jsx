@@ -27,27 +27,65 @@ const YourStoriesPage = () => {
   const [error, setError] = useState("");
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState(null);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  // Add this function at the start of your component
+  const handleEditClick = (storyId, e) => {
+    e.stopPropagation();
+    setOpenDropdownId(openDropdownId === storyId ? null : storyId);
+  };
 
   useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
+      if(!token) {
+        redirect("/login");
+      }
+    fetchStories();
+  }, [currentPage, sortOrder]);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
-    if(!token) {
-      redirect("/login");
-    }
-  fetchStories();
-  }, []);
+  // // Add useEffect for refetching when page or sort order changes
+  // useEffect(() => {
+  //   fetchStories();
+  // }, [currentPage, sortOrder]);
 
-  const fetchStories = async () => {
-    // const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
+  // const fetchStories = async () => {
+  //   // const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;    
+  //   try {
+  //     const response = await fetch('/api/stories/user', {
+  //       headers: {
+  //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+  //       }
+  //     });
+  //     if (!response.ok) throw new Error('Failed to fetch stories');
+  //     const data = await response.json();
+  //     setStories(data.stories);
+  //   } catch (error) {
+  //     setError("Failed to load stories. Please try again.");
+  //     console.error("Error fetching stories:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+
+   // Modify your fetchStories function:
+   const fetchStories = async () => {
     try {
-      const response = await fetch('/api/stories/user', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+      const response = await fetch(
+        `/api/stories/user?page=${currentPage}&sortOrder=${sortOrder}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
         }
-      });
+      );
       if (!response.ok) throw new Error('Failed to fetch stories');
       const data = await response.json();
       setStories(data.stories);
+      setTotalPages(data.pagination.totalPages);
     } catch (error) {
       setError("Failed to load stories. Please try again.");
       console.error("Error fetching stories:", error);
@@ -124,7 +162,7 @@ const YourStoriesPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        {/* <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Your Stories</h1>
             <button
               onClick={() => router.push('/create-story')}
@@ -134,7 +172,29 @@ const YourStoriesPage = () => {
               <PlusCircle className="h-5 w-5" />
               Create New Story
             </button>
+        </div> */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold">Your Stories</h1>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2"
+            >
+              <option value="desc">Latest First</option>
+              <option value="asc">Oldest First</option>
+            </select>
+          </div>
+          <button
+            onClick={() => router.push('/create-story')}
+            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg 
+              flex items-center gap-2 transition duration-200"
+          >
+            <PlusCircle className="h-5 w-5" />
+            Create New Story
+          </button>
         </div>
+
         {isLoading ? (
           <LoadingSpinner />
         ) : stories.length === 0 ? (
@@ -154,9 +214,12 @@ const YourStoriesPage = () => {
             {stories.map((story) => (
               <div
                 key={story.id}
-                className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg 
-                  transition duration-200 hover:transform hover:-translate-y-1"
-              >
+                // Added z-index control and overflow-visible
+                  className={`bg-gray-800 rounded-lg hover:shadow-lg transition duration-200 
+                    hover:transform hover:-translate-y-1 relative
+                    ${openDropdownId === story.id ? 'z-50' : 'z-10'}
+                    ${openDropdownId === story.id ? 'overflow-visible' : 'overflow-hidden'}`}
+                >
                 {/* Cover Image */}
                 <div className="aspect-[16/9] relative">
                   <img
@@ -210,18 +273,47 @@ const YourStoriesPage = () => {
                               Add Story
                             </>
                           )} */}
-                          Add Chat
+                          Add Content
                         </button>
 
-                        {/* New Edit Story Button */}
-                        <button
-                          onClick={() => router.push(`/edit-episode/${story.id}`)}
-                          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-2xl 
-                            flex items-center gap-2 text-xs me-4"
-                        >
-                          <Edit className="h-4 w-4" />
-                          Edit
-                        </button>
+                          {/* Edit Button Dropdown Section */}
+                          <div className="relative">
+                            <button
+                              onClick={(e) => handleEditClick(story.id, e)}
+                              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-2xl flex items-center gap-2 text-xs me-4"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Edit
+                            </button>
+                            
+                            {openDropdownId === story.id && (
+                              // Increased z-index and adjusted positioning
+                              <div className="absolute left-0 top-full mt-3 w-48 rounded-md shadow-lg 
+                                bg-gray-800 ring-1 ring-black ring-opacity-5 z-[1000]">
+                                <div className="py-1">
+                                  <button
+                                    onClick={() => {
+                                      router.push(`/edit-story/${story.id}`);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                                  >
+                                    Edit Story
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      router.push(`/edit-episode/${story.id}`);
+                                      setOpenDropdownId(null);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                                  >
+                                    Edit Episode
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
                       </div>
 
                       <label className="inline-flex items-center cursor-pointer">
@@ -243,6 +335,35 @@ const YourStoriesPage = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {!isLoading && stories.length > 0 && (
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === 1
+                  ? 'bg-gray-700 cursor-not-allowed'
+                  : 'bg-purple-600 hover:bg-purple-700'
+              }`}
+            >
+              Previous
+            </button>
+            <span className="text-gray-400">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg ${
+                currentPage === totalPages
+                  ? 'bg-gray-700 cursor-not-allowed'
+                  : 'bg-purple-600 hover:bg-purple-700'
+              }`}
+            >
+              Next
+            </button>
           </div>
         )}
       </div>
