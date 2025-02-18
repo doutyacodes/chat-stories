@@ -119,6 +119,8 @@
 
           // Handle different input types
           if (slide.content.inputType === 'manual') {
+            console.log("in the manuall");
+
             for (let [sequence, line] of slide.content.storyLines.entries()) {
               const characterId = characterIds.find(c => c.name === line.character)?.id;
               
@@ -134,9 +136,12 @@
               }
             }
           } else if (slide.content.inputType === 'pdf') {
+            console.log("in the pdf");
+            
             const pdfFile = formData.get(`slides[${position}].pdfFile`);
             
             if (pdfFile) {
+              console.log("in the if pdf");
               const pdfContent = await processPDFContent(
                 pdfFile, 
                 new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
@@ -159,7 +164,61 @@
             slide_id: slideId,
             audio_url: slide.content.audio?.name || null, // Use the audio filename
           });
-        } else if (slide.type === 'quiz') {
+        } else if (slide.type === 'conversation') {
+          // Process characters (same as chat slide)
+          const characters = JSON.parse(formData.get('characters') || '[]');
+          const characterIds = await processCharacters(storyId, characters);
+        
+          // Handle different input types
+          if (slide.content.inputType === 'manual') {
+            console.log("in the manuall");
+
+            for (let [sequence, line] of slide.content.storyLines.entries()) {
+              const characterId = characterIds.find(c => c.name === line.character)?.id;
+              
+              if (characterId) {
+                await db.insert(CHAT_MESSAGES).values({
+                  story_id: storyId,
+                  episode_id: episodeId,
+                  slide_id: slideId,
+                  character_id: characterId,
+                  message: line.line,
+                  sequence
+                });
+              }
+            }
+          } else if (slide.content.inputType === 'pdf') {
+            console.log("in the pdf");
+            const pdfFile = formData.get(`slides[${position}].pdfFile`);
+            
+            if (pdfFile) {
+              console.log("in the if pdf");
+              const pdfContent = await processPDFContent(
+                pdfFile, 
+                new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
+              );
+        
+              for (let [sequence, { characterId, message }] of pdfContent.entries()) {
+                await db.insert(CHAT_MESSAGES).values({
+                  story_id: storyId,
+                  episode_id: episodeId,
+                  slide_id: slideId,
+                  character_id: characterId,
+                  message,
+                  sequence
+                });
+              }
+            }
+          }
+        
+          // Insert slide content with background image
+          await db.insert(SLIDE_CONTENT).values({
+            slide_id: slideId,
+            media_type: 'image',
+            media_url: slide.content.backgroundImage?.name || null, // Use the background image filename
+            audio_url: slide.content.audio?.name || null, // Use the audio filename
+          });
+        }else if (slide.type === 'quiz') {
           // Create quiz entry
           const correctAnswer = slide.content.quizType === 'multiple' 
             ? slide.content.options.find(opt => opt.is_correct)?.text || ''
@@ -252,11 +311,6 @@
       throw new Error('Failed to parse PDF content');
     }
 
-  //   const parsePDF = await import('pdf-parse/lib/pdf-parse.js');
-  //   const fs = await import('fs');
-    
-  //   const buffer = fs.readFileSync(filePath);
-  //   const pdfData = await parsePDF(buffer);
     
     return pdfData.text
       .split('\n')

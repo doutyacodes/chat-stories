@@ -109,7 +109,7 @@ export const SLIDES = mysqlTable("slides", {
   id: int("id").primaryKey().autoincrement(),
   story_id: int("story_id").notNull().references(() => STORIES.id),
   episode_id: int("episode_id").references(() => EPISODES.id), // Optional for slide-based episodes
-  slide_type: mysqlEnum("slide_type", ["image", "chat", "quiz", "pedometer"]).notNull(),
+  slide_type: mysqlEnum("slide_type", ["image", "chat", "conversation", "quiz", "pedometer", "location"]).notNull(),
   position: int("position").notNull(), // Order of the slide
   is_locked: boolean("is_locked").notNull().default(false), // Determines if a slide is gated by a quiz
   created_at: timestamp("created_at").defaultNow(),

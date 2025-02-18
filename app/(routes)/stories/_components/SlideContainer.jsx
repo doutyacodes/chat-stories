@@ -36,6 +36,9 @@ const SlideContainer = ({
     storyData,
     slideContent, 
     chatMessages, 
+    conversation,
+    conversationAudio,
+    bgImage,
     quizData,
     currentSlideIndex,
     previousSlideIndex,
@@ -195,6 +198,31 @@ const SlideContainer = ({
             </div>
             );
 
+        case 'conversation':
+        return (
+          <div className="flex-1 h-full bg-gray-900 relative">
+            <div className="max-w-[500px] mx-auto h-full relative">
+              <div className="w-full h-full bg-gray-800 animate-pulse" /> {/* Background placeholder */}
+              <div className="absolute inset-0">
+                <div className="flex-1 overflow-y-auto scrollbar-hide h-full">
+                  <div className="p-4">
+                    <div className="flex flex-col space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div 
+                          key={i} 
+                          className={`w-3/4 h-16 rounded-lg animate-pulse ${
+                            i % 2 === 0 ? 'bg-green-700/50 self-end' : 'bg-gray-700 self-start'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
         case 'pedometer':
             return (
                 <div className="flex-1 h-full bg-gray-900 relative">
@@ -271,6 +299,61 @@ const SlideContainer = ({
             </div>
         </div>
         </div>
+    );
+
+    const ConversationView = () => (
+      <div className="flex-1 h-full bg-gray-900 relative">
+        <div className="max-w-[500px] mx-auto h-full relative">
+          {/* Background Image */}
+          {bgImage && (
+            <div className="absolute inset-0">
+              <img
+                src={`${BASE_IMAGE_URL}${bgImage}`}
+                alt="Background"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" /> {/* Dimming and very mild blur */}
+            </div>
+          )}
+          
+          {/* Conversation Messages */}
+          <div className="relative h-full">
+            <div className="flex-1 overflow-y-auto scrollbar-hide h-full">
+              <div className="p-4">
+                <div className="flex flex-col space-y-4">
+                  {conversation.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`relative p-3 rounded-lg max-w-xs ${
+                        message.character.is_sender
+                        ? 'bg-green-700 text-white self-end'
+                        : 'bg-gray-700 text-gray-300 self-start'
+                      }`}
+                    >
+                      <strong>{message.character.name}: </strong>
+                      <p>{message.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Audio Control - if conversationAudio exists */}
+            {conversationAudio && (
+              <div className="absolute bottom-4 right-4 bg-gray-800/80 p-2 rounded-full backdrop-blur-sm">
+                <button 
+                  className="text-white p-2"
+                  onClick={() => {
+                    // Audio toggle logic would go here
+                  }}
+                >
+                  <FaVolumeUp className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     );
 
     const DetailView = () => (
@@ -914,11 +997,12 @@ const SlideContainer = ({
                 )}
             </AnimatePresence>
 
-            {/* Content that just appears */}
+             {/* Content that just appears */}
             {!loading && (
                 <div className="absolute w-full h-full">
                     {currentSlide?.slide_type === 'image' && slideContent && <DetailView />}
                     {currentSlide?.slide_type === 'chat' && chatMessages.length > 0 && <ChatView />}
+                    {currentSlide?.slide_type === 'conversation' && conversation && <ConversationView />}
                     {currentSlide?.slide_type === 'quiz' && quizData && <QuizView />}
                     {currentSlide?.slide_type === 'pedometer' && pedometerData && <PedometerView />}
                     {currentSlide?.slide_type === 'location' && locationData && <LocationView />}

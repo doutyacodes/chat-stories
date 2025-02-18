@@ -17,6 +17,11 @@ const StorySlides = () => {
   const [slideContent, setSlideContent] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatAudio, setChatAudio] = useState(null);
+  
+  const [conversation, setConversation] = useState([]);
+  const [conversationAudio, setConversationAudio] = useState(null);
+  const [bgImage, setBgImage] = useState([]);
+
   const [storyData, setStoryData] = useState([]);
   const [episodeAudio, setEpisodeAudio] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -169,6 +174,7 @@ const StorySlides = () => {
     const audioUrl =
     slideContent?.audio_url ||
     chatAudio ||
+    conversationAudio ||
     quizData?.audio_url;
 
     if (audioUrl) {
@@ -201,7 +207,7 @@ const StorySlides = () => {
         document.removeEventListener('click', handleFirstInteraction);
       };
     }
-  }, [slideContent, chatMessages, quizData]);
+  }, [slideContent, chatMessages, quizData, conversation]);
 
   // 4. Update volume effect
   useEffect(() => {
@@ -377,6 +383,14 @@ const StorySlides = () => {
         const chatData = await chatResponse.json();
         setChatMessages(chatData.chatMessages);
         setChatAudio(chatData.audio_url);
+      } else if (slideType === 'conversation') {
+        // const chatResponse = await fetch(`/api/chat-messages/${storyId}/${episodeId}`);
+        const chatResponse = await fetch(`/api/conversation/${storyId}/${episodeId}?slideId=${slideId}`);
+        if (!chatResponse.ok) throw new Error('Failed to fetch chat messages');
+        const conversationData = await chatResponse.json();
+        setConversation(conversationData.conversation);
+        setBgImage(conversationData.bgImage);
+        setConversationAudio(conversationData.audio_url);
       } else if (slideType === 'quiz') {
         const quizResponse = await fetch(`/api/quiz-content/${slideId}`);
         if (!quizResponse.ok) throw new Error('Failed to fetch quiz content');
@@ -930,6 +944,9 @@ const StorySlides = () => {
                 storyData={storyData}
                 slideContent={slideContent}
                 chatMessages={chatMessages}
+                conversation={conversation}
+                conversationAudio={conversationAudio}
+                bgImage={bgImage}
                 quizData={quizData}
                 currentSlideIndex={currentSlideIndex}
                 previousSlideIndex={previousSlideIndex}

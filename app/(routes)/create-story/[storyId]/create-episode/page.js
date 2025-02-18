@@ -43,6 +43,7 @@ console.log(storyType)
   const slideTypes = [
     { value: "image", label: "Image Slide" },
     { value: "chat", label: "Chat Slide" },
+    { value: "conversation", label: "Conversation Slide" }, // Add this new slide type
     ...(storyType === "game" ? [
       { value: "quiz", label: "Quiz Slide" },
       { value: "pedometer", label: "Step Task Slide" },
@@ -94,7 +95,7 @@ console.log(storyType)
     
         // Merge fetched and empty characters
         const mergedCharacters =
-        type === "chat"
+        type === "chat" || type === "conversation"
             ? [
                 ...fetchedCharacters.map((char) => ({
                 name: char.name,
@@ -131,6 +132,13 @@ console.log(storyType)
             longitude : 0,
             radius : 0,
             audio: null
+          } : type === "conversation" ? { // New case for chatWithBg
+            characters: mergedCharacters,
+            inputType: "manual",
+            storyLines: [{ character: "", line: "" }],
+            pdfFile: null,
+            audio: null,
+            backgroundImage: null // Add background image field
           } : {
                 characters: mergedCharacters,
                 inputType: "manual",
@@ -161,12 +169,6 @@ console.log(storyType)
 
   const handleRemoveSlide = (index) => {
     const updatedSlides = episodeData.slides.filter((_, i) => i !== index);
-    setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
-  };
-
-  const handleImageSlideChange = (index, field, value) => {
-    const updatedSlides = [...episodeData.slides];
-    updatedSlides[index].content[field] = value;
     setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
   };
 
@@ -442,6 +444,34 @@ console.log(storyType)
 //   }
 // };
 
+// const handleImageSlideChange = (index, field, value) => {
+//   const updatedSlides = [...episodeData.slides];
+//   updatedSlides[index].content[field] = value;
+//   setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+// };
+
+
+const handleImageSlideChange = (index, field, value) => {
+  setEpisodeData(prev => {
+    const updatedSlides = [...prev.slides];
+    if (updatedSlides[index].type === 'image') {
+      updatedSlides[index].content[field] = value;
+    } else if (updatedSlides[index].type === 'conversation' && field === 'media') {
+      // For conversation, we set the backgroundImage
+      updatedSlides[index].content.backgroundImage = value;
+    }
+    return { ...prev, slides: updatedSlides };
+  });
+};
+
+const handleRemoveBackgroundImage = (index) => {
+  setEpisodeData(prev => {
+    const updatedSlides = [...prev.slides];
+    updatedSlides[index].content.backgroundImage = null;
+    return { ...prev, slides: updatedSlides };
+  });
+};
+
 const handleMediaUpload = async (index, file) => {
   if (file) {
     if (file.type.startsWith('video/')) {
@@ -605,11 +635,26 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
   setIsSubmitting(true);
+  const validationErrors = {};
 
   // Basic validation
   if (!episodeData.name.trim()) {
     setError("Episode name is required");
     setIsSubmitting(false);
+    return;
+  }
+
+  // Validate chat with background slides
+  episodeData.slides.forEach((slide, index) => {
+    if (slide.type === 'conversation' && !slide.content.backgroundImage) {
+      validationErrors[`slide${index}BackgroundImage`] = "Background image is required";
+    }
+  });
+
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    setIsSubmitting(false);
+    setError("Please fix all errors before submitting");
     return;
   }
 
@@ -637,6 +682,15 @@ const handleSubmit = async (e) => {
         updatedSlide.content.media = mediaFileName ? {
           name: mediaFileName,
           type: slide.content.media.type // Keep only essential metadata
+        } : null;
+      }
+
+        // Handle background image uploads for chatWithBg slides
+        if (slide.type === 'conversation' && slide.content.backgroundImage?.file) {
+        const backgroundImageFileName = await uploadMediaToCPanel(slide.content.backgroundImage.file);
+        updatedSlide.content.backgroundImage = backgroundImageFileName ? {
+          name: backgroundImageFileName,
+          type: 'image'
         } : null;
       }
 
@@ -690,7 +744,7 @@ const handleSubmit = async (e) => {
 
     // Handle PDF files separately
     updatedEpisodeData.slides.forEach((slide, index) => {
-      if (slide.type === 'chat' && slide.content.pdfFile) {
+      if ((slide.type === 'chat' || slide.type === 'conversation') && slide.content.pdfFile) {
         formData.append(`slides[${index}].pdfFile`, slide.content.pdfFile);
       }
     });
@@ -1098,6 +1152,211 @@ const handleSubmit = async (e) => {
                         </div>
                         )}
 
+                        {slide.type === 'conversation' && (
+                          <div className="space-y-4">
+                            {/* Background Image Section */}
+                            <div className="mb-6">
+                              <label className="block text-sm font-medium mb-2">Background Image (Required)</label>
+                              <div className="flex items-center gap-4">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleMediaUpload(index, e.target.files[0])}
+                                  className="hidden"
+                                  id={`bgImage-${index}`}
+                                />
+                                <label 
+                                  htmlFor={`bgImage-${index}`}
+                                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500 cursor-pointer"
+                                >
+                                  <Upload className="h-5 w-5" />
+                                  <span>Upload Background Image</span>
+                                </label>
+                                
+                                {slide.content.backgroundImage && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm">{slide.content.backgroundImage.file?.name}</span>
+                                    <img 
+                                      src={slide.content.backgroundImage.preview} 
+                                      alt="Preview" 
+                                      className="h-10 w-10 object-cover rounded"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveBackgroundImage(index)}
+                                      className="text-red-400 hover:text-red-300"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              {errors[`slide${index}BackgroundImage`] && (
+                                <Alert variant="destructive" className="mt-2">
+                                  <AlertDescription>
+                                    {errors[`slide${index}BackgroundImage`]}
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                            </div>
+
+                            {/* Characters Section - Same as chat slide */}
+                            <div>
+                              {slide.content.characters.map((character, charIndex) => (
+                                <div key={charIndex} className="bg-gray-600 p-3 rounded-lg mb-2">
+                                  <div className="flex gap-4 items-center">
+                                    <input
+                                      type="text"
+                                      value={character.name}
+                                      onChange={(e) =>
+                                        handleChatCharacterChange(index, charIndex, "name", e.target.value)
+                                      }
+                                      placeholder="Character Name"
+                                      className="flex-1 p-2 rounded-lg bg-gray-500"
+                                    />
+                                    {/* <button
+                                      type="button"
+                                      onClick={() => handleSetSender(index, charIndex)}
+                                      className={`px-4 py-2 rounded-lg ${
+                                        character.isSender
+                                          ? "bg-green-600 hover:bg-green-700"
+                                          : "bg-gray-500 hover:bg-gray-600"
+                                      }`}
+                                    >
+                                      {character.isSender ? "Sender" : "Set as Sender"}
+                                    </button> */}
+                                    {slide.content.characters.length > 2 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveCharacter(index, charIndex)}
+                                        className="text-red-500 hover:text-red-400 px-4 py-2 rounded-lg"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+
+                              <button
+                                type="button"
+                                onClick={() => handleAddCharacter(index)}
+                                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg mt-4"
+                              >
+                                Add Character
+                              </button>
+                            </div>
+
+                            {/* Input Type Selection - Same as chat slide */}
+                            <div className="bg-gray-800 p-6 rounded-lg">
+                              <h2 className="text-xl font-semibold mb-4">Content Type</h2>
+                              <div className="flex gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => handleInputTypeChange(index, "manual")}
+                                  className={`px-6 py-3 rounded-lg transition ${
+                                    slide.content.inputType === "manual"
+                                      ? "bg-purple-600 text-white"
+                                      : "bg-gray-700 text-gray-300"
+                                  }`}
+                                >
+                                  Manual Entry
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleInputTypeChange(index, "pdf")}
+                                  className={`px-6 py-3 rounded-lg transition ${
+                                    slide.content.inputType === "pdf"
+                                      ? "bg-purple-600 text-white"
+                                      : "bg-gray-700 text-gray-300"
+                                  }`}
+                                >
+                                  Upload PDF
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Content Input Section - Same as chat slide */}
+                            <div className="bg-gray-800 p-6 rounded-lg"> 
+                              {slide.content.inputType === "manual" ? (
+                                <div className="space-y-6">
+                                  <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-semibold">Story Lines</h2>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddLine(index)}
+                                      className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm"
+                                    >
+                                      Add Line
+                                    </button>
+                                  </div>
+
+                                  {slide.content.storyLines.map((line, lineIndex) => (
+                                    <div key={lineIndex} className="bg-gray-700 p-4 rounded-lg space-y-3">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <h3 className="font-medium">Line {lineIndex + 1}</h3>
+                                        {lineIndex > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => handleRemoveLine(index, lineIndex)}
+                                            className="text-red-400 hover:text-red-300"
+                                          >
+                                            Remove
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      <select
+                                        value={line.character}
+                                        onChange={(e) =>
+                                          handleLineChange(index, lineIndex, "character", e.target.value)
+                                        }
+                                        className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
+                                      >
+                                        <option value="">Select a character</option>
+                                        {slide.content.characters.map((char, keyIndex) => (
+                                          <option key={keyIndex} value={char.name}>
+                                            {char.name}
+                                          </option>
+                                        ))}
+                                      </select>
+
+                                      <textarea
+                                        value={line.line}
+                                        onChange={(e) =>
+                                          handleLineChange(index, lineIndex, "line", e.target.value)
+                                        }
+                                        placeholder="Enter the character's line"
+                                        className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-center">
+                                  <div className="border-2 border-dashed border-gray-700 rounded-lg p-8">
+                                    <input
+                                      type="file"
+                                      accept=".pdf"
+                                      onChange={(e) => handlePDFUpload(index, e)}
+                                      className="hidden"
+                                      id={`pdfUpload-${index}`}
+                                    />
+                                    <label htmlFor={`pdfUpload-${index}`} className="cursor-pointer block">
+                                      <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                                      <p className="text-lg mb-2">Click to upload PDF</p>
+                                      <p className="text-sm text-gray-400">Maximum file size: 10MB</p>
+                                    </label>
+                                    {slide.content.pdfFile && (
+                                      <p className="mt-4 text-green-500">Selected: {slide.content.pdfFile.name}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
                         {(slide.type === 'quiz' && storyType == 'game') && (
                           <div className="space-y-4">
                             {/* Image Upload (same as image slide) */}
@@ -1440,7 +1699,12 @@ const handleSubmit = async (e) => {
               >
                 <img
                   ref={imgRef}
-                  src={episodeData.slides[currentSlideIndex]?.content?.media?.preview}
+                  // src={episodeData.slides[currentSlideIndex]?.content?.media?.preview}
+                  src={
+                    episodeData.slides[currentSlideIndex]?.type === "conversation"
+                      ? episodeData.slides[currentSlideIndex]?.content?.backgroundImage?.preview
+                      : episodeData.slides[currentSlideIndex]?.content?.media?.preview
+                  }
                   alt="Crop Preview"
                   onLoad={onImageLoad}
                   className="max-w-full"

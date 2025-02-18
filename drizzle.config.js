@@ -4,7 +4,7 @@ export default {
     dbCredentials: {
         host: "68.178.163.247",
         user: "devusr_wowfyuser",
-        database: "devusr_wowfy",
+        database: "devusr_chat_stories",
         password: '###Wowfy123'
     }
 };
