@@ -70,6 +70,7 @@ export async function GET(request, { params }) {
           // Fetch chat messages and characters for this slide
           const messages = await db
             .select({
+              id: CHAT_MESSAGES.id,
               message: CHAT_MESSAGES.message,
               sequence: CHAT_MESSAGES.sequence,
               characterId: CHARACTERS.id,
@@ -88,8 +89,6 @@ export async function GET(request, { params }) {
             )
             .orderBy(CHAT_MESSAGES.sequence);
 
-            console.log('messages', messages)
-
           // Get unique characters
           const characters = [...new Map(messages.map((m) => [m.characterId, { name: m.characterName, isSender: m.isSender }])).values()];
 
@@ -101,11 +100,62 @@ export async function GET(request, { params }) {
               characters,
               inputType: 'manual',
               storyLines: messages.map((m) => ({
+                id: m.id,
                 character: m.characterName,
                 line: m.message,
               })),
               pdfFile: null, // Add support for PDF uploads if needed
               audio: content[0]?.audio_url ? { name: content[0].audio_url } : null,
+            },
+          };
+        } else if (slide.slide_type === 'conversation') {
+
+          const content = await db
+          .select()
+          .from(SLIDE_CONTENT)
+          .where(eq(SLIDE_CONTENT.slide_id, slide.id))
+          .limit(1);
+
+          // Fetch chat messages and characters for this slide
+          const messages = await db
+            .select({
+              id: CHAT_MESSAGES.id,
+              message: CHAT_MESSAGES.message,
+              sequence: CHAT_MESSAGES.sequence,
+              characterId: CHARACTERS.id,
+              characterName: CHARACTERS.name,
+              isSender: CHARACTERS.is_sender,
+            })
+            .from(CHAT_MESSAGES)
+            .leftJoin(CHARACTERS, eq(CHAT_MESSAGES.character_id, CHARACTERS.id))
+            .where(
+              and(
+                eq(CHAT_MESSAGES.story_id, slide.story_id),
+                eq(CHAT_MESSAGES.episode_id, episodeId),
+                // gte(CHAT_MESSAGES.sequence, slide.position * 100),
+                // lt(CHAT_MESSAGES.sequence, (slide.position + 1) * 100)
+              )
+            )
+            .orderBy(CHAT_MESSAGES.sequence);
+
+          // Get unique characters
+          const characters = [...new Map(messages.map((m) => [m.characterId, { name: m.characterName, isSender: m.isSender }])).values()];
+
+          return {
+            id: slide.id,
+            type: 'conversation',
+            position: slide.position,
+            content: {
+              characters,
+              inputType: 'manual',
+              storyLines: messages.map((m) => ({
+                id: m.id,
+                character: m.characterName,
+                line: m.message,
+              })),
+              pdfFile: null, // Add support for PDF uploads if needed
+              audio: content[0]?.audio_url ? { name: content[0].audio_url } : null,
+              backgroundImage : content[0]?.media_url ? { preview: content[0].media_url } : null,
             },
           };
         } else if (slide.slide_type === 'quiz') {

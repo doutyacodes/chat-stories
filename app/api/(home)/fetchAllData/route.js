@@ -219,14 +219,14 @@ export async function GET(request) {
       ...(continueReadingStories.length > 0
         ? [{
             id: 'continue-reading-story',
-            title: 'Continue Reading',
+            title: 'Continue Reading Stories',
             data: continueReadingStories,
           }]
         : []),
       ...(continuePlayingGames.length > 0
         ? [{
             id: 'continue-reading-game',
-            title: 'Continue Reading',
+            title: 'Continue Reading Games',
             data: continuePlayingGames,
           }]
         : []),

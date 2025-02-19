@@ -124,8 +124,15 @@ const ViewAllPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-16 md:pt-28">
+    <div className="min-h-screen bg-black pb-16 md:pt-10">
       <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
+
+      {/* Title Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-white/90 mb-2">Stories</h1>
+        <p className="text-sm md:text-base">Explore immersive tales and narratives</p>
+      </div>
+
         {/* Categories and Sort Section */}
         <div className={`flex flex-col md:flex-row justify-between items-center gap-4 pt-4 ${!showSearch ? 'mb-8' : ''}`}>          {/* Categories */}
           <div className="relative w-full">

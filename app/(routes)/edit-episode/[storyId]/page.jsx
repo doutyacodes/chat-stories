@@ -28,6 +28,13 @@ const EditEpisode = () => {
     synopsisModified: false,
     slides: {},
   });
+console.log('modifications', modifications)
+  // this state for PDF upload confirmation
+  const [pdfUploadConfirm, setPdfUploadConfirm] = useState({
+    show: false,
+    slideIndex: null,
+    file: null
+  });
 
   const [cropState, setCropState] = useState({
     slideIndex: null,
@@ -43,6 +50,18 @@ const EditEpisode = () => {
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
   const BASE_VIDEO_URL = 'https://wowfy.in/testusr/videos/';
+
+  // Then update the PDF upload handler:
+  const handlePdfFileSelect = (index, file) => {
+    if (file) {
+      setPdfUploadConfirm({
+        show: true,
+        slideIndex: index,
+        file: file
+      });
+    }
+  };
+
 
   useEffect(() => {
     fetchEpisodes();
@@ -99,19 +118,36 @@ const EditEpisode = () => {
                 audio: slide.content.audio ? { name: slide.content.audio.name } : null
               }
             : slide.type === "chat"
-            ? {
+              ? {
                 characters: slide.content.characters.map((char) => ({
                   name: char.name,
                   isSender: char.isSender,
                 })),
                 inputType: slide.content.inputType || "manual",
                 storyLines: slide.content.storyLines.map((line) => ({
+                  id: line.id, // Add message ID
                   character: line.character || "",
                   line: line.line || "",
                 })),
                 pdfFile: slide.content.pdfFile ? { name: slide.content.pdfFile.name } : null,
                 audio: slide.content.audio ? { name: slide.content.audio.name } : null
               }
+              : slide.type === "conversation"
+                ? {
+                  characters: slide.content.characters.map((char) => ({
+                    name: char.name,
+                    isSender: char.isSender,
+                  })),
+                  inputType: slide.content.inputType || "manual",
+                  storyLines: slide.content.storyLines.map((line) => ({
+                    id: line.id, // Add message ID
+                    character: line.character || "",
+                    line: line.line || "",
+                  })),
+                  pdfFile: slide.content.pdfFile ? { name: slide.content.pdfFile.name } : null,
+                  audio: slide.content.audio ? { name: slide.content.audio.name } : null,
+                  backgroundImage: slide.content.backgroundImage ? { preview: slide.content.backgroundImage.preview } : null
+                }
             : slide.type === "quiz"
             ? {
                 media: slide.content.media
@@ -242,6 +278,68 @@ const handleRemoveEpisodeAudio = () => {
     setModifications(newModifications);
   };
 
+  // const handleAddSlide = (type) => {
+  //   const newSlideId = `temp-${Date.now()}`;
+  //   const defaultCharacterCount = 2;
+  //   const emptyCharacters = Array.from({ length: defaultCharacterCount }, (_, index) => ({
+  //     name: "",
+  //     isSender: index === 0,
+  //   }));
+    
+  //   const newSlide = {
+  //     id: newSlideId,
+  //     type,
+  //     position: episodeData.slides.length,
+  //     isNew: true, // Add this flag
+  //     content:
+  //       type === "image"
+  //         ? { media: null, description: "", audio: null }
+  //         : type === "quiz"
+  //         ? {
+  //             media: null,
+  //             question: "",
+  //             options: [{ text: "", is_correct: false }, { text: "", is_correct: false }],
+  //             audio: null,
+  //           } : type === "pedometer" ? {
+  //             description: "",
+  //             targetSteps: 0,
+  //             audio: null
+  //           } :
+  //           type === "location" ? {
+  //             description: "",
+  //             latitude: 0,
+  //             longitude: 0,
+  //             radius: 0,
+  //             audio: null
+  //           }
+  //         : {
+  //             characters: emptyCharacters,
+  //             inputType: "manual",
+  //             storyLines: [{ character: "", line: "" }],
+  //             pdfFile: null,
+  //             audio: null,
+  //           },
+  //   };
+    
+  //   setEpisodeData((prev) => ({ ...prev, slides: [...prev.slides, newSlide] }));
+    
+  //   // Update modifications state to track the new slide
+  //   setModifications((prev) => ({
+  //     ...prev,
+  //     slides: { 
+  //       ...prev.slides, 
+  //       [newSlideId]: { 
+  //         isNew: true,
+  //         type: type,
+  //         position: episodeData.slides.length,
+  //         contentModified: true,
+  //         initialContent: true // Add this to track that this is the initial content
+  //       } 
+  //     },
+  //   }));
+  // };
+
+  // 1. First, update the handleAddSlide function to include the conversation type
   const handleAddSlide = (type) => {
     const newSlideId = `temp-${Date.now()}`;
     const defaultCharacterCount = 2;
@@ -254,7 +352,7 @@ const handleRemoveEpisodeAudio = () => {
       id: newSlideId,
       type,
       position: episodeData.slides.length,
-      isNew: true, // Add this flag
+      isNew: true,
       content:
         type === "image"
           ? { media: null, description: "", audio: null }
@@ -264,30 +362,43 @@ const handleRemoveEpisodeAudio = () => {
               question: "",
               options: [{ text: "", is_correct: false }, { text: "", is_correct: false }],
               audio: null,
-            } : type === "pedometer" ? {
-              description: "",
-              targetSteps: 0,
-              audio: null
-            } :
-            type === "location" ? {
-              description: "",
-              latitude: 0,
-              longitude: 0,
-              radius: 0,
-              audio: null
             }
-          : {
+          : type === "conversation"
+          ? {
+              backgroundImage: null,
               characters: emptyCharacters,
               inputType: "manual",
               storyLines: [{ character: "", line: "" }],
               pdfFile: null,
               audio: null,
-            },
+            }
+          : type === "chat"
+          ? {
+              characters: emptyCharacters,
+              inputType: "manual",
+              storyLines: [{ character: "", line: "" }],
+              pdfFile: null,
+              audio: null,
+            }
+          : type === "pedometer"
+          ? {
+              description: "",
+              targetSteps: 0,
+              audio: null,
+            }
+          : type === "location"
+          ? {
+              description: "",
+              latitude: 0,
+              longitude: 0,
+              radius: 0,
+              audio: null,
+            }
+          : {}
     };
     
     setEpisodeData((prev) => ({ ...prev, slides: [...prev.slides, newSlide] }));
     
-    // Update modifications state to track the new slide
     setModifications((prev) => ({
       ...prev,
       slides: { 
@@ -297,7 +408,7 @@ const handleRemoveEpisodeAudio = () => {
           type: type,
           position: episodeData.slides.length,
           contentModified: true,
-          initialContent: true // Add this to track that this is the initial content
+          initialContent: true
         } 
       },
     }));
@@ -484,38 +595,76 @@ const handleRemoveEpisodeAudio = () => {
       },
     }));
   };
- // Issue 2: Fix story line change tracking
-  const handleStoryLineChange = (slideIndex, lineIndex, field, value) => {
-    const updatedSlides = [...episodeData.slides];
-    const currentSlide = updatedSlides[slideIndex];
+//  // Issue 2: Fix story line change tracking
+//   const handleStoryLineChange = (slideIndex, lineIndex, field, value) => {
+//     const updatedSlides = [...episodeData.slides];
+//     const currentSlide = updatedSlides[slideIndex];
     
-    if (!currentSlide.content.storyLines[lineIndex]) {
-      currentSlide.content.storyLines[lineIndex] = {};
-    }
-    currentSlide.content.storyLines[lineIndex][field] = value;
+//     if (!currentSlide.content.storyLines[lineIndex]) {
+//       currentSlide.content.storyLines[lineIndex] = {};
+//     }
+//     currentSlide.content.storyLines[lineIndex][field] = value;
     
-    setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+//     setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
     
-    // Enhanced modification tracking
-    setModifications((prev) => ({
-      ...prev,
-      slides: { 
-        ...prev.slides, 
-        [currentSlide.id]: { 
-          ...prev.slides[currentSlide.id],
-          contentModified: true,
-          storyLineChanges: {
-            ...(prev.slides[currentSlide.id]?.storyLineChanges || {}),
-            [lineIndex]: {
-              ...(prev.slides[currentSlide.id]?.storyLineChanges?.[lineIndex] || {}),
-              [field]: value,
-              modified: true
+//     // Enhanced modification tracking
+//     setModifications((prev) => ({
+//       ...prev,
+//       slides: { 
+//         ...prev.slides, 
+//         [currentSlide.id]: { 
+//           ...prev.slides[currentSlide.id],
+//           contentModified: true,
+//           storyLineChanges: {
+//             ...(prev.slides[currentSlide.id]?.storyLineChanges || {}),
+//             [lineIndex]: {
+//               ...(prev.slides[currentSlide.id]?.storyLineChanges?.[lineIndex] || {}),
+//               [field]: value,
+//               modified: true
+//             }
+//           }
+//         } 
+//       },
+//     }));
+//   };
+
+    const handleStoryLineChange = (slideIndex, lineIndex, field, value) => {
+      console.log(slideIndex, lineIndex, field, value)
+      const updatedSlides = [...episodeData.slides];
+      const currentSlide = updatedSlides[slideIndex];
+      
+      if (!currentSlide.content.storyLines[lineIndex]) {
+        currentSlide.content.storyLines[lineIndex] = {};
+      }
+      
+      const messageId = currentSlide.content.storyLines[lineIndex].id;
+      console.log("messageId", messageId)
+
+      currentSlide.content.storyLines[lineIndex][field] = value;
+      
+      setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+      
+      // Enhanced modification tracking including message ID
+      setModifications((prev) => ({
+        ...prev,
+        slides: { 
+          ...prev.slides, 
+          [currentSlide.id]: { 
+            ...prev.slides[currentSlide.id],
+            contentModified: true,
+            storyLineChanges: {
+              ...(prev.slides[currentSlide.id]?.storyLineChanges || {}),
+              [messageId || lineIndex]: {
+                ...(prev.slides[currentSlide.id]?.storyLineChanges?.[messageId || lineIndex] || {}),
+                [field]: value,
+                modified: true,
+                id: messageId
+              }
             }
-          }
-        } 
-      },
-    }));
-  };
+          } 
+        },
+      }));
+    };
 
   const handleAudioUpload = (index, file) => {
     if (file) {
@@ -964,6 +1113,33 @@ const handleRemoveEpisodeAudio = () => {
                                       </button>
                                   </div>
                                   ))}
+                                  <div className="flex items-center gap-2 mt-4">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updatedSlides = [...episodeData.slides];
+                                        updatedSlides[index].content.characters.push({
+                                          name: "",
+                                          isSender: false
+                                        });
+                                        setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                        setModifications((prev) => ({
+                                          ...prev,
+                                          slides: { 
+                                            ...prev.slides, 
+                                            [slide.id]: { 
+                                              ...prev.slides[slide.id],
+                                              charactersModified: true,
+                                              characterAdded: true
+                                            }
+                                          },
+                                        }));
+                                      }}
+                                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg"
+                                    >
+                                      <Plus className="w-4 h-4 mr-1 inline" /> Add Character
+                                    </button>
+                                  </div>
                               </div>
 
                                 <h4>Expand/Collapse Chats</h4>
@@ -971,15 +1147,16 @@ const handleRemoveEpisodeAudio = () => {
                                   <div key={lineIndex} className="mt-2">
                                     <select
                                       value={line.character}
-                                      onChange={(e) => {
-                                        const updatedSlides = [...episodeData.slides];
-                                        updatedSlides[index].content.storyLines[lineIndex].character = e.target.value;
-                                        setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-                                        setModifications((prev) => ({
-                                          ...prev,
-                                          slides: { ...prev.slides, [slide.id]: { contentModified: true } },
-                                        }));
-                                      }}
+                                      // onChange={(e) => {
+                                      //   const updatedSlides = [...episodeData.slides];
+                                      //   updatedSlides[index].content.storyLines[lineIndex].character = e.target.value;
+                                      //   setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      //   setModifications((prev) => ({
+                                      //     ...prev,
+                                      //     slides: { ...prev.slides, [slide.id]: { contentModified: true } },
+                                      //   }));
+                                      // }}
+                                      onChange={(e) => handleStoryLineChange(index, lineIndex, 'character', e.target.value)}
                                       className="w-full p-2 rounded-lg bg-gray-500"
                                     >
                                       <option value="">Select Character</option>
@@ -994,16 +1171,7 @@ const handleRemoveEpisodeAudio = () => {
                                     </select>
                                     <textarea
                                       value={line.line}
-                                      // onChange={(e) => {
-                                      //   const updatedSlides = [...episodeData.slides];
-                                      //   updatedSlides[index].content.storyLines[lineIndex].line = e.target.value;
-                                      //   setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-                                      //   setModifications((prev) => ({
-                                      //     ...prev,
-                                      //     slides: { ...prev.slides, [slide.id]: { contentModified: true } },
-                                      //   }));
-                                      // }}
-                                      onChange={(e) => handleStoryLineChange(index, lineIndex, 'character', e.target.value)}
+                                      onChange={(e) => handleStoryLineChange(index, lineIndex, 'line', e.target.value)}
                                       placeholder="Enter dialogue"
                                       className="w-full p-2 rounded-lg bg-gray-500 h-20 mt-2"
                                     />
@@ -1033,18 +1201,20 @@ const handleRemoveEpisodeAudio = () => {
                                 </button>
                                 <input
                                   type="file"
-                                  onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                      const updatedSlides = [...episodeData.slides];
-                                      updatedSlides[index].content.pdfFile = file;
-                                      setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-                                      setModifications((prev) => ({
-                                        ...prev,
-                                        slides: { ...prev.slides, [slide.id]: { pdfModified: true } },
-                                      }));
-                                    }
-                                  }}
+                                  // onChange={(e) => {
+                                  //   const file = e.target.files[0];
+                                  //   if (file) {
+                                  //     const updatedSlides = [...episodeData.slides];
+                                  //     updatedSlides[index].content.pdfFile = file;
+                                  //     setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                  //     setModifications((prev) => ({
+                                  //       ...prev,
+                                  //       slides: { ...prev.slides, [slide.id]: { pdfModified: true } },
+                                  //     }));
+                                  //   }
+                                  // }}
+                                  onChange={(e) => handlePdfFileSelect(index,  e.target.files[0])}
+                                   
                                   className="hidden"
                                   id={`pdfUpload-${index}`}
                                 />
@@ -1052,6 +1222,153 @@ const handleRemoveEpisodeAudio = () => {
                                   Upload PDF
                                 </label>
                                 {slide.content.pdfFile?.name && <p>Selected: {slide.content.pdfFile.name}</p>}
+                              </>
+                            )}
+
+                            {slide.type === "conversation" && (
+                              <>
+                                <div className="bg-gray-600 p-4 rounded-lg">
+                                  <h4 className="font-medium mb-4">Background Image</h4>
+                                  <div className="flex items-center gap-4 mb-4">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => handleMediaUploadWithCrop(index, e.target.files[0])}
+                                      className="hidden"
+                                      id={`bgImage-${index}`}
+                                    />
+                                    <label 
+                                      htmlFor={`bgImage-${index}`}
+                                      className="flex items-center gap-2 px-4 py-2 bg-gray-500 rounded-lg hover:bg-gray-400 cursor-pointer"
+                                    >
+                                      <Upload className="h-5 w-5" />
+                                      <span>Upload Background Image</span>
+                                    </label>
+                                    
+                                    {slide.content.backgroundImage && (
+                                      <div className="flex items-center gap-2">
+                                        <img 
+                                          src={`${BASE_IMAGE_URL}${slide.content.backgroundImage.preview}`}
+                                          alt="Background Preview" 
+                                          className="h-10 w-10 object-cover rounded"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updatedSlides = [...episodeData.slides];
+                                            updatedSlides[index].content.backgroundImage = null;
+                                            setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+                                            setModifications(prev => ({
+                                              ...prev,
+                                              slides: {
+                                                ...prev.slides,
+                                                [slide.id]: {
+                                                  ...prev.slides[slide.id],
+                                                  backgroundImageModified: true,
+                                                  backgroundImageRemoved: true
+                                                }
+                                              }
+                                            }));
+                                          }}
+                                          className="text-red-400 hover:text-red-300"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <h4 className="font-medium mb-4">Chat Characters</h4>
+                                  {slide?.content?.characters?.map((character, charIndex) => (
+                                    <div key={charIndex} className="mb-2 flex gap-4 items-center">
+                                      <input
+                                        type="text"
+                                        value={character.name}
+                                        onChange={(e) => {
+                                          const updatedSlides = [...episodeData.slides];
+                                          updatedSlides[index].content.characters[charIndex].name = e.target.value;
+                                          setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+                                          setModifications(prev => ({
+                                            ...prev,
+                                            slides: {
+                                              ...prev.slides,
+                                              [slide.id]: { ...prev.slides[slide.id], charactersModified: true }
+                                            }
+                                          }));
+                                        }}
+                                        placeholder="Character Name"
+                                        className="flex-1 p-2 rounded-lg bg-gray-500"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const updatedSlides = [...episodeData.slides];
+                                          updatedSlides[index].content.characters = updatedSlides[index].content.characters.map(
+                                            (char, idx) => ({ ...char, isSender: idx === charIndex })
+                                          );
+                                          setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
+                                          setModifications(prev => ({
+                                            ...prev,
+                                            slides: {
+                                              ...prev.slides,
+                                              [slide.id]: { ...prev.slides[slide.id], charactersModified: true }
+                                            }
+                                          }));
+                                        }}
+                                        className={`px-4 py-2 rounded-lg ${
+                                          character.isSender ? "bg-green-600" : "bg-gray-500"
+                                        }`}
+                                      >
+                                        {character.isSender ? "Sender" : "Set as Sender"}
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Rest of the chat functionality remains the same */}
+                                <h4>Story Lines</h4>
+                                {slide?.content?.storyLines?.map((line, lineIndex) => (
+                                  <div key={lineIndex} className="mt-2">
+                                    <select
+                                      value={line.character}
+                                      onChange={(e) => handleStoryLineChange(index, lineIndex, 'character', e.target.value)}
+                                      className="w-full p-2 rounded-lg bg-gray-500"
+                                    >
+                                      <option value="">Select Character</option>
+                                      {slide.content.characters.map((char, idx) => (
+                                        <option key={idx} value={char.name}>{char.name}</option>
+                                      ))}
+                                    </select>
+                                    <textarea
+                                      value={line.line}
+                                      onChange={(e) => handleStoryLineChange(index, lineIndex, 'line', e.target.value)}
+                                      placeholder="Enter dialogue"
+                                      className="w-full p-2 rounded-lg bg-gray-500 h-20 mt-2"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updatedSlides = [...episodeData.slides];
+                                        updatedSlides[index].content.storyLines.splice(lineIndex, 1);
+                                        setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      }}
+                                      className="text-red-400 hover:text-red-300"
+                                    >
+                                      Remove Line
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updatedSlides = [...episodeData.slides];
+                                    updatedSlides[index].content.storyLines.push({ character: "", line: "" });
+                                    setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                  }}
+                                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg mt-2"
+                                >
+                                  Add Line
+                                </button>
                               </>
                             )}
 
@@ -1400,6 +1717,48 @@ const handleRemoveEpisodeAudio = () => {
                 className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors"
               >
                 Apply Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    {/* pdf the confirmation modal*/}  
+    {pdfUploadConfirm.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-md">
+            <h3 className="text-xl font-bold mb-4">Warning</h3>
+            <p className="mb-4">Uploading a new PDF will replace all existing chat messages. Do you want to continue?</p>
+            <div className="flex justify-end gap-4">
+              <button 
+                className="bg-gray-600 px-4 py-2 rounded-lg"
+                onClick={() => setPdfUploadConfirm({show: false, slideIndex: null, file: null})}
+              >
+                Cancel
+              </button>
+              <button 
+                className="bg-red-600 px-4 py-2 rounded-lg"
+                onClick={() => {
+                  const updatedSlides = [...episodeData.slides];
+                  updatedSlides[pdfUploadConfirm.slideIndex].content.pdfFile = pdfUploadConfirm.file;
+                  updatedSlides[pdfUploadConfirm.slideIndex].content.inputType = 'pdf';
+                  setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                  setModifications((prev) => ({
+                    ...prev,
+                    slides: { 
+                      ...prev.slides, 
+                      [updatedSlides[pdfUploadConfirm.slideIndex].id]: { 
+                        pdfModified: true,
+                        contentModified: true,
+                        // Clear any existing story line changes since they'll be replaced
+                        storyLineChanges: {}
+                      }
+                    },
+                  }));
+                  setPdfUploadConfirm({show: false, slideIndex: null, file: null});
+                }}
+              >
+                Continue
               </button>
             </div>
           </div>

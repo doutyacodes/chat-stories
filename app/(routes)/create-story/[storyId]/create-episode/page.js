@@ -454,7 +454,7 @@ console.log(storyType)
 const handleImageSlideChange = (index, field, value) => {
   setEpisodeData(prev => {
     const updatedSlides = [...prev.slides];
-    if (updatedSlides[index].type === 'image') {
+    if (updatedSlides[index].type === 'image' || updatedSlides[index].type === 'quiz') {
       updatedSlides[index].content[field] = value;
     } else if (updatedSlides[index].type === 'conversation' && field === 'media') {
       // For conversation, we set the backgroundImage
@@ -738,7 +738,7 @@ const handleSubmit = async (e) => {
     formData.append('slides', JSON.stringify(updatedEpisodeData.slides));
     formData.append('characters', JSON.stringify(
       updatedEpisodeData.slides
-        .filter(slide => slide.type === 'chat')
+        .filter(slide => (slide.type === 'chat' || slide.type === 'conversation'))
         .flatMap(slide => slide.content.characters)
     ));
 
@@ -1700,10 +1700,10 @@ const handleSubmit = async (e) => {
                 <img
                   ref={imgRef}
                   // src={episodeData.slides[currentSlideIndex]?.content?.media?.preview}
-                  src={
-                    episodeData.slides[currentSlideIndex]?.type === "conversation"
-                      ? episodeData.slides[currentSlideIndex]?.content?.backgroundImage?.preview
-                      : episodeData.slides[currentSlideIndex]?.content?.media?.preview
+                  src={ 
+                    episodeData.slides[currentSlideIndex]?.type === "quiz" || episodeData.slides[currentSlideIndex]?.type === "image"
+                      ? episodeData.slides[currentSlideIndex]?.content?.media?.preview
+                      : episodeData.slides[currentSlideIndex]?.content?.backgroundImage?.preview 
                   }
                   alt="Crop Preview"
                   onLoad={onImageLoad}

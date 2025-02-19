@@ -147,6 +147,8 @@
                 new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
               );
 
+              console.log("pdfContent", pdfContent)
+
               for (let [sequence, { characterId, message }] of pdfContent.entries()) {
                 await db.insert(CHAT_MESSAGES).values({
                   story_id: storyId,
@@ -320,9 +322,11 @@
         if (colonIndex === -1) return null;
         
         const characterName = line.substring(0, colonIndex).trim();
+        console.log("characterName", characterName);
         const message = line.substring(colonIndex + 1).trim();
-        
+        console.log("message", message);
         const characterId = characterMap.get(characterName.toLowerCase());
+        console.log("characterId", characterId);
         if (!characterId) return null;
 
         return { characterId, message };
@@ -333,6 +337,8 @@
   // Helper function to process characters
   async function processCharacters(storyId, characters) {
     const savedCharacters = [];
+
+    console.log( "characters", characters, 'storyId', storyId)
 
     for (let character of characters) {
       // Check if character already exists
@@ -346,9 +352,13 @@
           )
         )
         .limit(1);
+      console.log("existing chars", existingCharacter);
 
       let characterId;
       if (existingCharacter.length === 0) {
+        console.log("existing chars zoreoo");
+        console.log(character.isSender, character.name, storyId);
+        
         // Insert new character
         const result = await db.insert(CHARACTERS).values({
           story_id: storyId,

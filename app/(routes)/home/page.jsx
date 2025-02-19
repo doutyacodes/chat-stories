@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Loader2, GamepadIcon, BookOpen, Gamepad2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import StoryCardsSlider from './_components/StoryCardsSlider';
@@ -125,11 +125,40 @@ const ImageCarousel = () => {
       large: "h-28 md:h-44"
     };
 
+    const iconSizeClasses = {
+      small: "w-4 h-4 md:w-5 md:h-5",
+      large: "w-5 h-5 md:w-6 md:h-6"
+    };
+
     return (
       <div 
-        className={`flex-none ${sizeClasses[size]} cursor-pointer transition-transform hover:scale-105`}
+        className={`flex-none ${sizeClasses[size]} cursor-pointer transition-transform hover:scale-105 relative`}
         onClick={handleClick}
       >
+        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm z-10 px-2 py-1 rounded-full">
+          <p className="text-xs text-purple-400 font-medium">
+            {story.story_type === 'game' ? (
+              <Gamepad2
+                className={`${iconSizeClasses[size]} text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]`} 
+              />
+            ) : (
+              <BookOpen 
+                className={`${iconSizeClasses[size]} text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]`} 
+              />
+            )}
+          </p>
+        </div>
+        {/* <div className="absolute top-3 right-3 z-10 drop-shadow-lg">
+          {story.story_type === 'game' ? (
+            <Gamepad2
+              className={`${iconSizeClasses[size]} text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]`} 
+            />
+          ) : (
+            <BookOpen 
+              className={`${iconSizeClasses[size]} text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]`} 
+            />
+          )}
+        </div> */}
         <img 
           src={`${BASE_IMAGE_URL}${story.cover_img}`}
           alt={story.title}
@@ -138,7 +167,7 @@ const ImageCarousel = () => {
         <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
           {story.title}
         </p>
-      </div>
+    </div>
     );
   };
 

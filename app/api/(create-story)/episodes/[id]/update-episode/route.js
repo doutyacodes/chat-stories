@@ -8,17 +8,95 @@ export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 export const maxBodyLength = 1024 * 1024 * 100;
 
+// async function processChat(trx, slide, slideId, storyId, episodeId, formData) {
+//   if (slide.content.inputType === 'manual') {
+//     const characters = slide.content.characters;
+//     const characterIds = await processCharacters(trx, storyId, characters);
+
+//     // Update the chat section in the processChat function
+//     if (slide.changes.contentModified || slide.changes.audioModified) {
+//       const updateData = {};
+      
+//       if (slide.changes.audioModified) {
+//         updateData.audio_url = slide.content.media?.file || null;
+//       }
+
+//       if (Object.keys(updateData).length > 0) {
+//         await trx.update(SLIDE_CONTENT)
+//           .set(updateData)
+//           .where(eq(SLIDE_CONTENT.slide_id, slideId));
+//       }
+
+//       if (slide.changes.contentModified && slide.changes.storyLineChanges) {
+//         await trx.delete(CHAT_MESSAGES)
+//           .where(eq(CHAT_MESSAGES.slide_id, slideId));
+
+//         for (const [index, line] of slide.content.storyLines.entries()) {
+//           const characterId = characterIds.find(c => c.name === line.character)?.id;
+//           if (characterId) {
+//             await trx.insert(CHAT_MESSAGES).values({
+//               story_id: storyId,
+//               episode_id: episodeId,
+//               slide_id: slideId,
+//               character_id: characterId,
+//               message: line.line,
+//               sequence: index
+//             });
+//           }
+//         }
+//       }
+//     }
+
+//   } else if (slide.content.inputType === 'pdf') {
+//     const pdfFile = formData.get(`slides.${slide.id}.pdfFile`);
+//     if (pdfFile) {
+//       const characters = slide.content.characters;
+//       const characterIds = await processCharacters(trx, storyId, characters);
+      
+//       const pdfContent = await processPDFContent(
+//         pdfFile, 
+//         new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
+//       );
+
+//       await trx
+//         .delete(CHAT_MESSAGES)
+//         .where(eq(CHAT_MESSAGES.slide_id, slideId));
+
+//       for (let [index, { characterId, message }] of pdfContent.entries()) {
+//         await trx.insert(CHAT_MESSAGES).values({
+//           story_id: storyId,
+//           episode_id: episodeId,
+//           slide_id: slideId,
+//           character_id: characterId,
+//           message,
+//           sequence: index
+//         });
+//       }
+//     }
+//   }
+// }
+
+// Import this at the top
+async function getPDFParser() {
+  const { default: pdfParse } = await import('pdf-parse/lib/pdf-parse.js');
+  return pdfParse;
+}
+
 async function processChat(trx, slide, slideId, storyId, episodeId, formData) {
   if (slide.content.inputType === 'manual') {
     const characters = slide.content.characters;
     const characterIds = await processCharacters(trx, storyId, characters);
 
-    // Update the chat section in the processChat function
-    if (slide.changes.contentModified || slide.changes.audioModified) {
+    if (slide.changes.contentModified || slide.changes.audioModified || slide.changes.mediaModified) {
       const updateData = {};
       
       if (slide.changes.audioModified) {
         updateData.audio_url = slide.content.media?.file || null;
+      }
+
+      if (slide.changes.mediaModified) {
+        updateData.media_url = slide.content.media?.file || null;
+        updateData.media_type = slide.content.media?.type || 'image';
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -27,40 +105,88 @@ async function processChat(trx, slide, slideId, storyId, episodeId, formData) {
           .where(eq(SLIDE_CONTENT.slide_id, slideId));
       }
 
+      // Process story line changes if they exist
       if (slide.changes.contentModified && slide.changes.storyLineChanges) {
-        await trx.delete(CHAT_MESSAGES)
-          .where(eq(CHAT_MESSAGES.slide_id, slideId));
-
-        for (const [index, line] of slide.content.storyLines.entries()) {
-          const characterId = characterIds.find(c => c.name === line.character)?.id;
-          if (characterId) {
-            await trx.insert(CHAT_MESSAGES).values({
-              story_id: storyId,
-              episode_id: episodeId,
-              slide_id: slideId,
-              character_id: characterId,
-              message: line.line,
-              sequence: index
-            });
+        const storyLineChanges = slide.changes.storyLineChanges;
+        
+        for (const [messageIdOrIndex, change] of Object.entries(storyLineChanges)) {
+          if (change.id) {
+            // Update existing message
+            await trx.update(CHAT_MESSAGES)
+              .set({
+                message: change.line || slide.content.storyLines.find(line => line.id === change.id)?.line,
+                character_id: characterIds.find(c => c.name === (change.character || 
+                  slide.content.storyLines.find(line => line.id === change.id)?.character))?.id
+              })
+              .where(eq(CHAT_MESSAGES.id, change.id));
+          } else {
+            // Find the story line by index
+            const storyLine = slide.content.storyLines[parseInt(messageIdOrIndex)];
+            if (storyLine) {
+              // This is a new message
+              const characterId = characterIds.find(c => c.name === storyLine.character)?.id;
+              if (characterId) {
+                await trx.insert(CHAT_MESSAGES).values({
+                  story_id: storyId,
+                  episode_id: episodeId,
+                  slide_id: slideId,
+                  character_id: characterId,
+                  message: storyLine.line,
+                  sequence: parseInt(messageIdOrIndex)
+                });
+              }
+            }
           }
         }
       }
     }
+  } else if (slide.content.inputType === 'pdf' && slide.changes.pdfModified) {
 
-  } else if (slide.content.inputType === 'pdf') {
+    const updateData = {};
+      
+    if (slide.changes.audioModified) {
+      updateData.audio_url = slide.content.media?.file || null;
+    }
+
+    if (slide.changes.mediaModified) {
+      updateData.media_url = slide.content.media?.file || null;
+      updateData.media_type = slide.content.media?.type || 'image';
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await trx.update(SLIDE_CONTENT)
+        .set(updateData)
+        .where(eq(SLIDE_CONTENT.slide_id, slideId));
+    }
+
+    console.log("modfief pfs")
     const pdfFile = formData.get(`slides.${slide.id}.pdfFile`);
     if (pdfFile) {
+      console.log("in the pddf ")
       const characters = slide.content.characters;
+      console.log("ids", slideId, storyId, episodeId);
+      console.log("characters", characters);
       const characterIds = await processCharacters(trx, storyId, characters);
+      
+      // Delete all existing messages for this slide since we're replacing them
+      await trx.delete(CHAT_MESSAGES)
+        .where(eq(CHAT_MESSAGES.slide_id, slideId));
+      /* trying both methods just incse if it saved usinf without a lside id (old method) */
+      await trx.delete(CHAT_MESSAGES)
+      .where(
+        and(
+          eq(CHAT_MESSAGES.story_id, storyId),
+          eq(CHAT_MESSAGES.episode_id, episodeId)
+        )
+      );
+
+      console.log("After delete")
+
       
       const pdfContent = await processPDFContent(
         pdfFile, 
         new Map(characterIds.map(c => [c.name.toLowerCase(), c.id]))
       );
-
-      await trx
-        .delete(CHAT_MESSAGES)
-        .where(eq(CHAT_MESSAGES.slide_id, slideId));
 
       for (let [index, { characterId, message }] of pdfContent.entries()) {
         await trx.insert(CHAT_MESSAGES).values({
@@ -107,6 +233,34 @@ async function processCharacters(trx, storyId, characters) {
   }
 
   return savedCharacters;
+}
+
+
+async function processPDFContent(pdfFile, characterMap) {
+  const arrayBuffer = await pdfFile.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const parsePDF = await getPDFParser();
+  const pdfData = await parsePDF(buffer);
+
+  if (!pdfData || !pdfData.text) {
+    throw new Error('Failed to parse PDF content');
+  }
+  
+  return pdfData.text
+    .split('\n')
+    .filter(line => line.trim())
+    .map(line => {
+      const colonIndex = line.indexOf(':');
+      if (colonIndex === -1) return null;
+      
+      const characterName = line.substring(0, colonIndex).trim();
+      const message = line.substring(colonIndex + 1).trim();
+      const characterId = characterMap.get(characterName.toLowerCase());
+      if (!characterId) return null;
+
+      return { characterId, message };
+    })
+    .filter(line => line !== null);
 }
 
 export async function PUT(request, { params }) {
@@ -184,7 +338,8 @@ export async function PUT(request, { params }) {
 
           } else if (slide.type === 'chat') {
             await processChat(trx, slide, slideId, storyId, episodeId, formData);
-
+          } else if (slide.type === 'conversation') {
+            await processChat(trx, slide, slideId, storyId, episodeId, formData);
           } else if (slide.type === 'quiz') {
             const correctAnswer = slide.content.options.find(opt => opt.is_correct)?.text || '';
             const quizResult = await trx.insert(QUIZZES).values({
@@ -267,6 +422,10 @@ export async function PUT(request, { params }) {
             }
           } else if (slide.type === 'chat') {
             if (slide.changes.contentModified || slide.changes.audioModified) {
+              await processChat(trx, slide, slide.id, storyId, episodeId, formData);
+            }
+          } else if (slide.type === 'conversation') {
+            if (slide.changes.contentModified || slide.changes.audioModified || slide.changes.mediaModified) {
               await processChat(trx, slide, slide.id, storyId, episodeId, formData);
             }
           } else if (slide.type === 'quiz') {
@@ -379,3 +538,4 @@ export async function PUT(request, { params }) {
     );
   }
 }
+
