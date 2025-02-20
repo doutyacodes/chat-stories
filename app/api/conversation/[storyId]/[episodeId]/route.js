@@ -36,6 +36,8 @@ export async function GET(request, { params }) {
 
     // If we found messages with slide_id = 0, use the old format query
     if (oldFormatMessages.length > 0) {
+      console.log("if")
+
     conversation = await db
       .select({
         id: CHAT_MESSAGES.id,
@@ -79,6 +81,7 @@ export async function GET(request, { params }) {
 
   } else {   
     // Use the new format with slide_id
+    console.log("else")
     conversation = await db
         .select({
         id: CHAT_MESSAGES.id,
@@ -113,6 +116,7 @@ export async function GET(request, { params }) {
     )
     .limit(1);
   }
+  console.log("audioMediaData", audioMediaData)
     // Extract values from the result
     const audioUrl = audioMediaData.length > 0 ? audioMediaData[0].audio_url : null;
     const mediaUrl = audioMediaData.length > 0 ? audioMediaData[0].media_url : null;

@@ -116,27 +116,60 @@ export async function GET(request, { params }) {
           .where(eq(SLIDE_CONTENT.slide_id, slide.id))
           .limit(1);
 
-          // Fetch chat messages and characters for this slide
-          const messages = await db
+          const oldFormatMessages = await db
             .select({
-              id: CHAT_MESSAGES.id,
-              message: CHAT_MESSAGES.message,
-              sequence: CHAT_MESSAGES.sequence,
-              characterId: CHARACTERS.id,
-              characterName: CHARACTERS.name,
-              isSender: CHARACTERS.is_sender,
+              id: CHAT_MESSAGES.id
             })
             .from(CHAT_MESSAGES)
-            .leftJoin(CHARACTERS, eq(CHAT_MESSAGES.character_id, CHARACTERS.id))
             .where(
               and(
                 eq(CHAT_MESSAGES.story_id, slide.story_id),
                 eq(CHAT_MESSAGES.episode_id, episodeId),
-                // gte(CHAT_MESSAGES.sequence, slide.position * 100),
-                // lt(CHAT_MESSAGES.sequence, (slide.position + 1) * 100)
+                eq(CHAT_MESSAGES.slide_id, 0)
               )
             )
-            .orderBy(CHAT_MESSAGES.sequence);
+            .limit(1);
+        
+            let messages;
+
+            if (oldFormatMessages.length > 0) {
+              // Fetch chat messages and characters for this slide
+              messages = await db
+              .select({
+                id: CHAT_MESSAGES.id,
+                message: CHAT_MESSAGES.message,
+                sequence: CHAT_MESSAGES.sequence,
+                characterId: CHARACTERS.id,
+                characterName: CHARACTERS.name,
+                isSender: CHARACTERS.is_sender,
+              })
+              .from(CHAT_MESSAGES)
+              .leftJoin(CHARACTERS, eq(CHAT_MESSAGES.character_id, CHARACTERS.id))
+              .where(
+                and(
+                  eq(CHAT_MESSAGES.story_id, slide.story_id),
+                  eq(CHAT_MESSAGES.episode_id, episodeId),
+                  // gte(CHAT_MESSAGES.sequence, slide.position * 100),
+                  // lt(CHAT_MESSAGES.sequence, (slide.position + 1) * 100)
+                )
+              )
+              .orderBy(CHAT_MESSAGES.sequence);
+            }  else {   
+              // Use the new format with slide_id
+              messages = await db
+                .select({
+                  id: CHAT_MESSAGES.id,
+                  message: CHAT_MESSAGES.message,
+                  sequence: CHAT_MESSAGES.sequence,
+                  characterId: CHARACTERS.id,
+                  characterName: CHARACTERS.name,
+                  isSender: CHARACTERS.is_sender,
+                })
+                .from(CHAT_MESSAGES)
+                .leftJoin(CHARACTERS, eq(CHAT_MESSAGES.character_id, CHARACTERS.id))
+                .where(eq(CHAT_MESSAGES.slide_id, slide.id)) // Removed extra closing parenthesis
+                .orderBy(CHAT_MESSAGES.sequence);
+            }
 
           // Get unique characters
           const characters = [...new Map(messages.map((m) => [m.characterId, { name: m.characterName, isSender: m.isSender }])).values()];

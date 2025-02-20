@@ -83,27 +83,91 @@ async function getPDFParser() {
 }
 
 async function processChat(trx, slide, slideId, storyId, episodeId, formData) {
+
+  // if (slide.changes.contentModified || slide.changes.audioModified || slide.changes.mediaModified) {
+  //   const updateData = {};
+      
+  //   if (slide.changes.audioModified) {
+  //     updateData.audio_url = slide.content.media?.file || null;
+  //   }
+
+  //   if (slide.changes.mediaModified) {
+  //     // const fileName = formData.get(`slides.${slide.id}.media.file`);
+  //     // const fileType = formData.get(`slides.${slide.id}.media.type`);
+  //     console.log('fileName', slide.content.media.file, 'fileType', slide.content.media.type)
+
+  //     updateData.media_url = slide.content.media?.file || null;
+  //     updateData.media_type = slide.content.media?.type || 'image';
+  //     // console.log('fileName', fileName, 'fileType', fileType)
+  //   //   updateData.media_url = fileName || null;
+  //   //   updateData.media_type = fileType || 'image';
+  //   }
+
+  //   console.log(updateData)
+
+  //   if (Object.keys(updateData).length > 0) {
+  //     await trx.update(SLIDE_CONTENT)
+  //       .set(updateData)
+  //       .where(eq(SLIDE_CONTENT.slide_id, slideId));
+  //   }
+  // }
+
+  if (slide.changes.contentModified || slide.changes.audioModified || slide.changes.mediaModified) {
+    const updateData = {};
+  
+    if (slide.changes.audioModified) {
+      updateData.audio_url = slide.content.media?.file || null;
+    }
+  
+    if (slide.changes.mediaModified) {
+      console.log('fileName', slide.content.media.file, 'fileType', slide.content.media.type);
+  
+      updateData.media_url = slide.content.media?.file || null;
+      updateData.media_type = slide.content.media?.type || 'image';
+    }
+  
+    console.log(updateData);
+  
+    if (Object.keys(updateData).length > 0) {
+      await trx.insert(SLIDE_CONTENT)
+        .values({
+          slide_id: slideId,
+          audio_url: updateData.audio_url || null,
+          media_url: updateData.media_url || null,
+          media_type: updateData.media_type || 'image'
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            audio_url: updateData.audio_url || null,
+            media_url: updateData.media_url || null,
+            media_type: updateData.media_type || 'image'
+          }
+        }); // Ensure update if slide_id exists
+    }
+  }
+  
+
   if (slide.content.inputType === 'manual') {
     const characters = slide.content.characters;
     const characterIds = await processCharacters(trx, storyId, characters);
 
     if (slide.changes.contentModified || slide.changes.audioModified || slide.changes.mediaModified) {
-      const updateData = {};
+      // const updateData = {};
       
-      if (slide.changes.audioModified) {
-        updateData.audio_url = slide.content.media?.file || null;
-      }
+      // if (slide.changes.audioModified) {
+      //   updateData.audio_url = slide.content.media?.file || null;
+      // }
 
-      if (slide.changes.mediaModified) {
-        updateData.media_url = slide.content.media?.file || null;
-        updateData.media_type = slide.content.media?.type || 'image';
-      }
+      // if (slide.changes.mediaModified) {
+      //   updateData.media_url = slide.content.media?.file || null;
+      //   updateData.media_type = slide.content.media?.type || 'image';
+      // }
 
-      if (Object.keys(updateData).length > 0) {
-        await trx.update(SLIDE_CONTENT)
-          .set(updateData)
-          .where(eq(SLIDE_CONTENT.slide_id, slideId));
-      }
+      // if (Object.keys(updateData).length > 0) {
+      //   await trx.update(SLIDE_CONTENT)
+      //     .set(updateData)
+      //     .where(eq(SLIDE_CONTENT.slide_id, slideId));
+      // }
 
       // Process story line changes if they exist
       if (slide.changes.contentModified && slide.changes.storyLineChanges) {
@@ -142,22 +206,28 @@ async function processChat(trx, slide, slideId, storyId, episodeId, formData) {
     }
   } else if (slide.content.inputType === 'pdf' && slide.changes.pdfModified) {
 
-    const updateData = {};
+    // const updateData = {};
       
-    if (slide.changes.audioModified) {
-      updateData.audio_url = slide.content.media?.file || null;
-    }
+    // if (slide.changes.audioModified) {
+    //   const pdfFile = formData.get(`slides.${slide.id}.pdfFile`);
+    //   updateData.audio_url = slide.content.media?.file || null;
+    // }
 
-    if (slide.changes.mediaModified) {
-      updateData.media_url = slide.content.media?.file || null;
-      updateData.media_type = slide.content.media?.type || 'image';
-    }
+    // if (slide.changes.mediaModified) {
+    //   const fileName = formData.get(`slides.${slide.id}.media.file`);
+    //   const fileType = formData.get(`slides.${slide.id}.media.type`);
+    //   // updateData.media_url = slide.content.media?.file || null;
+    //   // updateData.media_type = slide.content.media?.type || 'image';
+    //   console.log('fileName', fileName, 'fileType', fileType)
+    //   updateData.media_url = fileName || null;
+    //   updateData.media_type = fileType || 'image';
+    // }
 
-    if (Object.keys(updateData).length > 0) {
-      await trx.update(SLIDE_CONTENT)
-        .set(updateData)
-        .where(eq(SLIDE_CONTENT.slide_id, slideId));
-    }
+    // if (Object.keys(updateData).length > 0) {
+    //   await trx.update(SLIDE_CONTENT)
+    //     .set(updateData)
+    //     .where(eq(SLIDE_CONTENT.slide_id, slideId));
+    // }
 
     console.log("modfief pfs")
     const pdfFile = formData.get(`slides.${slide.id}.pdfFile`);

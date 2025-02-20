@@ -418,7 +418,11 @@ const handleRemoveEpisodeAudio = () => {
     const slideToRemove = episodeData.slides[index];
     if (!slideToRemove.id.startsWith("temp-")) {
       try {
-        const response = await fetch(`/api/slides/${slideToRemove.id}`, { method: "DELETE" });
+        const response = await fetch(`/api/delete-slides/${slideToRemove.id}`, {
+          method: "DELETE", // Move this inside
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        
         if (!response.ok) throw new Error("Failed to delete slide");
       } catch (error) {
         setError("Failed to delete slide");
@@ -533,8 +537,10 @@ const handleRemoveEpisodeAudio = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const updatedSlides = [...episodeData.slides];
+        console.log("updatedSlides", updatedSlides)
         const currentSlide = updatedSlides[cropState.slideIndex];
-        
+        console.log("currentSlide", currentSlide)
+
         currentSlide.content.media = {
           file: croppedFile,
           preview: reader.result,
@@ -918,6 +924,13 @@ const handleRemoveEpisodeAudio = () => {
             >
               Add Chat Slide
             </button>
+            <button
+              type="button"
+              onClick={() => handleAddSlide("conversation")}
+              className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mr-2"
+            >
+              Add Conversation Slide
+            </button>
             {storyType === "game" && (
               <>
                 <button
@@ -1029,41 +1042,6 @@ const handleRemoveEpisodeAudio = () => {
                                   />
                               </>
                             )}
-
-                            {/* {slide.type === "image" && (
-                              <>
-                                <input
-                                  type="file"
-                                  onChange={(e) => handleMediaUpload(index, e.target.files[0])}
-                                  className="hidden"
-                                  id={`mediaUpload-${index}`}
-                                />
-                                <label htmlFor={`mediaUpload-${index}`} className="cursor-pointer">
-                                  {slide.content.media ? "Change Media" : "Upload Image/GIF/Video"}
-                                </label>
-                                {slide.content.media?.preview && (
-                                  <img
-                                    src={slide.content.media.preview}
-                                    alt="Preview"
-                                    className="mt-2 w-full h-48 object-cover"
-                                  />
-                                )}
-                                <textarea
-                                  value={slide.content.description}
-                                  onChange={(e) => {
-                                    const updatedSlides = [...episodeData.slides];
-                                    updatedSlides[index].content.description = e.target.value;
-                                    setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
-                                    setModifications((prev) => ({
-                                      ...prev,
-                                      slides: { ...prev.slides, [slide.id]: { descriptionModified: true } },
-                                    }));
-                                  }}
-                                  placeholder="Image description"
-                                  className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24 mt-2"
-                                />
-                              </>
-                            )} */}
 
                             {slide.type === "chat" && (
                               <>
@@ -1228,7 +1206,7 @@ const handleRemoveEpisodeAudio = () => {
                             {slide.type === "conversation" && (
                               <>
                                 <div className="bg-gray-600 p-4 rounded-lg">
-                                  <h4 className="font-medium mb-4">Background Image</h4>
+                                <h4 className="font-medium mb-4">Background Image</h4>
                                   <div className="flex items-center gap-4 mb-4">
                                     <input
                                       type="file"
@@ -1280,63 +1258,103 @@ const handleRemoveEpisodeAudio = () => {
 
                                   <h4 className="font-medium mb-4">Chat Characters</h4>
                                   {slide?.content?.characters?.map((character, charIndex) => (
-                                    <div key={charIndex} className="mb-2 flex gap-4 items-center">
+                                  <div key={charIndex} className="mb-2 flex gap-4 items-center">
                                       <input
-                                        type="text"
-                                        value={character.name}
-                                        onChange={(e) => {
+                                      type="text"
+                                      value={character.name}
+                                      onChange={(e) => {
                                           const updatedSlides = [...episodeData.slides];
                                           updatedSlides[index].content.characters[charIndex].name = e.target.value;
                                           setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
                                           setModifications(prev => ({
-                                            ...prev,
-                                            slides: {
+                                          ...prev,
+                                          slides: {
                                               ...prev.slides,
                                               [slide.id]: { ...prev.slides[slide.id], charactersModified: true }
-                                            }
+                                          }
                                           }));
-                                        }}
-                                        placeholder="Character Name"
-                                        className="flex-1 p-2 rounded-lg bg-gray-500"
+                                      }}
+                                      placeholder="Character Name"
+                                      className="flex-1 p-2 rounded-lg bg-gray-500"
                                       />
                                       <button
-                                        type="button"
-                                        onClick={() => {
+                                      type="button"
+                                      onClick={() => {
                                           const updatedSlides = [...episodeData.slides];
                                           updatedSlides[index].content.characters = updatedSlides[index].content.characters.map(
-                                            (char, idx) => ({ ...char, isSender: idx === charIndex })
+                                          (char, idx) => ({ ...char, isSender: idx === charIndex })
                                           );
                                           setEpisodeData(prev => ({ ...prev, slides: updatedSlides }));
                                           setModifications(prev => ({
-                                            ...prev,
-                                            slides: {
+                                          ...prev,
+                                          slides: {
                                               ...prev.slides,
                                               [slide.id]: { ...prev.slides[slide.id], charactersModified: true }
-                                            }
+                                          }
                                           }));
-                                        }}
-                                        className={`px-4 py-2 rounded-lg ${
+                                      }}
+                                      className={`px-4 py-2 rounded-lg ${
                                           character.isSender ? "bg-green-600" : "bg-gray-500"
-                                        }`}
+                                      }`}
                                       >
-                                        {character.isSender ? "Sender" : "Set as Sender"}
+                                      {character.isSender ? "Sender" : "Set as Sender"}
                                       </button>
-                                    </div>
+                                  </div>
                                   ))}
-                                </div>
+                                  <div className="flex items-center gap-2 mt-4">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updatedSlides = [...episodeData.slides];
+                                        updatedSlides[index].content.characters.push({
+                                          name: "",
+                                          isSender: false
+                                        });
+                                        setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                        setModifications((prev) => ({
+                                          ...prev,
+                                          slides: { 
+                                            ...prev.slides, 
+                                            [slide.id]: { 
+                                              ...prev.slides[slide.id],
+                                              charactersModified: true,
+                                              characterAdded: true
+                                            }
+                                          },
+                                        }));
+                                      }}
+                                      className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg"
+                                    >
+                                      <Plus className="w-4 h-4 mr-1 inline" /> Add Character
+                                    </button>
+                                  </div>
+                              </div>
 
-                                {/* Rest of the chat functionality remains the same */}
-                                <h4>Story Lines</h4>
-                                {slide?.content?.storyLines?.map((line, lineIndex) => (
+                                <h4>Expand/Collapse Chats</h4>
+                                {slide.content.storyLines.map((line, lineIndex) => (
                                   <div key={lineIndex} className="mt-2">
                                     <select
                                       value={line.character}
+                                      // onChange={(e) => {
+                                      //   const updatedSlides = [...episodeData.slides];
+                                      //   updatedSlides[index].content.storyLines[lineIndex].character = e.target.value;
+                                      //   setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      //   setModifications((prev) => ({
+                                      //     ...prev,
+                                      //     slides: { ...prev.slides, [slide.id]: { contentModified: true } },
+                                      //   }));
+                                      // }}
                                       onChange={(e) => handleStoryLineChange(index, lineIndex, 'character', e.target.value)}
                                       className="w-full p-2 rounded-lg bg-gray-500"
                                     >
                                       <option value="">Select Character</option>
+                                      {/* {fetchedCharacters.map((char) => (
+                                        <option key={char.id} value={char.name}>
+                                          {char.name}
+                                        </option>
+                                      ))} */}
                                       {slide.content.characters.map((char, idx) => (
-                                        <option key={idx} value={char.name}>{char.name}</option>
+                                          <option key={idx} value={char.name}>{char.name}</option>
                                       ))}
                                     </select>
                                     <textarea
@@ -1369,6 +1387,29 @@ const handleRemoveEpisodeAudio = () => {
                                 >
                                   Add Line
                                 </button>
+                                <input
+                                  type="file"
+                                  // onChange={(e) => {
+                                  //   const file = e.target.files[0];
+                                  //   if (file) {
+                                  //     const updatedSlides = [...episodeData.slides];
+                                  //     updatedSlides[index].content.pdfFile = file;
+                                  //     setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                  //     setModifications((prev) => ({
+                                  //       ...prev,
+                                  //       slides: { ...prev.slides, [slide.id]: { pdfModified: true } },
+                                  //     }));
+                                  //   }
+                                  // }}
+                                  onChange={(e) => handlePdfFileSelect(index,  e.target.files[0])}
+                                   
+                                  className="hidden"
+                                  id={`pdfUpload-${index}`}
+                                />
+                                <label htmlFor={`pdfUpload-${index}`} className="cursor-pointer">
+                                  Upload PDF
+                                </label>
+                                {slide.content.pdfFile?.name && <p>Selected: {slide.content.pdfFile.name}</p>}
                               </>
                             )}
 

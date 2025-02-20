@@ -11,7 +11,7 @@ export async function DELETE(request, { params }) {
   }
 
   try {
-    const slideId = parseInt(params.slideId);
+    const { slideId } = params;
 
     await db.transaction(async (trx) => {
       // Delete chat messages if they exist
