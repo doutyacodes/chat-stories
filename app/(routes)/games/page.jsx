@@ -610,11 +610,11 @@ const GameCard = ({ storyData }) => {
           alt={storyData.title}
           className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-gray-800/80 mb-2 group-hover:border-purple-500/80 transition-colors"
         />
-        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
+        {/* <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
           <p className="text-xs text-purple-400 font-medium">
             {storyData.episodes_count} EP
           </p>
-        </div>
+        </div> */}
       </div>
       <p className="text-xs md:text-sm text-center text-white/90 font-medium line-clamp-2 group-hover:text-purple-400 transition-colors">
         {storyData.title}
