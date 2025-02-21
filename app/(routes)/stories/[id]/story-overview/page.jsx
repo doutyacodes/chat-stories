@@ -101,9 +101,9 @@ const StoryOverview = () => {
                   <h2 className="text-white text-2xl md:text-5xl font-bold mb-2">
                   {story?.title}
                   </h2>
-                  <p className="text-white/90 text-sm md:text-xl max-w-3xl">
+                  {/* <p className="text-white/90 text-sm md:text-xl max-w-3xl">
                   {story?.synopsis}
-                  </p>
+                  </p> */}
               </div>
             </div>
 
