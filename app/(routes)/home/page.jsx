@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Search, Loader2, GamepadIcon, BookOpen, Game
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import StoryCardsSlider from './_components/StoryCardsSlider';
+import Image from 'next/image';
 
 const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 
@@ -16,6 +17,8 @@ const ImageCarousel = () => {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const router = useRouter();
+  const customLoader = ({ src }) => `${src}?w=500&q=75`;
+
 
   const fetchStories = async () => {
     let sessionId = null;
@@ -164,6 +167,17 @@ const ImageCarousel = () => {
           alt={story.title}
           className={`w-full ${imageClasses[size]} object-cover rounded-2xl border-[6px] border-white mb-2`}
         />
+        {/* <Image
+         loader={customLoader}
+          src={`${BASE_IMAGE_URL}${story.cover_img}?t=${new Date().getTime()}`}
+          // src={`${BASE_IMAGE_URL}${story.cover_img}`}
+          alt={story.title}
+          width={500}  // Adjust based on your largest expected image width
+          height={800} // Adjust based on your largest expected image height
+          className={`w-full ${imageClasses[size]} object-cover rounded-2xl border-[6px] border-white mb-2`}
+          priority={true}
+          sizes={size === "small" ? "160px" : "224px"}
+        /> */}
         <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
           {story.title}
         </p>
@@ -196,15 +210,27 @@ const ImageCarousel = () => {
                       alt={carouselStories[currentIndex].title}
                       className="w-full h-full object-cover"
                   />
+
+                    {/* <Image 
+                      loader={customLoader}
+                      // src={`${BASE_IMAGE_URL}${carouselStories[currentIndex].cover_img}`}
+                      src={`${BASE_IMAGE_URL}${carouselStories[currentIndex].cover_img}?t=${new Date().getTime()}`}
+                      alt={carouselStories[currentIndex].title}
+                      width={500} 
+                      height={800}
+                      className="w-full h-full object-cover"
+                      priority={true}
+                      // sizes={size === "small" ? "160px" : "224px"}
+                    /> */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                 
                   <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
                       <h2 className="text-white text-2xl md:text-5xl font-bold mb-2">
                       {carouselStories[currentIndex].title}
                       </h2>
-                      <p className="text-white/90 text-sm md:text-xl max-w-3xl">
+                      {/* <p className="text-white/90 text-sm md:text-xl max-w-3xl">
                       {carouselStories[currentIndex].synopsis}
-                      </p>
+                      </p> */}
                   </div>
                   
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">

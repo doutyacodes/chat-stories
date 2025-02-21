@@ -6,6 +6,7 @@ import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import ReactCrop from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import { toast } from "sonner"
 
 const EditEpisode = () => {
   const router = useRouter();
@@ -76,6 +77,7 @@ console.log('modifications', modifications)
       const data = await response.json();
       setEpisodes(data);
     } catch (error) {
+      toast.error("Failed to load episodes");
       setError("Failed to load episodes");
       console.error(error);
     }
@@ -192,6 +194,7 @@ console.log('modifications', modifications)
         slides: {}, // Reset modifications tracking
       });
     } catch (error) {
+      toast.error("Failed to load episode details", { id: "episode-details" });
       setError("Failed to load episode details");
       console.error(error);
     } finally {
@@ -242,6 +245,7 @@ const handleRemoveEpisodeAudio = () => {
       setFetchedCharacters(data.characters);
       setStoryType(data.storyType[0].storyType); // Add this line
     } catch (error) {
+      toast.error("Failed to load characters");
       setError("Failed to load characters");
       console.error(error);
     }
@@ -424,7 +428,10 @@ const handleRemoveEpisodeAudio = () => {
         });
         
         if (!response.ok) throw new Error("Failed to delete slide");
+        toast.success("Slide removed successfully");
+
       } catch (error) {
+        toast.error("Failed to delete slide");
         setError("Failed to delete slide");
         console.error(error);
         return;
@@ -764,8 +771,14 @@ const handleRemoveEpisodeAudio = () => {
       });
   
       if (!response.ok) throw new Error("Failed to update episode");
-  
+      toast.success("Episode updated successfully");
+      if (selectedEpisodeId) {
+        fetchEpisodeDetails(selectedEpisodeId);
+        fetchCharacters();
+      }
+
     } catch (error) {
+      toast.error("Failed to update episode. Please try again.");
       setError("Failed to update episode. Please try again.");
       console.error(error);
     } finally {
