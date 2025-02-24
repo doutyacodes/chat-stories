@@ -85,6 +85,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { useRouter } from 'next/navigation';
+import SignInRequiredDialog from '@/app/components/SignInRequiredDialog';
 
 const StoryUserActions = ({ story }) => {
   const router = useRouter();
@@ -319,7 +320,7 @@ const StoryUserActions = ({ story }) => {
       </div>
 
       {/* Auth Dialog */}
-      <AlertDialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+      {/* <AlertDialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <AlertDialogContent className='bg-gray-300'>
           <AlertDialogHeader>
             <AlertDialogTitle>Sign in required</AlertDialogTitle>
@@ -332,7 +333,14 @@ const StoryUserActions = ({ story }) => {
             <AlertDialogAction onClick={() => router.push('/login')}>Sign In</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog> */}
+
+      <SignInRequiredDialog
+        showAuthDialog={showAuthDialog}
+        setShowAuthDialog={setShowAuthDialog}
+        actionType={actionType}
+        router={router}
+      />
     </>
   );
 };

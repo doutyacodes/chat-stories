@@ -51,7 +51,13 @@ const StorySlides = () => {
   const [showCorrectAnswerModal, setShowCorrectAnswerModal] = useState(false);
   const [hasSubmittedAnswer, setHasSubmittedAnswer] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(true);
+  // const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(true);
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(() => {
+    // Check localStorage for saved preference
+    const savedPreference = localStorage.getItem('fullscreenPreference');
+    // Show prompt only if no preference is saved
+    return savedPreference === null;
+  });
 
   const [pedometerData, setPedometerData] = useState(null);
   const [currentSteps, setCurrentSteps] = useState(0);
@@ -132,7 +138,28 @@ const StorySlides = () => {
   };
   
 
-  // Add these functions after your state declarations
+  // const toggleFullscreen = async () => {
+  //   try {
+  //     if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+  //       // Enter fullscreen
+  //       if (document.documentElement.requestFullscreen) {
+  //         await document.documentElement.requestFullscreen();
+  //       } else if (document.documentElement.webkitRequestFullscreen) {
+  //         await document.documentElement.webkitRequestFullscreen();
+  //       }
+  //     } else {
+  //       // Exit fullscreen
+  //       if (document.exitFullscreen) {
+  //         await document.exitFullscreen();
+  //       } else if (document.webkitExitFullscreen) {
+  //         await document.webkitExitFullscreen();
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error('Error toggling fullscreen:', err);
+  //   }
+  // };
+
   const toggleFullscreen = async () => {
     try {
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -142,6 +169,7 @@ const StorySlides = () => {
         } else if (document.documentElement.webkitRequestFullscreen) {
           await document.documentElement.webkitRequestFullscreen();
         }
+        localStorage.setItem('fullscreenPreference', 'fullscreen');
       } else {
         // Exit fullscreen
         if (document.exitFullscreen) {
@@ -149,6 +177,7 @@ const StorySlides = () => {
         } else if (document.webkitExitFullscreen) {
           await document.webkitExitFullscreen();
         }
+        localStorage.setItem('fullscreenPreference', 'normal');
       }
     } catch (err) {
       console.error('Error toggling fullscreen:', err);
@@ -165,6 +194,13 @@ const StorySlides = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const savedPreference = localStorage.getItem('fullscreenPreference');
+    if (savedPreference === 'fullscreen' && !document.fullscreenElement) {
+      toggleFullscreen();
+    }
+  }, []); // Run once on mount
+  
   // 3. Update your audio useEffect to this:
   useEffect(() => {
     // Clean up previous audio
@@ -1018,7 +1054,7 @@ const StorySlides = () => {
       nextEpisode={nextEpisode}
     />
 
-      {showFullscreenPrompt && (
+      {/* {showFullscreenPrompt && (
         <FullscreenPrompt 
           onAccept={() => {
             toggleFullscreen();
@@ -1028,7 +1064,21 @@ const StorySlides = () => {
             setShowFullscreenPrompt(false);
           }}
         />
-      )}
+      )} */}
+
+    {showFullscreenPrompt && (
+      <FullscreenPrompt 
+        onAccept={() => {
+          toggleFullscreen();
+          setShowFullscreenPrompt(false);
+          localStorage.setItem('fullscreenPreference', 'fullscreen');
+        }}
+        onDecline={() => {
+          setShowFullscreenPrompt(false);
+          localStorage.setItem('fullscreenPreference', 'normal');
+        }}
+      />
+    )}
 
     </div>
   );

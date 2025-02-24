@@ -463,7 +463,7 @@ const StoryCard = ({ storyData }) => {
 /* last */
 
 return (
-  <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 pb-16 md:pt-10">
+  <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 pb-24 md:pt-10">
     <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
       {/* Title Section */}
       <div className="mb-8">

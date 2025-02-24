@@ -70,8 +70,7 @@ const StoryOverview = () => {
           />
         )}
         <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
-          {/* {isEpisode ? storyData.name : storyData.title} */}
-          {storyData.name}
+          {isEpisode ? storyData.name : storyData.title}
         </p>
       </div>
     );

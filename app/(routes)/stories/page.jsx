@@ -124,7 +124,7 @@ const ViewAllPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-16 md:pt-10">
+    <div className="min-h-screen bg-black pb-24 md:pt-10">
       <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
 
       {/* Title Section */}

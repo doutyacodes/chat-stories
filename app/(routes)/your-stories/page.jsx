@@ -162,38 +162,27 @@ const YourStoriesPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Your Stories</h1>
-            <button
-              onClick={() => router.push('/create-story')}
-              className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg 
-                flex items-center gap-2 transition duration-200"
-            >
-              <PlusCircle className="h-5 w-5" />
-              Create New Story
-            </button>
-        </div> */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold">Your Stories</h1>
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2"
-            >
-              <option value="desc">Latest First</option>
-              <option value="asc">Oldest First</option>
-            </select>
-          </div>
-          <button
-            onClick={() => router.push('/create-story')}
-            className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg 
-              flex items-center gap-2 transition duration-200"
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">Your Stories</h1>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="w-full sm:w-auto bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-2"
           >
-            <PlusCircle className="h-5 w-5" />
-            Create New Story
-          </button>
+            <option value="desc">Latest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
         </div>
+        <button
+          onClick={() => router.push('/create-story')}
+          className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg 
+            flex items-center justify-center gap-2 transition duration-200"
+        >
+          <PlusCircle className="h-5 w-5" />
+          Create New Story
+        </button>
+      </div>
 
         {isLoading ? (
           <LoadingSpinner />

@@ -766,7 +766,7 @@ const handleSubmit = async (e) => {
 };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8 md:pt-28">
+    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8 pb-28">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Create Episode</h1>
 
