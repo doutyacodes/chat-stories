@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo, FaVolumeMute, FaVolumeUp } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo, FaVolumeMute, FaVolumeUp, FaCheckDouble } from 'react-icons/fa';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const QuitDialog = ({ isOpen, onClose, onConfirm }) => {
@@ -277,26 +277,47 @@ const SlideContainer = ({
             </div>
             </div>
 
-            {/* Scrollable Chat Area */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <div className="p-4">
-                <div className="flex flex-col space-y-4">
-                {chatMessages.map((message) => (
-                    <div
-                    key={message.id}
-                    className={`relative p-3 rounded-lg max-w-xs ${
-                        message.character.is_sender
-                        ? 'bg-green-700 text-white self-end'
-                        : 'bg-gray-700 text-gray-300 self-start'
+        {/* Scrollable Chat Area */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
+          <div className="p-4">
+            <div className="flex flex-col space-y-4">
+              {chatMessages.map((message, index) => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.character.is_sender ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`chat-bubble relative px-3 py-2 max-w-xs shadow-md ${
+                      message.character.is_sender
+                        ? "chat-sent bg-green-600 text-white"
+                        : "chat-received bg-gray-700 text-gray-100"
                     }`}
-                    >
-                    <strong>{message.character.name}: </strong>
-                    <p>{message.message}</p>
+                  >
+                    <p className="text-[11px] font-semibold opacity-80 leading-tight">
+                      {message.character.name}
+                    </p>
+
+                    <p className="text-sm leading-snug mt-1 pr-8">
+                      {message.message}
+                    </p>
+
+                    <div className="flex items-center justify-end gap-1 mt-1">
+                      <span className="text-[10px] opacity-70">
+                        {formatMessageTime(index)}
+                      </span>
+
+                      {message.character.is_sender && (
+                        <FaCheckDouble className="w-3 h-3 text-blue-200" />
+                      )}
                     </div>
-                ))}
+                  </div>
                 </div>
+              ))}
             </div>
-            </div>
+          </div>
+        </div>
         </div>
         </div>
     );
@@ -739,6 +760,18 @@ const SlideContainer = ({
           </div>
         );
       };
+
+    const [chatStartTime] = useState(() => {
+        const now = new Date();
+        const randomMinutesAgo = Math.floor(Math.random() * 180) + 10; // 10–190 mins ago
+        now.setMinutes(now.getMinutes() - randomMinutesAgo, 0, 0);
+        return now;
+    });
+
+    const formatMessageTime = (index) => {
+        const msgTime = new Date(chatStartTime.getTime() + index * 30000); // +30s per message
+        return msgTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    };
 
     // if (!window.DeviceMotionEvent) {
     //     return (

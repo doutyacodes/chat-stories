@@ -150,6 +150,7 @@ const StoryUserActions = ({ story }) => {
 
     try {
       const token = localStorage.getItem("token");
+      console.log("fdsfsdfsdf", token)
       const response = await fetch(`/api/author/${story.authorId}/subscribe`, {
         method: 'POST',
         headers: {
@@ -160,7 +161,7 @@ const StoryUserActions = ({ story }) => {
       setUserData(prev => ({
         ...prev,
         isSubscribed: data.isSubscribed,
-        subscribersCount: data.subscribersCount
+        subscribersCount: data.subscribersCount ?? prev.subscribersCount
       }));
     } catch (error) {
       console.error('Error updating subscription:', error);
@@ -275,7 +276,7 @@ const StoryUserActions = ({ story }) => {
         </div>
         <div className="flex-grow">
           <h2 className="text-xs font-semibold">{capitalizeFirstLetter(story?.author)}</h2>
-          <p className="text-[8px] text-gray-400">{userData.subscribersCount.toLocaleString()} Subscribers</p>
+          <p className="text-[8px] text-gray-400">{(userData.subscribersCount ?? 0).toLocaleString()} Subscribers</p>
         </div>
         <button 
           onClick={handleSubscribe}

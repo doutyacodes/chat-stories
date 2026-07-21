@@ -33,6 +33,44 @@ body, html {
   display: none;
 }
 
+.chat-bubble {
+  position: relative;
+  border-radius: 18px;
+  word-break: break-word;
+}
+
+/* Sent bubble */
+.chat-sent {
+  border-top-right-radius: 5px;
+}
+
+.chat-sent::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -7px;
+  width: 8px;
+  height: 14px;
+  background: #16a34a;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+/* Received bubble */
+.chat-received {
+  border-top-left-radius: 5px;
+}
+
+.chat-received::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -7px;
+  width: 8px;
+  height: 14px;
+  background: #374151;
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+}
+
 @layer base {}
 
 @layer base {

@@ -6,7 +6,7 @@ import { eq, and, count } from 'drizzle-orm';
 
 // Get user actions for a story (likes, saves, subscriptions)
 export async function GET(request, { params }) {
-  const { storyId } = params;
+  const { storyId } = await params;
   const authResult = await authenticate(request);
   
   try {

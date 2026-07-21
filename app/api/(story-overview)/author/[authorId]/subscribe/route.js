@@ -5,7 +5,7 @@ import { STORY_SUBSCRIPTIONS } from '../../../../../../utils/schema';
 import { eq, and, count } from 'drizzle-orm';
 
 export async function POST(request, { params }) {
-    const { authorId } = params;
+    const { authorId } = await params; 
     const authResult = await authenticate(request);
     if (!authResult.authenticated) {
       return authResult.response;
