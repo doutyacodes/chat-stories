@@ -41,7 +41,7 @@ const ContactUsPage = () => {
         {/* Header */}
         <div className="mb-14 md:mb-20">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-5 leading-tight">
-            Let's talk
+            Let&apos;s talk
           </h1>
           <p className="text-white/40 text-base md:text-lg max-w-md">
             Got a question, a story idea, or feedback? Drop us a message — we read everything.
@@ -147,7 +147,7 @@ const ContactUsPage = () => {
                 <p className="text-white/50 text-base text-justify">
                   Want to publish stories or games on Ping Tales? 
                   You can start right away — hit the Create button in the menu 
-                  and you're good to go.
+                  and you&apos;re good to go.
                 </p>
               </div>
             </div>

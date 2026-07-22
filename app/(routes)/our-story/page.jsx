@@ -40,14 +40,14 @@ const OurStoryPage = () => {
             something wild that happened last night. It can be a series of images 
             that set the mood before a single word is spoken. It can be a voice 
             note that pulls you in, or a video clip that drops you right into the 
-            middle of the action. On Ping Tales, stories aren't locked into one 
+            middle of the action. On Ping Tales, stories aren&apos;t locked into one 
             format — they use all of them together.
           </p>
 
           <p>
-            That's what makes this different. A story here might start with a 
+            That&apos;s what makes this different. A story here might start with a 
             photo, shift into a chat between two characters, pause for a voiceover 
-            that changes everything, and then hit you with a short clip you didn't 
+            that changes everything, and then hit you with a short clip you didn&apos;t 
             see coming. It feels alive because it uses every way we already 
             communicate — images, text, audio, video — layered into one experience 
             that keeps you hooked.
@@ -55,17 +55,17 @@ const OurStoryPage = () => {
 
           <p>
             But reading is only half of it. Some stories on Ping Tales are games. 
-            You're following along, getting deep into the plot, and then a quiz 
+            You&apos;re following along, getting deep into the plot, and then a quiz 
             shows up — answer it right and you unlock the next episode. Or the 
             story gives you a real-life challenge: walk a thousand steps before 
             you can continue, because your character is on the run. Or it tells 
             you to reach an actual location in your city, because the next chapter 
-            only unlocks when you get there. The story doesn't just stay on your 
+            only unlocks when you get there. The story doesn&apos;t just stay on your 
             phone. It spills into your real world.
           </p>
 
           <p>
-            And anyone can build this. You don't need to be a developer or a 
+            And anyone can build this. You don&apos;t need to be a developer or a 
             filmmaker. If you have a story to tell, Ping Tales gives you the 
             tools to tell it in any way you want — chats, images, audio, video, 
             quizzes, real-world challenges, all of it. The platform is as much 
@@ -88,8 +88,8 @@ const OurStoryPage = () => {
               where the detective needs to get to a safehouse — and your app tells 
               you to walk 2,000 steps before the next chapter opens. Or a treasure 
               hunt that sends you to a park bench in your neighborhood because 
-              that's where the clue is hidden. The line between the story and your 
-              life blurs on purpose. That's not a feature we added on top. That's 
+              that&apos;s where the clue is hidden. The line between the story and your 
+              life blurs on purpose. That&apos;s not a feature we added on top. That&apos;s 
               the kind of storytelling we built this whole thing for.
             </p>
           </div>
