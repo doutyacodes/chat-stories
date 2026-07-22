@@ -194,7 +194,7 @@ export default function NavBar() {
 
                             <Link
                               onClick={() => setIsMenuOpen(false)}
-                              href="/"
+                              href="/our-story"
                               className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
                             >
                               <Info className="w-4 h-4" />
@@ -203,7 +203,7 @@ export default function NavBar() {
                             
                             <Link 
                               onClick={() => setIsMenuOpen(false)}
-                              href="/"
+                              href="/contact-us"
                               className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
                             >
                               <Mail className="w-4 h-4" />
@@ -337,7 +337,7 @@ export default function NavBar() {
             </button>
 
             <button
-              onClick={() => navigateTo('/')}
+              onClick={() => navigateTo('/our-story')}
               className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
             >
               <div className="bg-orange-100 p-2 rounded-lg">
@@ -350,7 +350,7 @@ export default function NavBar() {
             </button>
 
             <button
-              onClick={() => navigateTo('/')}
+              onClick={() => navigateTo('/contact-us')}
               className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
             >
               <div className="bg-orange-100 p-2 rounded-lg">
