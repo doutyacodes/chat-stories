@@ -1,14 +1,20 @@
 'use client';
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Home, Book, User, Sparkles, Gamepad2, Info, Mail, Plus } from 'lucide-react';
+import { Menu, X, Home, Book, User, Sparkles, Gamepad2, Info, Mail, Plus, LogOut, LogIn } from 'lucide-react';
 import {ChevronDown, PenLine, Layout } from 'lucide-react';
 import Link from 'next/link';
+import useAuth from '@/app/hooks/useAuth';
 
 export default function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated, logout } = useAuth();
 
+  // Refs for click-outside detection
+  const createDropdownRef = useRef(null);
+  const menuDropdownRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   // Check if the current path should have a transparent navbar
   const shouldBeTransparent = () => {
@@ -22,16 +28,66 @@ export default function NavBar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isMobileCreateOpen, setIsMobileCreateOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close all desktop dropdowns
+  const closeAllDropdowns = useCallback(() => {
+    setIsCreateOpen(false);
+    setIsMenuOpen(false);
+  }, []);
+
+  // Toggle a specific dropdown, closing the other one first
+  const toggleCreateDropdown = () => {
+    setIsMenuOpen(false);
+    setIsCreateOpen(prev => !prev);
+  };
+
+  const toggleMenuDropdown = () => {
+    setIsCreateOpen(false);
+    setIsMenuOpen(prev => !prev);
+  };
+
+  // Click outside handler for desktop dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check if click is outside all dropdown refs
+      const isOutsideCreate = !createDropdownRef.current || !createDropdownRef.current.contains(event.target);
+      const isOutsideMenu = !menuDropdownRef.current || !menuDropdownRef.current.contains(event.target);
+
+      if (isOutsideCreate && isOutsideMenu) {
+        closeAllDropdowns();
+      }
+    };
+
+    if (isCreateOpen || isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCreateOpen, isMenuOpen, closeAllDropdowns]);
 
   const navigateTo = (path) => {
     setIsMobileCreateOpen(false);
+    setIsMobileMenuOpen(false);
+    closeAllDropdowns();
     router.push(path);
+  };
+
+  const handleLogout = () => {
+    closeAllDropdowns();
+    setIsMobileMenuOpen(false);
+    logout();
   };
 
   //function to check if we're on a chat story page
   const isChatStoryPage = () => {
     return pathname.match(/^\/stories\/\d+\/\d+\/chat-story$/);
   };
+
+  // Whether any desktop dropdown is open (used for overlay)
+  const isAnyDesktopDropdownOpen = isCreateOpen || isMenuOpen;
     
   return (
     <>
@@ -56,7 +112,7 @@ export default function NavBar() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden md:block">
-                  <ul className="flex gap-6 text-lg font-medium">
+                  <ul className="flex gap-6 text-lg font-medium items-center">
                     <li 
                       className="text-white hover:text-gray-300 cursor-pointer transition-colors"
                       onClick={() => router.push('/')}
@@ -77,10 +133,10 @@ export default function NavBar() {
                     </li>
 
                     {/* Create Dropdown */}
-                    <li className="relative">
+                    <li className="relative" ref={createDropdownRef}>
                       <div 
                         className="flex items-center gap-1 text-white hover:text-gray-300 cursor-pointer transition-colors"
-                        onClick={() => setIsCreateOpen(!isCreateOpen)}
+                        onClick={toggleCreateDropdown}
                       >
                         Create
                         <ChevronDown className={`w-4 h-4 transition-transform ${isCreateOpen ? 'rotate-180' : ''}`} />
@@ -92,7 +148,7 @@ export default function NavBar() {
                           
                           <div className="relative bg-white rounded-lg">
                             <Link
-                              onClick={() => setIsCreateOpen(!isCreateOpen)}
+                              onClick={() => setIsCreateOpen(false)}
                               href="/your-stories"
                               className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
                             >
@@ -101,7 +157,7 @@ export default function NavBar() {
                             </Link>
                             
                             <Link 
-                              onClick={() => setIsCreateOpen(!isCreateOpen)}
+                              onClick={() => setIsCreateOpen(false)}
                               href="/create-story"
                               className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
                             >
@@ -113,16 +169,9 @@ export default function NavBar() {
                       )}
                     </li>
 
-                    <li 
-                      className="text-white hover:text-gray-300 cursor-pointer transition-colors"
-                      onClick={() => router.push('/profile')}
-                    >
-                      Profile
-                    </li>
-
-                    {/* Menu Dropdown */}
-                    <li className="relative">
-                      <div onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                    {/* Menu Dropdown (now includes Profile + Logout) */}
+                    <li className="relative" ref={menuDropdownRef}>
+                      <div onClick={toggleMenuDropdown}>
                         <Menu 
                           className={`text-white hover:text-gray-300 cursor-pointer transition-colors ${
                             isMenuOpen ? 'rotate-180' : ''
@@ -135,6 +184,16 @@ export default function NavBar() {
                           
                           <div className="relative bg-white rounded-lg">
                             <Link
+                              onClick={() => setIsMenuOpen(false)}
+                              href="/profile"
+                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            >
+                              <User className="w-4 h-4" />
+                              <span className="font-medium">Profile</span>
+                            </Link>
+
+                            <Link
+                              onClick={() => setIsMenuOpen(false)}
                               href="/"
                               className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
                             >
@@ -143,12 +202,34 @@ export default function NavBar() {
                             </Link>
                             
                             <Link 
+                              onClick={() => setIsMenuOpen(false)}
                               href="/"
                               className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
                             >
                               <Mail className="w-4 h-4" />
                               <span className="font-medium">Contact Us</span>
                             </Link>
+
+                            <div className="my-1 border-t border-gray-100" />
+
+                            {isAuthenticated ? (
+                              <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                              >
+                                <LogOut className="w-4 h-4" />
+                                <span className="font-medium">Logout</span>
+                              </button>
+                            ) : (
+                              <Link
+                                onClick={() => setIsMenuOpen(false)}
+                                href="/login"
+                                className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                              >
+                                <LogIn className="w-4 h-4" />
+                                <span className="font-medium">Login</span>
+                              </Link>
+                            )}
                           </div>
                         </div>
                       )}
@@ -168,6 +249,14 @@ export default function NavBar() {
         <div 
           className="md:hidden fixed inset-0 bg-black/60 z-[101]"
           onClick={() => setIsMobileCreateOpen(false)}
+        />
+      )}
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 z-[101]"
+          onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
@@ -217,6 +306,95 @@ export default function NavBar() {
         </div>
       </div>
 
+      {/* Mobile Menu (Profile, Our Story, Contact, Logout) */}
+      <div ref={mobileMenuRef} className={`
+        md:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
+        ${isMobileMenuOpen ? 'translate-y-0' : 'translate-y-full'}
+      `}>
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Menu</h3>
+            <button 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1 hover:bg-gray-100 rounded-full"
+            >
+              <X size={24} className="text-gray-500" />
+            </button>
+          </div>
+          
+          <div className="space-y-2">
+            <button
+              onClick={() => navigateTo('/profile')}
+              className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
+            >
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <User size={24} className="text-orange-500" />
+              </div>
+              <div>
+                <div className="font-semibold">Profile</div>
+                <div className="text-sm text-gray-500">View your profile</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => navigateTo('/')}
+              className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
+            >
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <Info size={24} className="text-orange-500" />
+              </div>
+              <div>
+                <div className="font-semibold">Our Story</div>
+                <div className="text-sm text-gray-500">Learn more about us</div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => navigateTo('/')}
+              className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
+            >
+              <div className="bg-orange-100 p-2 rounded-lg">
+                <Mail size={24} className="text-orange-500" />
+              </div>
+              <div>
+                <div className="font-semibold">Contact Us</div>
+                <div className="text-sm text-gray-500">Get in touch with us</div>
+              </div>
+            </button>
+
+            <div className="my-1 border-t border-gray-100" />
+
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 p-4 text-left text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+              >
+                <div className="bg-red-100 p-2 rounded-lg">
+                  <LogOut size={24} className="text-red-500" />
+                </div>
+                <div>
+                  <div className="font-semibold">Logout</div>
+                  <div className="text-sm text-red-400">Sign out of your account</div>
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={() => navigateTo('/login')}
+                className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
+              >
+                <div className="bg-orange-100 p-2 rounded-lg">
+                  <LogIn size={24} className="text-orange-500" />
+                </div>
+                <div>
+                  <div className="font-semibold">Login</div>
+                  <div className="text-sm text-gray-500">Sign in to your account</div>
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
        {/* Mobile Bottom Navigation */}
        <div className="md:hidden bg-[#111111] fixed pt-1 pb-2.5 -bottom-1 left-0 right-0 z-[100] text-white shadow-lg">
         <div className="flex justify-around items-center h-16 px-4">
@@ -237,7 +415,7 @@ export default function NavBar() {
           </button>
           
           <button
-            onClick={() => setIsMobileCreateOpen(true)}
+            onClick={() => { setIsMobileMenuOpen(false); setIsMobileCreateOpen(true); }}
             className="flex flex-col items-center space-y-1 text-xs"
           >
             <div className="bg-gradient-to-r from-[rgb(4,188,100)] to-[rgb(4,188,100)] p-3 rounded-full shadow-lg">
@@ -255,15 +433,11 @@ export default function NavBar() {
           </button>
           
           <button
-            onClick={() => navigateTo('/profile')}
+            onClick={() => { setIsMobileCreateOpen(false); setIsMobileMenuOpen(true); }}
             className="flex flex-col items-center space-y-1 text-xs"
           >
-            <img
-              src="https://www.pingtales.com/user.png"
-              alt="Profile"
-              className="w-7 h-7 rounded-full object-cover"
-            />
-            <span>Profile</span>
+            <Menu size={20} />
+            <span>Menu</span>
           </button>
         </div>
       </div>

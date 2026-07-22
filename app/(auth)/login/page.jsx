@@ -23,6 +23,7 @@ const LoginPage = () => {
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token); // Store token
+        window.dispatchEvent(new Event("auth-change")); // Notify auth listeners
         toast.success("Logged in successfully!");
         router.replace("/home"); // Redirect to home
       }

@@ -251,6 +251,7 @@ const ProfilePage = () => {
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        window.dispatchEvent(new Event("auth-change")); // Notify auth listeners
       }
 
       setUserData(prev => ({ ...prev, [field]: formData[field] }));

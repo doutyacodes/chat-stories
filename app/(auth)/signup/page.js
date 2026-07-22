@@ -42,6 +42,7 @@ const SignupPage = () => {
 
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
+        window.dispatchEvent(new Event("auth-change")); // Notify auth listeners
         router.replace("/home");
         toast.success("Account created successfully!");
       }
