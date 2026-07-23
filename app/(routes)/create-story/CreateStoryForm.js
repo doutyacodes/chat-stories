@@ -48,6 +48,11 @@ const CreateStoryBasics = () => {
     tempImagePreview: null, // for crop modal
   });
 
+  const [allTags, setAllTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
+  const [ageRating, setAgeRating] = useState("13+");
+  const [language, setLanguage] = useState("English");
+
   const [storyData, setStoryData] = useState({
     name: "",
     synopsis: "",
@@ -60,7 +65,19 @@ const CreateStoryBasics = () => {
 
   useEffect(() => {
     fetchCategories();
+    fetchTags();
   }, []);
+
+  const fetchTags = async () => {
+    try {
+      const response = await fetch('/api/tags');
+      if (!response.ok) throw new Error('Failed to fetch tags');
+      const data = await response.json();
+      setAllTags(data);
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+    }
+  };
 
   const resetError = (field) => {
     setErrors(prev => ({ ...prev, [field]: "" }));
@@ -468,7 +485,10 @@ const CreateStoryBasics = () => {
           category: storyData.category,
           coverImagePath: uploadedFileName,
           trailerPath: trailerFileName,
-          storyType: storyData.storyType
+          storyType: storyData.storyType,
+          ageRating: ageRating,
+          language: language,
+          tagIds: selectedTagIds
         })
       });
 
@@ -578,6 +598,69 @@ const CreateStoryBasics = () => {
                 {errors.category && (
                   <p className="mt-2 text-sm text-red-500">{errors.category}</p>
                 )}
+              </div>
+
+              {/* Age Rating & Language */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Age Rating</label>
+                  <select
+                    value={ageRating}
+                    onChange={(e) => setAgeRating(e.target.value)}
+                    className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-600 transition-colors"
+                  >
+                    <option value="6+">6+ (General Audience)</option>
+                    <option value="13+">13+ (Teens & Above)</option>
+                    <option value="18+">18+ (Mature Audience Only)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Language</label>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:ring-2 focus:ring-purple-600 transition-colors"
+                  >
+                    <option value="English">English</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Story Tags */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Story Tags <span className="text-gray-400 font-normal">(Select up to 5)</span>
+                </label>
+                <div className="flex flex-wrap gap-2 p-4 rounded-lg bg-gray-800 border border-gray-700">
+                  {allTags.map((tag) => {
+                    const isSelected = selectedTagIds.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedTagIds(selectedTagIds.filter(id => id !== tag.id));
+                          } else {
+                            if (selectedTagIds.length >= 5) {
+                              alert("You can select up to 5 tags maximum.");
+                              return;
+                            }
+                            setSelectedTagIds([...selectedTagIds, tag.id]);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                          isSelected
+                            ? "bg-purple-600 text-white shadow-md shadow-purple-500/30"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        }`}
+                      >
+                        {isSelected ? `✓ ${tag.name}` : `+ ${tag.name}`}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>

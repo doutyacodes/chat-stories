@@ -290,18 +290,18 @@ const StoryUserActions = ({ story }) => {
 
       {/* Action Icons */}
       <div className="flex justify-between items-center my-4 text-white">
-        <div className="flex flex-col items-center gap-1">
-          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
-            <span className="text-sm">6</span>
+        <div className="flex flex-col items-center gap-1" title={`${story?.age_rating || '13+'} and Above`}>
+          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center font-bold px-1">
+            <span className="text-xs">{story?.age_rating || '13+'}</span>
           </div>
           <span className="text-[8px]">Age & Above</span>
         </div>
 
-        <div className="flex flex-col items-center gap-1">
-          <div className="w-8 h-8 flex items-center justify-center">
-            <span className="text-2xl font-bold">EN</span>
+        <div className="flex flex-col items-center gap-1" title={story?.language || 'English'}>
+          <div className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
+            <span className="text-xs font-bold">{story?.language ? story.language.substring(0, 3).toUpperCase() : 'ENG'}</span>
           </div>
-          <span className="text-[8px]">Language</span>
+          <span className="text-[8px]">{story?.language || 'Language'}</span>
         </div>
 
         <div className="flex flex-col items-center gap-1 cursor-pointer" onClick={handleLike}>

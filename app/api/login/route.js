@@ -1,4 +1,3 @@
-// app/api/login/route.js
 import { compare } from "bcryptjs";
 import { USERS } from "../../../utils/schema";
 import { db } from "../../../utils";
@@ -8,11 +7,19 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
 
+function calculateAge(dobString) {
+  if (!dobString) return null;
+  const dob = new Date(dobString);
+  if (isNaN(dob.getTime())) return null;
+  const diffMs = Date.now() - dob.getTime();
+  const ageDate = new Date(diffMs);
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
+
 export async function POST(req) {
   try {
-    const { email , password } = await req.json();
+    const { email, password } = await req.json();
 
-    // Fetch user from the database by username
     const users = await db
       .select()
       .from(USERS)
@@ -37,14 +44,21 @@ export async function POST(req) {
       );
     }
 
+    const userAge = user.date_of_birth ? calculateAge(user.date_of_birth) : null;
+
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, username: user.username },
-      JWT_SECRET,
+      {
+        id: user.id,
+        username: user.username,
+        date_of_birth: user.date_of_birth,
+        age: userAge,
+      },
+      JWT_SECRET
     );
 
     return NextResponse.json(
-      { message: "Login successful", token },
+      { message: "Login successful", token, age: userAge },
       { status: 200 }
     );
   } catch (error) {

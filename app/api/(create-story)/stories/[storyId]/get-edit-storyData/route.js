@@ -1,12 +1,10 @@
-// app/api/stories/[storyId]/route.ts
 import { NextResponse } from 'next/server';
 import { eq, and } from 'drizzle-orm';
-import { CHARACTERS, EPISODES, STORIES } from '@/utils/schema';
+import { CHARACTERS, EPISODES, STORIES, STORY_TAGS } from '@/utils/schema';
 import { db } from '@/utils';
 import { authenticate } from '@/lib/jwtMiddleware';
 
 export async function GET(request, { params }) {
-
   const { storyId } = await params;
 
   const authResult = await authenticate(request, true);
@@ -14,10 +12,8 @@ export async function GET(request, { params }) {
     return authResult.response;
   }
   const userId = authResult.decoded_Data.id;
-console.log("story id , user id", storyId, userId);
 
   try {
-    // Fetch story details with user verification
     const story = await db
       .select({
         id: STORIES.id,
@@ -26,8 +22,9 @@ console.log("story id , user id", storyId, userId);
         category_id: STORIES.category_id,
         storyType: STORIES.story_type,
         coverImagePath: STORIES.cover_img,
-        // is_published: STORIES.is_published,
-        // has_episodes: STORIES.has_episodes
+        trailerPath: STORIES.trailer,
+        ageRating: STORIES.age_rating,
+        language: STORIES.language,
       })
       .from(STORIES)
       .where(and(
@@ -43,33 +40,16 @@ console.log("story id , user id", storyId, userId);
       );
     }
 
-    // Fetch episodes
-    // const episodes = await db
-    //   .select({
-    //     id: EPISODES.id,
-    //     name: EPISODES.name,
-    //     synopsis: EPISODES.synopsis,
-    //     episode_number: EPISODES.episode_number
-    //   })
-    //   .from(EPISODES)
-    //   .where(eq(EPISODES.story_id, storyId))
-    //   .orderBy(EPISODES.episode_number);
+    const tags = await db
+      .select({ tag_id: STORY_TAGS.tag_id })
+      .from(STORY_TAGS)
+      .where(eq(STORY_TAGS.story_id, storyId));
 
-    // Fetch characters (only for chat stories)
-    // let characters = [];
-    // if (story[0].story_type === 'chat') {
-    //   characters = await db
-    //     .select({
-    //       id: CHARACTERS.id,
-    //       name: CHARACTERS.name,
-    //       is_sender: CHARACTERS.is_sender
-    //     })
-    //     .from(CHARACTERS)
-    //     .where(eq(CHARACTERS.story_id, storyId));
-    // }
+    const tagIds = tags.map(t => t.tag_id);
 
     return NextResponse.json({
       ...story[0],
+      tagIds,
     }, { status: 200 });
 
   } catch (error) {

@@ -495,6 +495,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Loader2, BookOpen, Gamepad2, Bookmark, Volume2, VolumeX } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import SignInRequiredDialog from '../../components/SignInRequiredDialog';
+import AgeWarningModal from '../../components/AgeWarningModal';
 
 const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 const BASE_VIDEO_URL = 'https://wowfy.in/testusr/videos/';
@@ -507,6 +508,9 @@ const ImageCarousel = () => {
   const [isMuted, setIsMuted] = useState(true);
   const [savedStories, setSavedStories] = useState({});
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [selectedStoryForWarning, setSelectedStoryForWarning] = useState(null);
+  const [showAgeWarningModal, setShowAgeWarningModal] = useState(false);
+
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const router = useRouter();
@@ -516,6 +520,60 @@ const ImageCarousel = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragScrollLeft, setDragScrollLeft] = useState(0);
+
+  const handleOpenStory = (story) => {
+    if (!story) return;
+    const rating = story.age_rating || story.ageRating || '13+';
+    if (rating === '18+') {
+      setSelectedStoryForWarning(story);
+      setShowAgeWarningModal(true);
+    } else {
+      const targetId = story.story_id || story.id || story.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
+
+  const confirmOpenStory = () => {
+    if (selectedStoryForWarning) {
+      const targetId = selectedStoryForWarning.story_id || selectedStoryForWarning.id || selectedStoryForWarning.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
+
+  const StoryCard = ({ story }) => {
+    const handleClick = () => {
+      handleOpenStory(story);
+    };
+
+    return (
+      <div 
+        className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105 relative"
+        onClick={handleClick}
+      >
+        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm z-10 px-2 py-1 rounded-full">
+          <p className="text-xs text-purple-400 font-medium">
+            {story.story_type === 'game' ? (
+              <Gamepad2
+                className="w-5 h-5 md:w-6 md:h-6 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" 
+              />
+            ) : (
+              <BookOpen 
+                className="w-5 h-5 md:w-6 md:h-6 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" 
+              />
+            )}
+          </p>
+        </div>
+        <img 
+          src={`${BASE_IMAGE_URL}${story.cover_img}`}
+          alt={story.title}
+          className="w-full h-28 md:h-44 object-cover rounded-2xl border-[6px] border-white mb-2"
+        />
+        <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
+          {story.title}
+        </p>
+      </div>
+    );
+  };
 
   const isLoggedIn = () => {
     return typeof window !== 'undefined' && !!localStorage.getItem('token');
@@ -695,40 +753,7 @@ const ImageCarousel = () => {
     );
   }
 
-  const StoryCard = ({ story }) => {
-    const handleClick = () => {
-      router.push(`/stories/${story.story_id}/story-overview`);
-    };
 
-    return (
-      <div 
-        className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105 relative"
-        onClick={handleClick}
-      >
-        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm z-10 px-2 py-1 rounded-full">
-          <p className="text-xs text-purple-400 font-medium">
-            {story.story_type === 'game' ? (
-              <Gamepad2
-                className="w-5 h-5 md:w-6 md:h-6 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" 
-              />
-            ) : (
-              <BookOpen 
-                className="w-5 h-5 md:w-6 md:h-6 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" 
-              />
-            )}
-          </p>
-        </div>
-        <img 
-          src={`${BASE_IMAGE_URL}${story.cover_img}`}
-          alt={story.title}
-          className="w-full h-28 md:h-44 object-cover rounded-2xl border-[6px] border-white mb-2"
-        />
-        <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
-          {story.title}
-        </p>
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-black pb-16">
@@ -759,7 +784,7 @@ const ImageCarousel = () => {
                 transition-all
                 duration-700
                 "
-                onClick={() => router.push(`/stories/${currentStory.story_id}/story-overview`)}
+                onClick={() => handleOpenStory(currentStory)}
               >
                 {currentStory.trailer && isTrailerVideo(currentStory.trailer) ? (
                   <video
@@ -848,7 +873,7 @@ const ImageCarousel = () => {
                     font-medium
                   "
                 >
-                  13+
+                  {currentStory.age_rating || '13+'}
                 </span>
 
                 <span className="text-white/20">•</span>
@@ -860,7 +885,7 @@ const ImageCarousel = () => {
                 <span className="text-white/20">•</span>
 
                 <span className="text-white/70">
-                  English
+                  {currentStory.language || 'English'}
                 </span>
 
                 {currentStory.release_year && (
@@ -934,9 +959,7 @@ const ImageCarousel = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push(
-                      `/stories/${currentStory.story_id}/story-overview`
-                    );
+                    handleOpenStory(currentStory);
                   }}
                   className="h-14 min-w-[200px] md:min-w-[280px] px-8 md:px-12 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#9900FF] to-[#E60073] hover:from-[#1A75FF] hover:via-[#A61AFF] hover:to-[#FF1A82] text-white font-bold text-lg md:text-xl tracking-wide shadow-lg shadow-purple-900/40 hover:shadow-[0_0_30px_rgba(153,0,255,0.5)] transition-all duration-300 active:scale-95 flex items-center justify-center"
                 >
@@ -1089,6 +1112,14 @@ const ImageCarousel = () => {
         setShowAuthDialog={setShowAuthDialog}
         actionType="save"
         router={router}
+      />
+
+      {/* Age Warning & Content Warning Modal */}
+      <AgeWarningModal
+        isOpen={showAgeWarningModal}
+        onClose={() => setShowAgeWarningModal(false)}
+        onConfirm={confirmOpenStory}
+        story={selectedStoryForWarning}
       />
     </div>
   );

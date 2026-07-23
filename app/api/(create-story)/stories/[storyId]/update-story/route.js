@@ -293,51 +293,37 @@ export async function PATCH(request, { params }) {
     if (data.synopsis !== undefined) updateData.synopsis = data.synopsis;
     if (data.category !== undefined) updateData.category_id = parseInt(data.category);
     if (data.storyType !== undefined) updateData.story_type = data.storyType;
-    
+    if (data.trailerPath !== undefined) updateData.trailer = data.trailerPath;
+    if (data.ageRating !== undefined) updateData.age_rating = data.ageRating;
+    if (data.language !== undefined) updateData.language = data.language;
+
     // Handle cover image update
     if (data.coverImagePath !== undefined && data.coverImagePath !== existingStory[0].cover_img) {
       updateData.cover_img = data.coverImagePath;
-      
-      // Delete the old image if a new one is provided
-      if (existingStory[0].cover_img) {
+    }
+
+    // Sync tags if tagIds is provided
+    if (Array.isArray(data.tagIds)) {
+      const { STORY_TAGS } = await import('@/utils/schema');
+      await db.delete(STORY_TAGS).where(eq(STORY_TAGS.story_id, parseInt(storyId)));
+      for (const tagId of data.tagIds) {
         try {
-          const sftp = new Client();
-          await sftp.connect({
-            host: '68.178.163.247',
-            port: 22,
-            username: 'devusr',
-            password: 'Wowfyuser#123',
+          await db.insert(STORY_TAGS).values({
+            story_id: parseInt(storyId),
+            tag_id: parseInt(tagId),
           });
-          
-          const cPanelDirectory = '/home/devusr/public_html/testusr/images';
-          const oldImagePath = `${cPanelDirectory}/${existingStory[0].cover_img}`;
-          
-          // Check if file exists before attempting to delete
-          const fileExists = await sftp.exists(oldImagePath);
-          if (fileExists) {
-            await sftp.delete(oldImagePath);
-          }
-          
-          await sftp.end();
-        } catch (sftpError) {
-          console.error('Error deleting old image:', sftpError);
-          // Continue with the update even if image deletion fails
+        } catch (tagErr) {
+          console.error("Error updating story tag:", tagErr);
         }
       }
     }
     
-    // Skip update if no fields have changed
-    if (Object.keys(updateData).length === 0) {
-      return NextResponse.json(
-        { message: 'No changes to update' },
-        { status: 200 }
-      );
+    // Update the story record if any story fields changed
+    if (Object.keys(updateData).length > 0) {
+      await db.update(STORIES)
+        .set(updateData)
+        .where(eq(STORIES.id, parseInt(storyId)));
     }
-    
-    // Update the story record
-    await db.update(STORIES)
-      .set(updateData)
-      .where(eq(STORIES.id, parseInt(storyId)));
     
     return NextResponse.json(
       {

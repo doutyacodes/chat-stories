@@ -22,6 +22,7 @@ export const USERS = mysqlTable("users", {
   email: varchar("email", {lenght: 255}).notNull().unique(),
   username: varchar("username", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
+  date_of_birth: date("date_of_birth"),
   created_at: timestamp("created_at").defaultNow(),
   updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
 });
@@ -53,11 +54,26 @@ export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
     category_id: int("category_id").notNull().references(() => CATEGORIES.id),
     cover_img: varchar("cover_img", { length: 255 }),
     trailer: varchar("trailer", { length: 255 }).default(null),
+    age_rating: varchar("age_rating", { length: 10 }).default("13+"),
+    language: varchar("language", { length: 50 }).default("English"),
     story_type: varchar("story_type", { length: 50 }).notNull(),
     has_episodes: boolean("has_episodes").notNull().default(false), // New field
     is_published: boolean("is_published").notNull().default(false), // New field for visibility
     created_at: timestamp("created_at").defaultNow(),
     updated_at: timestamp("updated_at").defaultNow().onUpdateNow(),
+  });
+
+  export const TAGS = mysqlTable("tags", {
+    id: int("id").primaryKey().autoincrement(),
+    name: varchar("name", { length: 100 }).notNull().unique(),
+    created_at: timestamp("created_at").defaultNow(),
+  });
+
+  export const STORY_TAGS = mysqlTable("story_tags", {
+    id: int("id").primaryKey().autoincrement(),
+    story_id: int("story_id").notNull().references(() => STORIES.id),
+    tag_id: int("tag_id").notNull().references(() => TAGS.id),
+    created_at: timestamp("created_at").defaultNow(),
   });
 
   export const EPISODES = mysqlTable("episodes", {

@@ -14,7 +14,6 @@ export async function GET(request, { params }) {
 //   }
 
   try {
-    // Fetch story details
     const storyDetails = await db
       .select({
         id: STORIES.id,
@@ -25,6 +24,8 @@ export async function GET(request, { params }) {
         categoryId: STORIES.category_id,
         hasEpisodes: STORIES.has_episodes,
         authorId: STORIES.user_id,
+        ageRating: STORIES.age_rating,
+        language: STORIES.language,
       })
       .from(STORIES)
       .where(eq(STORIES.id, parseInt(storyId)));
@@ -37,6 +38,20 @@ export async function GET(request, { params }) {
     }
 
     const story = storyDetails[0];
+
+    // Fetch tags for story
+    let storyTags = [];
+    try {
+      const { TAGS, STORY_TAGS } = await import('@/utils/schema');
+      const tagRecords = await db
+        .select({ name: TAGS.name })
+        .from(STORY_TAGS)
+        .innerJoin(TAGS, eq(STORY_TAGS.tag_id, TAGS.id))
+        .where(eq(STORY_TAGS.story_id, story.id));
+      storyTags = tagRecords.map(t => t.name);
+    } catch (e) {
+      console.error("Error fetching story tags:", e);
+    }
 
     // Fetch episodes related to the story
     const episodes = await db
@@ -67,17 +82,18 @@ export async function GET(request, { params }) {
         title: STORIES.title,
         coverImg: STORIES.cover_img,
         storyType: STORIES.story_type,
+        ageRating: STORIES.age_rating,
+        language: STORIES.language,
     })
     .from(STORIES)
     .where(
         and(
         eq(STORIES.category_id, story.categoryId),
         eq(STORIES.is_published, true),
-        ne(STORIES.id, story.id) // Use the `ne` function for "not equal"
+        ne(STORIES.id, story.id)
         )
     );
 
-    // Format similar stories data
     const similarStoriesData = {
       id: 'similar',
       title: 'Similar Stories',
@@ -86,6 +102,8 @@ export async function GET(request, { params }) {
         title: similar.title,
         cover_img: similar.coverImg,
         story_type: similar.storyType,
+        age_rating: similar.ageRating,
+        language: similar.language,
       })),
     };
 
@@ -98,6 +116,9 @@ export async function GET(request, { params }) {
         cover_img: story.coverImg,
         story_type: story.storyType,
         has_episodes: story.hasEpisodes,
+        age_rating: story.ageRating || '13+',
+        language: story.language || 'English',
+        tags: storyTags,
         author,
         authorId: authorDetails[0]?.authorId
       },

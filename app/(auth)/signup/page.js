@@ -106,6 +106,25 @@ const SignupPage = () => {
               </p>
             )}
           </div>
+          <div className="mb-4">
+            <label
+              htmlFor="date_of_birth"
+              className="block text-sm text-gray-300 font-medium mb-2"
+            >
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              id="date_of_birth"
+              {...register("date_of_birth", { required: "Date of birth is required" })}
+              className="w-full px-4 py-3 border-none rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+            {errors.date_of_birth && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.date_of_birth.message}
+              </p>
+            )}
+          </div>
           <div className="mb-6">
             <label
               htmlFor="password"

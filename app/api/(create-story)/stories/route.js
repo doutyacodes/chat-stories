@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { STORIES, CHARACTERS, EPISODES } from '../../../../utils/schema';
+import { STORIES, CHARACTERS, EPISODES, STORY_TAGS } from '../../../../utils/schema';
 import Client from 'ssh2-sftp-client';
 import fs from 'fs';
 import path from 'path';
@@ -17,10 +17,8 @@ export async function POST(request) {
   const localTempDir = os.tmpdir();
 
   try {
-    // Parse the JSON body instead of formData since we're sending JSON now
     const data = await request.json();
 
-    // Validate required fields
     if (!data.name || !data.synopsis || !data.category || !data.coverImagePath) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -28,8 +26,6 @@ export async function POST(request) {
       );
     }
 
-
-    // Save story in database
     const storyRecord = await db.insert(STORIES).values({
       title: data.name,
       synopsis: data.synopsis,
@@ -38,10 +34,25 @@ export async function POST(request) {
       user_id: userId,
       cover_img: data.coverImagePath,
       trailer: data.trailerPath || null,
+      age_rating: data.ageRating || '13+',
+      language: data.language || 'English',
       is_published: false,
     });
 
     const storyId = storyRecord[0].insertId;
+
+    if (Array.isArray(data.tagIds) && data.tagIds.length > 0) {
+      for (const tagId of data.tagIds) {
+        try {
+          await db.insert(STORY_TAGS).values({
+            story_id: storyId,
+            tag_id: parseInt(tagId),
+          });
+        } catch (err) {
+          console.error("Error inserting story tag:", err);
+        }
+      }
+    }
 
     // Handle image upload
     // if (coverImage) {
