@@ -86,7 +86,7 @@ export default function AgeWarningModal({
               </div>
 
               <AlertDialogDescription className="text-neutral-400 text-sm leading-relaxed text-justify">
-                This title <span className="font-medium text-neutral-200">"{story.title}"</span> is rated 18+ for mature audiences. Please confirm that you are at least 18 years old to access this content.
+                This title <span className="font-medium text-neutral-200">&quot;{story.title}&quot;</span> is rated 18+ for mature audiences. Please confirm that you are at least 18 years old to access this content.
               </AlertDialogDescription>
             </AlertDialogHeader>
 
@@ -120,7 +120,7 @@ export default function AgeWarningModal({
 
               <div className="space-y-3">
                 <p className="text-neutral-400 text-sm leading-relaxed text-justify">
-                  <span className="font-medium text-neutral-200">"{story.title}"</span> contains themes intended for adult audiences.
+                  <span className="font-medium text-neutral-200">&quot;{story.title}&quot;</span> contains themes intended for adult audiences.
                 </p>
 
                 {tags.length > 0 && (
