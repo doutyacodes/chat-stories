@@ -3,9 +3,9 @@ export default {
     dialect: 'mysql',
     dbCredentials: {
         host: "68.178.163.247",
-        user: "devusr_wowfyuser",
-        database: "devusr_chat_stories",
-        password: '###Wowfy123'
+        user: "devuser_chat_stories_user",
+        database: "devuser_chat_stories",
+        password: 'Wowfy#user'
     }
 };
 

@@ -5,6 +5,7 @@ import {
   STORY_VIEWS,
   CATEGORIES,
   USER_LAST_READ,
+  EPISODES,
 } from '../../../../utils/schema';
 import { db } from '../../../../utils';
 import { eq, gte, and, or, isNull, lt, sql, desc } from 'drizzle-orm';
@@ -40,8 +41,10 @@ export async function GET(request) {
         title: STORIES.title,
         synopsis: STORIES.synopsis,
         cover_img: STORIES.cover_img,
+        trailer: STORIES.trailer,
         story_type: STORIES.story_type,
         story_id: CAROUSEL_STORIES.story_id,
+        episode_count: sql`(SELECT COUNT(*) FROM episodes WHERE episodes.story_id = ${STORIES.id})`.as('episode_count'),
       })
       .from(CAROUSEL_STORIES)
       .innerJoin(STORIES, eq(CAROUSEL_STORIES.story_id, STORIES.id))

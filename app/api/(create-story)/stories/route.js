@@ -34,9 +34,10 @@ export async function POST(request) {
       title: data.name,
       synopsis: data.synopsis,
       category_id: parseInt(data.category),
-      story_type: data.storyType, // Hardcoded as per original code
+      story_type: data.storyType,
       user_id: userId,
-      cover_img: data.coverImagePath, // Use the filename from cPanel upload
+      cover_img: data.coverImagePath,
+      trailer: data.trailerPath || null,
       is_published: false,
     });
 

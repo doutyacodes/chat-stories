@@ -52,6 +52,7 @@ export const CAROUSEL_STORIES = mysqlTable("carousel_stories", {
     user_id: int("user_id").notNull().references(() => USERS.id), // New field referencing USERS
     category_id: int("category_id").notNull().references(() => CATEGORIES.id),
     cover_img: varchar("cover_img", { length: 255 }),
+    trailer: varchar("trailer", { length: 255 }).default(null),
     story_type: varchar("story_type", { length: 50 }).notNull(),
     has_episodes: boolean("has_episodes").notNull().default(false), // New field
     is_published: boolean("is_published").notNull().default(false), // New field for visibility

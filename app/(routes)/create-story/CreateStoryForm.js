@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, X, Move } from "lucide-react";
+import { Upload, X, Move, Film, Image as ImageIcon } from "lucide-react";
 import ReactCrop from 'react-image-crop';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import 'react-image-crop/dist/ReactCrop.css';
+import axios from 'axios';
 
 const CreateStoryBasics = () => {
   const router = useRouter();
@@ -19,12 +20,32 @@ const CreateStoryBasics = () => {
   const [completedCrop, setCompletedCrop] = useState(null);
   const [showCropModal, setShowCropModal] = useState(false);
   const fileInputRef = useRef(null);
+  const trailerInputRef = useRef(null);
   const imgRef = useRef(null);
+  const trailerImgRef = useRef(null);
 
   const [crop, setCrop] = useState({
     unit: '%',
     width: 90,
     aspect: 16 / 9
+  });
+
+  // Trailer-specific crop state
+  const [trailerCrop, setTrailerCrop] = useState({
+    unit: '%',
+    width: 90,
+    aspect: 16 / 9
+  });
+  const [completedTrailerCrop, setCompletedTrailerCrop] = useState(null);
+  const [showTrailerCropModal, setShowTrailerCropModal] = useState(false);
+
+  // Trailer state
+  const [trailerData, setTrailerData] = useState({
+    file: null,
+    preview: null,
+    type: null, // 'video' or 'image'
+    uploadedFileName: null,
+    tempImagePreview: null, // for crop modal
   });
 
   const [storyData, setStoryData] = useState({
@@ -253,10 +274,172 @@ const CreateStoryBasics = () => {
         throw new Error(data.error);
       }
       
-      return data.filePath; // This should be the filename returned from PHP
+      return data.filePath;
     } catch (error) {
       throw new Error(`Image upload failed: ${error.message}`);
     }
+  };
+
+  // Upload trailer media (video or image)
+  const uploadTrailerToCPanel = async (file) => {
+    const isVideo = file.type.startsWith('video/');
+    const formData = new FormData();
+    formData.append(isVideo ? 'videoFile' : 'coverImage', file);
+
+    try {
+      const response = await axios.post(
+        `https://wowfy.in/testusr/${isVideo ? 'upload2.php' : 'upload.php'}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      if (response.data.success || response.data.filePath) {
+        return response.data.filePath;
+      }
+      throw new Error(response.data.error || 'Upload failed');
+    } catch (error) {
+      throw new Error(`Trailer upload failed: ${error.message}`);
+    }
+  };
+
+  // Handle trailer file selection
+  const handleTrailerUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const isVideo = file.type.startsWith('video/');
+    const isImage = file.type.startsWith('image/');
+
+    if (!isVideo && !isImage) {
+      setErrors(prev => ({ ...prev, general: 'Please select a video or image file for the trailer.' }));
+      return;
+    }
+
+    if (isVideo) {
+      const videoUrl = URL.createObjectURL(file);
+      setTrailerData({
+        file: file,
+        preview: videoUrl,
+        type: 'video',
+        uploadedFileName: null,
+        tempImagePreview: null,
+      });
+    } else {
+      // Image — open crop modal
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTrailerData(prev => ({
+          ...prev,
+          file: file,
+          type: 'image',
+          tempImagePreview: reader.result,
+          preview: null,
+          uploadedFileName: null,
+        }));
+        setShowTrailerCropModal(true);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if (trailerInputRef.current) {
+      trailerInputRef.current.value = '';
+    }
+  };
+
+  // Trailer image crop handlers
+  const onTrailerImageLoad = (image) => {
+    trailerImgRef.current = image.target;
+    setTrailerCrop({
+      unit: '%',
+      width: 90,
+      x: 5,
+      y: 5,
+      aspect: 16 / 9
+    });
+  };
+
+  const getCroppedTrailerImg = async () => {
+    try {
+      const image = trailerImgRef.current;
+      const canvas = document.createElement('canvas');
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
+      canvas.width = completedTrailerCrop.width;
+      canvas.height = completedTrailerCrop.height;
+      const ctx = canvas.getContext('2d');
+
+      ctx.drawImage(
+        image,
+        completedTrailerCrop.x * scaleX,
+        completedTrailerCrop.y * scaleY,
+        completedTrailerCrop.width * scaleX,
+        completedTrailerCrop.height * scaleY,
+        0,
+        0,
+        completedTrailerCrop.width,
+        completedTrailerCrop.height
+      );
+
+      return new Promise((resolve) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return;
+            blob.name = 'cropped-trailer.jpeg';
+            resolve(blob);
+          },
+          'image/jpeg',
+          0.95
+        );
+      });
+    } catch (e) {
+      console.error('Error creating cropped trailer image:', e);
+      return null;
+    }
+  };
+
+  const handleTrailerCropComplete = async () => {
+    try {
+      if (completedTrailerCrop?.width && completedTrailerCrop?.height) {
+        const croppedBlob = await getCroppedTrailerImg();
+        if (croppedBlob) {
+          const croppedFile = new File([croppedBlob], 'cropped-trailer.jpg', { type: 'image/jpeg' });
+          const previewUrl = URL.createObjectURL(croppedBlob);
+          setTrailerData(prev => ({
+            ...prev,
+            file: croppedFile,
+            preview: previewUrl,
+            tempImagePreview: null,
+          }));
+        }
+      }
+    } catch (e) {
+      console.error('Error completing trailer crop:', e);
+    }
+    setShowTrailerCropModal(false);
+  };
+
+  const handleTrailerCropModalClose = () => {
+    setShowTrailerCropModal(false);
+    setTrailerData({
+      file: null,
+      preview: null,
+      type: null,
+      uploadedFileName: null,
+      tempImagePreview: null,
+    });
+  };
+
+  const removeTrailer = () => {
+    if (trailerData.preview) {
+      URL.revokeObjectURL(trailerData.preview);
+    }
+    setTrailerData({
+      file: null,
+      preview: null,
+      type: null,
+      uploadedFileName: null,
+      tempImagePreview: null,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -266,6 +449,12 @@ const CreateStoryBasics = () => {
     setIsUploading(true);
     try {
       const uploadedFileName = await uploadImageToCPanel(storyData.coverImage);
+
+      // Upload trailer if provided
+      let trailerFileName = null;
+      if (trailerData.file) {
+        trailerFileName = await uploadTrailerToCPanel(trailerData.file);
+      }
       
       const response = await fetch('/api/stories', {
         method: 'POST',
@@ -278,6 +467,7 @@ const CreateStoryBasics = () => {
           synopsis: storyData.synopsis,
           category: storyData.category,
           coverImagePath: uploadedFileName,
+          trailerPath: trailerFileName,
           storyType: storyData.storyType
         })
       });
@@ -444,6 +634,66 @@ const CreateStoryBasics = () => {
                   <p className="mt-2 text-sm text-red-500">{errors.coverImage}</p>
                 )}
               </div>
+
+              {/* Trailer Upload Section */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Trailer (Optional)</label>
+                <p className="text-sm text-gray-400 mb-2">
+                  Upload a landscape video or image as the trailer. This will be shown in the home carousel. 
+                  If no trailer is provided, the cover image will be used instead.
+                  Recommended aspect ratio: 16:9.
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <input
+                      ref={trailerInputRef}
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={handleTrailerUpload}
+                      className="hidden"
+                      id="trailerUpload"
+                      disabled={isUploading}
+                    />
+                    <label 
+                      htmlFor="trailerUpload" 
+                      className={`w-full p-3 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center cursor-pointer hover:bg-gray-700 transition ${
+                        isUploading ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <Film className="mr-2 w-5 h-5" /> Upload Trailer (Video or Image)
+                    </label>
+                  </div>
+                  {trailerData.preview && (
+                    <div className="w-48 h-28 relative rounded-lg overflow-hidden border border-gray-700">
+                      {trailerData.type === 'video' ? (
+                        <video
+                          src={trailerData.preview}
+                          className="w-full h-full object-cover"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={trailerData.preview}
+                          alt="Trailer Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={removeTrailer}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"
+                        disabled={isUploading}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      <div className="absolute bottom-1 left-1 bg-black/70 text-white text-[10px] px-1.5 py-0.5 rounded">
+                        {trailerData.type === 'video' ? 'Video' : 'Image'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <button
@@ -489,6 +739,46 @@ const CreateStoryBasics = () => {
               <button
                 type="button"
                 onClick={handleCropComplete}
+                className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors"
+              >
+                Apply Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Trailer Image Crop Modal */}
+      {showTrailerCropModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-4xl w-full">
+            <h3 className="text-xl font-semibold mb-4">Crop Trailer Image</h3>
+            <div className="relative max-h-[60vh] overflow-auto mb-4">
+              <ReactCrop
+                crop={trailerCrop}
+                onChange={c => setTrailerCrop(c)}
+                onComplete={c => setCompletedTrailerCrop(c)}
+                aspect={16/9}
+              >
+                <img
+                  ref={trailerImgRef}
+                  src={trailerData.tempImagePreview}
+                  alt="Trailer Crop Preview"
+                  onLoad={onTrailerImageLoad}
+                  className="max-w-full"
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={handleTrailerCropModalClose}
+                className="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleTrailerCropComplete}
                 className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors"
               >
                 Apply Crop
