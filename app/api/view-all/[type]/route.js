@@ -76,7 +76,7 @@ export async function GET(request, { params }) {
       // Set category info for trending/latest
       categoryInfo = {
         title: type === 'trending' ? 'Trending Stories' : 'Latest Stories',
-        cover_img: type === 'trending' ? 'trending-cover.jpg' : 'latest-cover.jpg',
+        cover_img: null,
         description: type === 'trending' 
           ? 'Most popular stories from the past week' 
           : 'Recently added stories'

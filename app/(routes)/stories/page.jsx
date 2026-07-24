@@ -1,7 +1,8 @@
-"use client"
-import React, { useEffect, useState, useRef } from 'react';
-import { Search } from 'lucide-react';
+"use client";
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Search, ChevronDown, SlidersHorizontal, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import GridSkeleton from '../../components/GridSkeleton';
 
 const SortOptions = {
   LATEST: 'latest',
@@ -11,13 +12,17 @@ const SortOptions = {
 
 const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 
-const ViewAllPage = () => {
+const StoriesPage = () => {
   const router = useRouter();
   const [stories, setStories] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState(SortOptions.LATEST);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -25,24 +30,7 @@ const ViewAllPage = () => {
 
   const searchRef = useRef(null);
   const scrollContainerRef = useRef(null);
-
-  console.log("searchSuggestions", searchSuggestions)
-  console.log("searchQuery", searchQuery)
-
-  useEffect(() => {
-    fetchCategories();
-    fetchStories(searchQuery);
-
-    // Click outside handler for search suggestions
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [selectedCategory, sortBy]);
+  const observerTarget = useRef(null);
 
   const fetchCategories = async () => {
     try {
@@ -55,27 +43,83 @@ const ViewAllPage = () => {
     }
   };
 
-  const fetchStories = async (currentQuery) => {
-    setLoading(true);
-    console.log("Before sending the pi", searchQuery)
+  const fetchStories = async (query = searchQuery, pageNum = 1, isAppend = false) => {
+    if (isAppend) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const queryParams = new URLSearchParams({
         sort: sortBy,
         category: selectedCategory,
-        search: currentQuery,
-        type: 'chat'
+        search: query,
+        type: 'chat',
+        page: pageNum.toString(),
+        limit: '20'
       });
       
       const endpoint = `/api/view-all/stories?${queryParams}`;
       const response = await fetch(endpoint);
       const data = await response.json();
-      setStories(data.stories);
+      
+      const newStories = data.stories || [];
+      if (isAppend) {
+        setStories(prev => [...prev, ...newStories]);
+      } else {
+        setStories(newStories);
+      }
+      setHasMore(data.hasMore ?? newStories.length === 20);
+      setPage(pageNum);
     } catch (error) {
       console.error('Error fetching stories:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  // Reset page & fetch when category/sort changes
+  useEffect(() => {
+    fetchCategories();
+    fetchStories(searchQuery, 1, false);
+  }, [selectedCategory, sortBy]);
+
+  // Click outside for search suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Infinite Scroll Trigger
+  const loadNextPage = useCallback(() => {
+    if (!loading && !loadingMore && hasMore) {
+      fetchStories(searchQuery, page + 1, true);
+    }
+  }, [loading, loadingMore, hasMore, page, searchQuery]);
+
+  useEffect(() => {
+    const target = observerTarget.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadNextPage();
+        }
+      },
+      { rootMargin: '250px' }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [loadNextPage]);
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
@@ -83,7 +127,7 @@ const ViewAllPage = () => {
       try {
         const response = await fetch(`/api/search-suggestions?q=${query}`);
         const data = await response.json();
-        setSearchSuggestions(data.suggestions);
+        setSearchSuggestions(data.suggestions || []);
         setShowSuggestions(true);
       } catch (error) {
         console.error('Error fetching suggestions:', error);
@@ -94,10 +138,15 @@ const ViewAllPage = () => {
     }
   };
 
+  const applySuggestion = (suggestion) => {
+    setSearchQuery(suggestion);
+    setShowSuggestions(false);
+    fetchStories(suggestion, 1, false);
+  };
+
   const handleMouseDown = (e) => {
     const ele = scrollContainerRef.current;
     if (!ele) return;
-    
     const startX = e.pageX - ele.offsetLeft;
     const scrollLeft = ele.scrollLeft;
     
@@ -116,34 +165,23 @@ const ViewAllPage = () => {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const applySuggestion = (suggestion) => {
-    console.log("suggetion from apply", suggestion)
-    setSearchQuery(suggestion);
-    setShowSuggestions(false);
-    fetchStories(suggestion);
-  };
-
   return (
-    <div className="min-h-screen bg-black pb-24 md:pt-10">
+    <div className="min-h-screen bg-black pb-24 md:pt-8">
       <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
 
-      {/* Title Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-white/90 mb-2">Stories</h1>
-        <p className="text-sm md:text-base">Explore immersive tales and narratives</p>
-      </div>
+        {/* Header Title Section */}
+        <div className="mb-6">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-1">Stories</h1>
+          <p className="text-sm md:text-base text-neutral-400">Explore immersive tales, chat fiction, and narratives</p>
+        </div>
 
-        {/* Categories and Sort Section */}
-        <div className={`flex flex-col md:flex-row justify-between items-center gap-4 pt-4 ${!showSearch ? 'mb-8' : ''}`}>          {/* Categories */}
-          <div className="relative w-full">
+        {/* Filter Toolbar: Categories & Sort */}
+        <div className={`flex flex-col md:flex-row justify-between items-center gap-4 pt-2 ${!showSearch ? 'mb-8' : ''}`}>
+          {/* Category Chips Scroll Container */}
+          <div className="relative w-full overflow-hidden">
             <div
               ref={scrollContainerRef}
-              className="flex overflow-x-auto gap-2 w-full no-scrollbar touch-pan-x cursor-grab active:cursor-grabbing"
-              style={{
-                WebkitOverflowScrolling: 'touch',
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}
+              className="flex overflow-x-auto gap-2 w-full no-scrollbar touch-pan-x cursor-grab active:cursor-grabbing py-1"
               onMouseDown={handleMouseDown}
             >
               <div className="flex gap-2 px-1">
@@ -151,17 +189,19 @@ const ViewAllPage = () => {
                   onClick={() => {
                     setShowSearch(!showSearch);
                     setSearchQuery('');
-                    setSearchSuggestions([])
+                    setSearchSuggestions([]);
+                    fetchStories('', 1, false);
                   }}
-                  className={`whitespace-nowrap px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full font-medium transition-all flex-shrink-0
-                    ${showSearch ? 'bg-white text-gray-900' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                  className={`whitespace-nowrap px-4 py-2 text-xs md:text-sm rounded-full font-medium transition-all flex items-center gap-1.5 flex-shrink-0
+                    ${showSearch ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40' : 'bg-neutral-900 text-white/80 border border-neutral-800 hover:border-purple-500/50'}`}
                 >
+                  <Search className="w-3.5 h-3.5" />
                   Search
                 </button>
                 <button
                   onClick={() => setSelectedCategory('all')}
-                  className={`whitespace-nowrap px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full font-medium transition-all flex-shrink-0
-                    ${selectedCategory === 'all' ? 'bg-white text-gray-900' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                  className={`whitespace-nowrap px-4 py-2 text-xs md:text-sm rounded-full font-medium transition-all flex-shrink-0
+                    ${selectedCategory === 'all' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40' : 'bg-neutral-900 text-white/80 border border-neutral-800 hover:border-purple-500/50'}`}
                 >
                   All Stories
                 </button>
@@ -169,8 +209,8 @@ const ViewAllPage = () => {
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`whitespace-nowrap px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full font-medium transition-all flex-shrink-0
-                      ${selectedCategory === category.id ? 'bg-white text-gray-900' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                    className={`whitespace-nowrap px-4 py-2 text-xs md:text-sm rounded-full font-medium transition-all flex-shrink-0
+                      ${selectedCategory === category.id ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40' : 'bg-neutral-900 text-white/80 border border-neutral-800 hover:border-purple-500/50'}`}
                   >
                     {category.name}
                   </button>
@@ -179,45 +219,44 @@ const ViewAllPage = () => {
             </div>
           </div>
           
-          {/* Sort Options */}
-          <div className="relative min-w-[150px] self-end">
+          {/* Sort Dropdown */}
+          <div className="relative inline-flex items-center self-end md:self-auto flex-shrink-0">
+            <div className="absolute left-3.5 pointer-events-none text-purple-400 z-10">
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </div>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none bg-gray-800 text-white w-full px-4 py-2 text-sm md:px-6 md:py-3 md:text-base rounded-full focus:outline-none pr-10"
+              className="appearance-none bg-neutral-900 text-white text-xs md:text-sm font-semibold pl-9 pr-9 py-2 rounded-full border border-neutral-800 hover:border-purple-500/50 focus:border-purple-500 focus:outline-none cursor-pointer transition-all duration-300 shadow-md"
             >
-              <option value={SortOptions.LATEST}>Latest</option>
-              <option value={SortOptions.MOST_VIEWED}>Most Viewed</option>
-              <option value={SortOptions.MOST_LIKED}>Most Liked</option>
+              <option value={SortOptions.LATEST} className="bg-neutral-900 text-white">Latest</option>
+              <option value={SortOptions.MOST_VIEWED} className="bg-neutral-900 text-white">Most Viewed</option>
+              <option value={SortOptions.MOST_LIKED} className="bg-neutral-900 text-white">Most Liked</option>
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4">
-              <svg className="h-4 w-4 fill-current text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-              </svg>
+            <div className="pointer-events-none absolute right-3 text-neutral-400 z-10">
+              <ChevronDown className="w-3.5 h-3.5" />
             </div>
           </div>
         </div>
 
-        {/* Search Bar - Only shown when search is active */}
+        {/* Search Input Bar */}
         {showSearch && (
-          <div className="max-w-2xl mx-auto mb-8 py-4" ref={searchRef}>
+          <div className="max-w-2xl mx-auto mb-8 py-2" ref={searchRef}>
             <div className="relative">
-              <Search className="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                placeholder="Search Stories..."
-                className="w-full bg-transparent text-white/90 border-b border-white/30 focus:border-white/70 
-                  py-2 pl-8 pr-4 outline-none transition-colors placeholder:text-white/50 
-                  text-base font-light"
+                placeholder="Search Stories by title or synopsis..."
+                className="w-full bg-neutral-900/90 text-white border border-neutral-800 focus:border-purple-500 rounded-xl py-2.5 pl-10 pr-4 outline-none transition-all placeholder:text-neutral-500 text-sm"
               />
               {showSuggestions && searchSuggestions.length > 0 && (
-                <div className="absolute w-full bg-gray-900 mt-2 rounded-lg shadow-lg z-50">
+                <div className="absolute w-full bg-neutral-900 border border-neutral-800 mt-2 rounded-xl shadow-xl z-50 overflow-hidden">
                   {searchSuggestions.map((suggestion, index) => (
                     <div
                       key={index}
-                      className="px-4 py-2 hover:bg-gray-800 cursor-pointer text-white/90"
+                      className="px-4 py-2.5 hover:bg-purple-950/50 cursor-pointer text-sm text-neutral-200"
                       onClick={() => applySuggestion(suggestion)}
                     >
                       {suggestion}
@@ -229,24 +268,30 @@ const ViewAllPage = () => {
           </div>
         )}
 
-        {/* Stories Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {stories.map((story) => (
-            <StoryCard key={story.story_id} storyData={story} />
-          ))}
-        </div>
+        {/* Initial Loading Skeleton */}
+        {loading && <GridSkeleton count={10} />}
 
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white" />
+        {/* Stories Grid */}
+        {!loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {stories.map((story, idx) => (
+              <StoryCard key={`${story.story_id}-${idx}`} storyData={story} router={router} />
+            ))}
           </div>
         )}
 
-        {/* No Results */}
+        {/* Infinite Scroll Bottom Sentinel */}
+        <div ref={observerTarget} className="h-10 w-full flex justify-center items-center mt-6">
+          {loadingMore && (
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-500 border-t-transparent" />
+          )}
+        </div>
+
+        {/* Empty State */}
         {!loading && stories.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-white text-lg">No stories found.</p>
+          <div className="text-center py-20 bg-neutral-950/50 rounded-2xl border border-neutral-900 my-8">
+            <p className="text-white text-lg font-medium">No stories found.</p>
+            <p className="text-neutral-500 text-sm mt-1">Try selecting a different category or adjusting your search.</p>
           </div>
         )}
       </div>
@@ -254,28 +299,28 @@ const ViewAllPage = () => {
   );
 };
 
-const StoryCard = ({ storyData }) => {
-  const router = useRouter();
-
+const StoryCard = ({ storyData, router }) => {
   const handleClick = () => {
     router.push(`/stories/${storyData.story_id}/story-overview`);
   };
 
   return (
     <div 
-      className="flex-none cursor-pointer transition-transform hover:scale-105"
+      className="flex-none cursor-pointer transition-transform hover:scale-105 group"
       onClick={handleClick}
     >
       <img 
         src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
         alt={storyData.title}
-        className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white mb-2"
+        loading="lazy"
+        decoding="async"
+        className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white/90 group-hover:border-purple-500 mb-2 transition-colors bg-neutral-900"
       />
-      <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
+      <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2 group-hover:text-purple-400 transition-colors">
         {storyData.title}
       </p>
     </div>
   );
 };
 
-export default ViewAllPage;
+export default StoriesPage;

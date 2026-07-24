@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { ChevronDown, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 
 const SortOptions = {
   LATEST: 'latest',
@@ -11,7 +12,6 @@ const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 
 const ViewAllPage = () => {
   const { section } = useParams();
-  // const { section } = params;
   const router = useRouter();
   const [stories, setStories] = useState([]);
   const [categoryInfo, setCategoryInfo] = useState(null);
@@ -27,13 +27,11 @@ const ViewAllPage = () => {
       if (section === 'trending' || section === 'latest') {
         endpoint = `/api/view-all/${section}?${queryParams}`;
       } else {
-        // Assuming section contains the genre ID for genre-based categories
         endpoint = `/api/view-all/genre/${section}?${queryParams}`;
       }
-      // Placeholder for API call
       const response = await fetch(endpoint);
       const data = await response.json();
-      setStories(data.stories);
+      setStories(data.stories || []);
       setCategoryInfo(data.categoryInfo);
     } catch (error) {
       console.error('Error fetching stories:', error);
@@ -48,48 +46,67 @@ const ViewAllPage = () => {
 
   return (
     <div className="min-h-screen bg-black pb-16">
-      <div className="w-full max-w-[1920px] mx-auto md:px-8">
-        {/* Cover Image Section */}
-        <div className="relative mx-auto h-[250px] md:h-[600px] overflow-hidden md:rounded-3xl mb-4">
-          <div className="relative h-full w-full">
-            {categoryInfo?.cover_img && (
+      <div className="w-full max-w-[1920px] mx-auto md:px-8 pt-4">
+        {/* Back Button */}
+        <div className="px-4 mb-4">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 text-white/70 hover:text-white bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+        </div>
+
+        {/* Cover Image Section - Only rendered if cover_img exists */}
+        {categoryInfo?.cover_img && (
+          <div className="relative mx-auto h-[250px] md:h-[450px] overflow-hidden md:rounded-3xl mb-4">
+            <div className="relative h-full w-full">
               <img
                 src={`${BASE_IMAGE_URL}${categoryInfo.cover_img}`}
                 alt={categoryInfo?.title}
                 className="w-full h-full object-cover"
               />
-            )}
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Title and Synopsis */}
-        <div className="md:max-w-4xl md:mx-8 p-7 sm:p-0 pt-0 md:mb-10">
+        <div className={`md:max-w-4xl md:mx-8 p-4 sm:p-0 ${categoryInfo?.cover_img ? 'pt-0 md:mb-8' : 'pt-2 md:pt-4 md:mb-6'}`}>
           <h2 className="text-white text-2xl md:text-5xl font-extrabold mb-2">
-            {categoryInfo?.title}
+            {categoryInfo?.title || (section ? section.charAt(0).toUpperCase() + section.slice(1) : '')}
           </h2>
-          <p className="text-gray-400 text-sm md:text-lg">
-            {categoryInfo?.description}
-          </p>
+          {categoryInfo?.description && (
+            <p className="text-gray-400 text-sm md:text-lg">
+              {categoryInfo.description}
+            </p>
+          )}
         </div>
 
-        {/* Sort Options */}
-        <div className="relative flex items-center justify-end px-4 mb-6">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="appearance-none bg-gray-800 text-white px-6 py-3 rounded-full focus:outline-none pr-10"
-          >
-            <option value={SortOptions.LATEST}>Latest</option>
-            <option value={SortOptions.MOST_VIEWED}>Most Viewed</option>
-            <option value={SortOptions.MOST_LIKED}>Most Liked</option>
-          </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4">
-                <svg className="h-4 w-4 fill-current text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                </svg>
+        {/* Sort / Filter Options */}
+        <div className="flex items-center justify-between px-4 md:px-8 mb-6">
+          <p className="text-xs md:text-sm text-neutral-400 font-medium">
+            Showing <span className="text-white font-semibold">{stories.length}</span> stories
+          </p>
+
+          <div className="relative inline-flex items-center">
+            <div className="absolute left-3.5 pointer-events-none text-purple-400 z-10">
+              <SlidersHorizontal className="w-3.5 h-3.5 md:w-4 md:h-4" />
             </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="appearance-none bg-neutral-900/90 text-white text-xs md:text-sm font-semibold pl-9 pr-9 py-2 md:py-2.5 rounded-full border border-neutral-800 hover:border-purple-500/50 focus:border-purple-500 focus:outline-none cursor-pointer transition-all duration-300 shadow-lg shadow-black/40"
+            >
+              <option value={SortOptions.LATEST} className="bg-neutral-900 text-white">Latest</option>
+              <option value={SortOptions.MOST_VIEWED} className="bg-neutral-900 text-white">Most Viewed</option>
+              <option value={SortOptions.MOST_LIKED} className="bg-neutral-900 text-white">Most Liked</option>
+            </select>
+            <div className="pointer-events-none absolute right-3 text-neutral-400 z-10">
+              <ChevronDown className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            </div>
+          </div>
         </div>
  
         {/* Stories Grid */}

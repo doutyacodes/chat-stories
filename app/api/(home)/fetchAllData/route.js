@@ -5,24 +5,55 @@ import {
   STORY_VIEWS,
   CATEGORIES,
   USER_LAST_READ,
-  EPISODES,
+  TAGS,
+  STORY_TAGS
 } from '../../../../utils/schema';
 import { db } from '../../../../utils';
-import { eq, gte, and, or, isNull, lt, sql, desc } from 'drizzle-orm';
+import { eq, gte, and, or, isNull, sql, desc, inArray } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+
+// Helper to batch populate story tags in a single DB query instead of N+1 queries
+const batchAttachTagsToStories = async (storiesList) => {
+  if (!storiesList || storiesList.length === 0) return [];
+  const storyIds = storiesList.map(s => s.story_id).filter(Boolean);
+  if (storyIds.length === 0) return storiesList.map(s => ({ ...s, tags: [] }));
+
+  try {
+    const allTags = await db
+      .select({
+        story_id: STORY_TAGS.story_id,
+        name: TAGS.name
+      })
+      .from(STORY_TAGS)
+      .innerJoin(TAGS, eq(STORY_TAGS.tag_id, TAGS.id))
+      .where(inArray(STORY_TAGS.story_id, storyIds));
+
+    const tagsMap = {};
+    allTags.forEach(({ story_id, name }) => {
+      if (!tagsMap[story_id]) tagsMap[story_id] = [];
+      tagsMap[story_id].push(name);
+    });
+
+    return storiesList.map(story => ({
+      ...story,
+      tags: tagsMap[story.story_id] || []
+    }));
+  } catch (e) {
+    console.error('Error batch fetching tags:', e);
+    return storiesList.map(s => ({ ...s, tags: [] }));
+  }
+};
 
 export async function GET(request) {
   try {
-    // Get user_id or session_id from request headers/cookies
     const { searchParams } = new URL(request.url);
     const session_id = searchParams.get('session_id');
 
-    // Extract user_id from the token if present
     const authHeader = request.headers.get('Authorization');
     let user_id = null;
 
     if (authHeader) {
-      const token = authHeader.split(' ')[1]; // Bearer <token>
+      const token = authHeader.split(' ')[1];
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         user_id = decoded.id;
@@ -34,9 +65,23 @@ export async function GET(request) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Fetch Carousel Stories
-    const rawCarouselStories = await db
-      .select({
+    // Run main database queries in parallel
+    const userCondition = user_id 
+      ? eq(USER_LAST_READ.user_id, parseInt(user_id))
+      : eq(USER_LAST_READ.session_id, session_id);
+
+    const [
+      rawCarouselStories,
+      continueReadingStories,
+      continuePlayingGames,
+      trendingStories,
+      trendingGames,
+      latestStories,
+      latestGames,
+      categoriesData
+    ] = await Promise.all([
+      // Carousel
+      db.select({
         id: CAROUSEL_STORIES.id,
         title: STORIES.title,
         synopsis: STORIES.synopsis,
@@ -61,35 +106,10 @@ export async function GET(request) {
           eq(STORIES.is_published, true)
         )
       )
-      .orderBy(CAROUSEL_STORIES.position);
+      .orderBy(CAROUSEL_STORIES.position),
 
-    // Fetch tags for each carousel story
-    const { TAGS, STORY_TAGS } = await import('../../../../utils/schema');
-    const carouselStories = await Promise.all(
-      rawCarouselStories.map(async (story) => {
-        try {
-          const tags = await db
-            .select({ name: TAGS.name })
-            .from(STORY_TAGS)
-            .innerJoin(TAGS, eq(STORY_TAGS.tag_id, TAGS.id))
-            .where(eq(STORY_TAGS.story_id, story.story_id));
-          return {
-            ...story,
-            genres: tags.map(t => t.name)
-          };
-        } catch (e) {
-          return { ...story, genres: [] };
-        }
-      })
-    );
-
-    // Fetch Continue Reading stories
-    const userCondition = user_id 
-      ? eq(USER_LAST_READ.user_id, parseInt(user_id))
-      : eq(USER_LAST_READ.session_id, session_id);
-
-    const continueReadingStories = await db
-      .select({
+      // Continue Reading Stories
+      db.select({
         story_id: STORIES.id,
         title: STORIES.title,
         cover_img: STORIES.cover_img,
@@ -108,10 +128,10 @@ export async function GET(request) {
         )
       )
       .orderBy(desc(USER_LAST_READ.last_read_at))
-      .limit(10);
+      .limit(10),
 
-    const continuePlayingGames = await db
-      .select({
+      // Continue Playing Games
+      db.select({
         story_id: STORIES.id,
         title: STORIES.title,
         cover_img: STORIES.cover_img,
@@ -130,11 +150,10 @@ export async function GET(request) {
         )
       )
       .orderBy(desc(USER_LAST_READ.last_read_at))
-      .limit(10);
+      .limit(10),
 
-    // Fetch Trending Stories (include stories with zero views)
-    const trendingStories = await db
-      .select({
+      // Trending Stories
+      db.select({
         story_id: STORIES.id,
         title: STORIES.title,
         cover_img: STORIES.cover_img,
@@ -151,32 +170,30 @@ export async function GET(request) {
         eq(STORIES.story_type, 'chat')
       ))
       .groupBy(STORIES.id, STORIES.title, STORIES.cover_img)
-      .orderBy(sql`views_count DESC`);
+      .orderBy(sql`views_count DESC`),
 
-  // Fetch Trending Games (include stories with zero views)
-    const trendingGames = await db
-    .select({
-      story_id: STORIES.id,
-      title: STORIES.title,
-      cover_img: STORIES.cover_img,
-      story_type: STORIES.story_type,
-      age_rating: STORIES.age_rating,
-      language: STORIES.language,
-      views_count: sql`IFNULL(COUNT(${STORY_VIEWS.id}), 0)`.as('views_count'),
-    })
-    .from(STORIES)
-    .leftJoin(STORY_VIEWS, eq(STORIES.id, STORY_VIEWS.story_id))
-    .where(and(
-      gte(STORIES.created_at, sevenDaysAgo),
-      eq(STORIES.is_published, true),
-      eq(STORIES.story_type, 'game')
-    ))
-    .groupBy(STORIES.id, STORIES.title, STORIES.cover_img)
-    .orderBy(sql`views_count DESC`);
+      // Trending Games
+      db.select({
+        story_id: STORIES.id,
+        title: STORIES.title,
+        cover_img: STORIES.cover_img,
+        story_type: STORIES.story_type,
+        age_rating: STORIES.age_rating,
+        language: STORIES.language,
+        views_count: sql`IFNULL(COUNT(${STORY_VIEWS.id}), 0)`.as('views_count'),
+      })
+      .from(STORIES)
+      .leftJoin(STORY_VIEWS, eq(STORIES.id, STORY_VIEWS.story_id))
+      .where(and(
+        gte(STORIES.created_at, sevenDaysAgo),
+        eq(STORIES.is_published, true),
+        eq(STORIES.story_type, 'game')
+      ))
+      .groupBy(STORIES.id, STORIES.title, STORIES.cover_img)
+      .orderBy(sql`views_count DESC`),
 
-    // Fetch Latest Stories
-    const latestStories = await db
-      .select({
+      // Latest Stories
+      db.select({
         story_id: STORIES.id,
         title: STORIES.title,
         cover_img: STORIES.cover_img,
@@ -193,49 +210,41 @@ export async function GET(request) {
         )
       )
       .orderBy(desc(STORIES.created_at))
-      .limit(10);
+      .limit(10),
 
-  // Fetch Latest Games
-    const latestGames = await db
-    .select({
-      story_id: STORIES.id,
-      title: STORIES.title,
-      cover_img: STORIES.cover_img,
-      story_type: STORIES.story_type,
-      age_rating: STORIES.age_rating,
-      language: STORIES.language,
-      created_at: STORIES.created_at,
-    })
-    .from(STORIES)
-    .where(
-      and(
-        eq(STORIES.is_published, true),
-        eq(STORIES.story_type, 'game')
+      // Latest Games
+      db.select({
+        story_id: STORIES.id,
+        title: STORIES.title,
+        cover_img: STORIES.cover_img,
+        story_type: STORIES.story_type,
+        age_rating: STORIES.age_rating,
+        language: STORIES.language,
+        created_at: STORIES.created_at,
+      })
+      .from(STORIES)
+      .where(
+        and(
+          eq(STORIES.is_published, true),
+          eq(STORIES.story_type, 'game')
+        )
       )
-    )
-    .orderBy(desc(STORIES.created_at))
-    .limit(10);
+      .orderBy(desc(STORIES.created_at))
+      .limit(10),
 
-    // Helper to populate story tags
-    const attachTagsToStories = async (storiesList) => {
-      return await Promise.all(
-        storiesList.map(async (story) => {
-          try {
-            const tags = await db
-              .select({ name: TAGS.name })
-              .from(STORY_TAGS)
-              .innerJoin(TAGS, eq(STORY_TAGS.tag_id, TAGS.id))
-              .where(eq(STORY_TAGS.story_id, story.story_id));
-            return { ...story, tags: tags.map(t => t.name) };
-          } catch (e) {
-            return { ...story, tags: [] };
-          }
-        })
-      );
-    };
+      // Categories Metadata
+      db.select({
+        category_id: CATEGORIES.id,
+        name: CATEGORIES.name,
+        description: CATEGORIES.description,
+        image_url: CATEGORIES.image_url,
+      })
+      .from(CATEGORIES)
+    ]);
 
-    // Attach tags to all category lists
+    // Batch attach tags for all main section lists concurrently
     const [
+      carouselStories,
       continueReadingStoriesWithTags,
       continuePlayingGamesWithTags,
       trendingStoriesWithTags,
@@ -243,28 +252,26 @@ export async function GET(request) {
       latestStoriesWithTags,
       latestGamesWithTags
     ] = await Promise.all([
-      attachTagsToStories(continueReadingStories),
-      attachTagsToStories(continuePlayingGames),
-      attachTagsToStories(trendingStories),
-      attachTagsToStories(trendingGames),
-      attachTagsToStories(latestStories),
-      attachTagsToStories(latestGames)
+      batchAttachTagsToStories(rawCarouselStories),
+      batchAttachTagsToStories(continueReadingStories),
+      batchAttachTagsToStories(continuePlayingGames),
+      batchAttachTagsToStories(trendingStories),
+      batchAttachTagsToStories(trendingGames),
+      batchAttachTagsToStories(latestStories),
+      batchAttachTagsToStories(latestGames)
     ]);
 
-    // Fetch Categories and Stories
-    const categoriesData = await db
-      .select({
-        category_id: CATEGORIES.id,
-        name: CATEGORIES.name,
-        description: CATEGORIES.description,
-        image_url: CATEGORIES.image_url,
-      })
-      .from(CATEGORIES);
+    // Ensure carousel genres field is populated
+    const formattedCarouselStories = carouselStories.map(s => ({
+      ...s,
+      genres: s.tags || []
+    }));
 
-    const categories = [];
-
-    for (const category of categoriesData) {
-      const categoryStories = await db
+    // Batch fetch category stories for all categories in 1 query
+    const categoryIds = categoriesData.map(c => c.category_id);
+    let allCategoryStories = [];
+    if (categoryIds.length > 0) {
+      allCategoryStories = await db
         .select({
           story_id: STORIES.id,
           title: STORIES.title,
@@ -272,23 +279,33 @@ export async function GET(request) {
           cover_img: STORIES.cover_img,
           age_rating: STORIES.age_rating,
           language: STORIES.language,
+          category_id: STORIES.category_id
         })
         .from(STORIES)
         .where(
           and(
-            eq(STORIES.category_id, category.category_id),
+            inArray(STORIES.category_id, categoryIds),
             eq(STORIES.is_published, true)
           )
         );
-
-      const categoryStoriesWithTags = await attachTagsToStories(categoryStories);
-
-      categories.push({
-        id: category.category_id,
-        title: category.name,
-        data: categoryStoriesWithTags,
-      });
     }
+
+    const categoryStoriesWithTags = await batchAttachTagsToStories(allCategoryStories);
+
+    // Group stories by category_id
+    const storiesByCategory = {};
+    categoryStoriesWithTags.forEach(story => {
+      if (!storiesByCategory[story.category_id]) {
+        storiesByCategory[story.category_id] = [];
+      }
+      storiesByCategory[story.category_id].push(story);
+    });
+
+    const categories = categoriesData.map(cat => ({
+      id: cat.category_id,
+      title: cat.name,
+      data: storiesByCategory[cat.category_id] || [],
+    }));
 
     // Merge Continue Reading, Trending, Latest, and Categories
     const mergedCategories = [
@@ -330,7 +347,7 @@ export async function GET(request) {
     ];
 
     const homeData = {
-      carouselStories,
+      carouselStories: formattedCarouselStories,
       categories: mergedCategories,
     };
 
@@ -342,4 +359,4 @@ export async function GET(request) {
       { status: 500 }
     );
   }
-}
+}
