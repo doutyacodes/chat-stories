@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Search, ChevronDown, SlidersHorizontal, BookOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import GridSkeleton from '../../components/GridSkeleton';
+import AgeWarningModal from '../../components/AgeWarningModal';
 
 const SortOptions = {
   LATEST: 'latest',
@@ -27,10 +28,31 @@ const StoriesPage = () => {
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [selectedStoryForWarning, setSelectedStoryForWarning] = useState(null);
+  const [showAgeWarningModal, setShowAgeWarningModal] = useState(false);
 
   const searchRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const observerTarget = useRef(null);
+
+  const handleOpenStory = (story) => {
+    if (!story) return;
+    const rating = story.age_rating || story.ageRating || '13+';
+    if (rating === '18+') {
+      setSelectedStoryForWarning(story);
+      setShowAgeWarningModal(true);
+    } else {
+      const targetId = story.story_id || story.id || story.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
+
+  const confirmOpenStory = () => {
+    if (selectedStoryForWarning) {
+      const targetId = selectedStoryForWarning.story_id || selectedStoryForWarning.id || selectedStoryForWarning.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -275,7 +297,7 @@ const StoriesPage = () => {
         {!loading && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {stories.map((story, idx) => (
-              <StoryCard key={`${story.story_id}-${idx}`} storyData={story} router={router} />
+              <StoryCard key={`${story.story_id}-${idx}`} storyData={story} onOpenStory={handleOpenStory} />
             ))}
           </div>
         )}
@@ -295,27 +317,37 @@ const StoriesPage = () => {
           </div>
         )}
       </div>
+
+      <AgeWarningModal
+        isOpen={showAgeWarningModal}
+        onClose={() => setShowAgeWarningModal(false)}
+        onConfirm={confirmOpenStory}
+        story={selectedStoryForWarning}
+      />
     </div>
   );
 };
 
-const StoryCard = ({ storyData, router }) => {
-  const handleClick = () => {
-    router.push(`/stories/${storyData.story_id}/story-overview`);
-  };
-
+const StoryCard = ({ storyData, onOpenStory }) => {
   return (
     <div 
-      className="flex-none cursor-pointer transition-transform hover:scale-105 group"
-      onClick={handleClick}
+      className="flex-none cursor-pointer transition-transform hover:scale-105 group relative"
+      onClick={() => onOpenStory(storyData)}
     >
-      <img 
-        src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
-        alt={storyData.title}
-        loading="lazy"
-        decoding="async"
-        className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white/90 group-hover:border-purple-500 mb-2 transition-colors bg-neutral-900"
-      />
+      <div className="relative">
+        {storyData.age_rating === '18+' && (
+          <div className="absolute top-2.5 right-2.5 bg-red-600/90 text-white z-10 px-1.5 py-0.5 rounded text-[10px] font-bold">
+            18+
+          </div>
+        )}
+        <img 
+          src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+          alt={storyData.title}
+          loading="lazy"
+          decoding="async"
+          className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white/90 group-hover:border-purple-500 mb-2 transition-colors bg-neutral-900"
+        />
+      </div>
       <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2 group-hover:text-purple-400 transition-colors">
         {storyData.title}
       </p>

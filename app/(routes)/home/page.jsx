@@ -334,6 +334,10 @@ const ImageCarousel = () => {
 
                 <div className="flex flex-wrap items-center gap-3 text-base mb-6 text-white/75 transition-opacity duration-300 group-hover:text-white">
                   <span className="rounded-md border border-white/25 bg-white/5 px-2.5 py-[2px] text-white/85 font-medium">
+                    {(currentStory?.story_type === 'game' || currentStory?.storyType === 'game' || currentStory?.type === 'game' || currentStory?.story_type === 'interactive' || currentStory?.storyType === 'interactive') ? 'Game' : 'Story'}
+                  </span>
+                  <span className="text-white/20">•</span>
+                  <span className="rounded-md border border-white/25 bg-white/5 px-2.5 py-[2px] text-white/85 font-medium">
                     {currentStory.age_rating || '13+'}
                   </span>
                   <span className="text-white/20">•</span>
@@ -373,7 +377,7 @@ const ImageCarousel = () => {
                     }}
                     className="h-14 min-w-[280px] px-12 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#9900FF] to-[#E60073] hover:from-[#1A75FF] hover:via-[#A61AFF] hover:to-[#FF1A82] text-white font-bold text-xl tracking-wide shadow-lg shadow-purple-900/40 hover:shadow-[0_0_30px_rgba(153,0,255,0.5)] transition-all duration-300 active:scale-95 flex items-center justify-center"
                   >
-                    Read Now
+                    {(currentStory?.story_type === 'game' || currentStory?.storyType === 'game' || currentStory?.type === 'game' || currentStory?.story_type === 'interactive' || currentStory?.storyType === 'interactive') ? 'Play Now' : 'Read Now'}
                   </button>
 
                   <button
@@ -572,6 +576,10 @@ const ImageCarousel = () => {
                 {/* Metadata Badges */}
                 <div className="flex flex-wrap items-center gap-2 text-xs mb-3 text-neutral-300 font-medium">
                   <span className="rounded bg-white/10 border border-white/20 px-2 py-0.5 text-white font-semibold">
+                    {(currentStory?.story_type === 'game' || currentStory?.storyType === 'game' || currentStory?.type === 'game' || currentStory?.story_type === 'interactive' || currentStory?.storyType === 'interactive') ? 'Game' : 'Story'}
+                  </span>
+                  <span>•</span>
+                  <span className="rounded bg-white/10 border border-white/20 px-2 py-0.5 text-white font-semibold">
                     {currentStory.age_rating || '13+'}
                   </span>
                   <span>•</span>
@@ -604,7 +612,7 @@ const ImageCarousel = () => {
                     onClick={() => handleOpenStory(currentStory)}
                     className="flex-1 h-12 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#9900FF] to-[#E60073] active:from-[#1A75FF] active:to-[#FF1A82] text-white font-bold text-base tracking-wide shadow-lg shadow-purple-900/30 flex items-center justify-center active:scale-95 transition-transform"
                   >
-                    Read Now
+                    {(currentStory?.story_type === 'game' || currentStory?.storyType === 'game' || currentStory?.type === 'game' || currentStory?.story_type === 'interactive' || currentStory?.storyType === 'interactive') ? 'Play Now' : 'Read Now'}
                   </button>
 
                   <button

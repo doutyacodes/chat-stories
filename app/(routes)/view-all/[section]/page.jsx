@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ChevronDown, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import AgeWarningModal from '../../../components/AgeWarningModal';
 
 const SortOptions = {
   LATEST: 'latest',
@@ -17,6 +18,35 @@ const ViewAllPage = () => {
   const [categoryInfo, setCategoryInfo] = useState(null);
   const [sortBy, setSortBy] = useState(SortOptions.LATEST);
   const [loading, setLoading] = useState(true);
+  const [selectedStoryForWarning, setSelectedStoryForWarning] = useState(null);
+  const [showAgeWarningModal, setShowAgeWarningModal] = useState(false);
+
+  const handleOpenStory = (story, isEpisode) => {
+    if (!story) return;
+    if (isEpisode) {
+      router.push(
+        story.story_type === 'chat'
+          ? `/stories/${story.id}/${story.id}/chat-story`
+          : `/stories/${story.id}/normal-story`
+      );
+      return;
+    }
+    const rating = story.age_rating || story.ageRating || '13+';
+    if (rating === '18+') {
+      setSelectedStoryForWarning(story);
+      setShowAgeWarningModal(true);
+    } else {
+      const targetId = story.story_id || story.id || story.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
+
+  const confirmOpenStory = () => {
+    if (selectedStoryForWarning) {
+      const targetId = selectedStoryForWarning.story_id || selectedStoryForWarning.id || selectedStoryForWarning.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
 
   const fetchStories = async () => {
     setLoading(true);
@@ -112,7 +142,7 @@ const ViewAllPage = () => {
         {/* Stories Grid */}
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 px-4">
           {stories.map((story) => (
-            <StoryCard key={story.story_id} storyData={story} />
+            <StoryCard key={story.story_id} storyData={story} onOpenStory={handleOpenStory} />
           ))}
         </div>
 
@@ -123,64 +153,47 @@ const ViewAllPage = () => {
           </div>
         )}
       </div>
+
+      <AgeWarningModal
+        isOpen={showAgeWarningModal}
+        onClose={() => setShowAgeWarningModal(false)}
+        onConfirm={confirmOpenStory}
+        story={selectedStoryForWarning}
+      />
     </div>
   );
 };
 
-const StoryCard = ({ storyData, isEpisode = false }) => {
-  const router = useRouter();
-
-  const handleClick = () => {
-    if (isEpisode) {
-      router.push(
-        storyData.story_type === 'chat'
-          ? `/stories/${storyData.id}/${storyData.id}/chat-story`
-          : `/stories/${storyData.id}/normal-story`
-      );
-    } else {
-      router.push(`/stories/${storyData.story_id}/story-overview`);
-    }
-  };
+const StoryCard = ({ storyData, isEpisode = false, onOpenStory }) => {
+  const isGame = storyData.story_type === 'game' || storyData.storyType === 'game' || storyData.type === 'game' || storyData.story_type === 'interactive';
 
   return (
     <div 
-      className="flex-none cursor-pointer transition-transform hover:scale-105"
-      onClick={handleClick}
+      className="flex-none cursor-pointer transition-transform hover:scale-105 group relative"
+      onClick={() => onOpenStory ? onOpenStory(storyData, isEpisode) : null}
     >
       {isEpisode ? (
         <div className="w-full aspect-[3/2.5] bg-gray-800 rounded-2xl border-[6px] border-white mb-2 flex items-center justify-center">
           <span className="text-white text-xl">Episode {storyData.episodeNumber}</span>
         </div>
       ) : (
-        <img 
-          src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
-          alt={storyData.title}
-          className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white mb-2"
-        />
+        <div className="relative">
+          {storyData.age_rating === '18+' && (
+            <div className="absolute top-2.5 right-2.5 bg-red-600/90 text-white z-10 px-1.5 py-0.5 rounded text-[10px] font-bold">
+              18+
+            </div>
+          )}
+          <img 
+            src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+            alt={storyData.title}
+            className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white mb-2"
+          />
+        </div>
       )}
       <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
         {isEpisode ? storyData.name : storyData.title}
       </p>
     </div>
-    // <div 
-    //   className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105"
-    //   onClick={handleClick}
-    // >
-    //   {isEpisode ? (
-    //     <div className="w-full h-28 md:h-44 bg-gray-800 rounded-2xl border-[6px] border-white mb-2 flex items-center justify-center">
-    //       <span className="text-white text-xl">Episode {storyData.episodeNumber}</span>
-    //     </div>
-    //   ) : (
-    //     <img 
-    //       src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
-    //       alt={storyData.title}
-    //       className="w-full h-28 md:h-44 object-cover rounded-2xl border-[6px] border-white mb-2"
-    //     />
-    //   )}
-    //   <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
-    //     {isEpisode ? storyData.name : storyData.title}
-    //   </p>
-    // </div>
   );
 };
 

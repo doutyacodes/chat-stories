@@ -18,37 +18,26 @@ export default function AgeWarningModal({
   story,
 }) {
   const [step, setStep] = useState(1); // 1 = Age Verification, 2 = Content Advisory
+  const [tags, setTags] = useState([]);
 
   useEffect(() => {
     if (isOpen && story) {
-      let isVerified = false;
+      setStep(1);
+      const initialTags = story.tags || story.genres || [];
+      setTags(initialTags);
 
-      // 1. Check JWT token if user logged in
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (token) {
-        try {
-          const decoded = jwt.decode(token);
-          if (decoded && (decoded.age >= 18 || decoded.age_verified_18)) {
-            isVerified = true;
-          }
-        } catch (e) {
-          // ignore
+      if (initialTags.length === 0) {
+        const targetId = story.story_id || story.id || story.storyId;
+        if (targetId) {
+          fetch(`/api/stories/${targetId}/tags`)
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+              if (data && Array.isArray(data.tags)) {
+                setTags(data.tags);
+              }
+            })
+            .catch(() => {});
         }
-      }
-
-      // 2. Check localStorage fallback
-      if (!isVerified && typeof window !== 'undefined') {
-        const storedVerified = localStorage.getItem('age_verified_18');
-        if (storedVerified === 'true') {
-          isVerified = true;
-        }
-      }
-
-      // If already verified 18+, skip step 1 and go straight to Step 2 (Content Warning)
-      if (isVerified) {
-        setStep(2);
-      } else {
-        setStep(1);
       }
     }
   }, [isOpen, story]);
@@ -56,9 +45,6 @@ export default function AgeWarningModal({
   if (!story || !isOpen) return null;
 
   const handleAgeConfirm = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('age_verified_18', 'true');
-    }
     setStep(2);
   };
 
@@ -66,8 +52,6 @@ export default function AgeWarningModal({
     onClose();
     if (onConfirm) onConfirm();
   };
-
-  const tags = story.tags || story.genres || [];
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
@@ -91,18 +75,20 @@ export default function AgeWarningModal({
             </AlertDialogHeader>
 
             <AlertDialogFooter className="mt-6 flex flex-row items-center justify-end gap-2.5">
-              <AlertDialogCancel
+              <button
+                type="button"
                 onClick={onClose}
                 className="m-0 h-10 px-4 rounded-xl bg-[#22222a] hover:bg-[#2c2c36] text-neutral-300 hover:text-white border-0 font-medium text-xs transition-all"
               >
                 Under 18
-              </AlertDialogCancel>
-              <AlertDialogAction
+              </button>
+              <button
+                type="button"
                 onClick={handleAgeConfirm}
                 className="m-0 h-10 px-5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition-all shadow-md"
               >
                 I am 18 or older
-              </AlertDialogAction>
+              </button>
             </AlertDialogFooter>
           </>
         ) : (
@@ -139,18 +125,20 @@ export default function AgeWarningModal({
             </AlertDialogHeader>
 
             <AlertDialogFooter className="mt-6 flex flex-row items-center justify-end gap-2.5">
-              <AlertDialogCancel
+              <button
+                type="button"
                 onClick={onClose}
                 className="m-0 h-10 px-4 rounded-xl bg-[#22222a] hover:bg-[#2c2c36] text-neutral-300 hover:text-white border-0 font-medium text-xs transition-all"
               >
                 Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
+              </button>
+              <button
+                type="button"
                 onClick={handleContentConfirm}
                 className="m-0 h-10 px-5 rounded-xl bg-white hover:bg-neutral-200 text-black font-semibold text-xs transition-all shadow-md"
               >
                 Continue
-              </AlertDialogAction>
+              </button>
             </AlertDialogFooter>
           </>
         )}

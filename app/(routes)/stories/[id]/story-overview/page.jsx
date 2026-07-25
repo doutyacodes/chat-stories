@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Heart, Bookmark, Share2, Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import StoryUserActions from '../../_components/StoryUserActions';
+import AgeWarningModal from '@/app/components/AgeWarningModal';
+
 
 const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
 
@@ -12,6 +14,27 @@ const StoryOverview = () => {
   const [episodes, setEpisodes] = useState([]);
   const [similarStories, setSimilarStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedStoryForWarning, setSelectedStoryForWarning] = useState(null);
+  const [showAgeWarningModal, setShowAgeWarningModal] = useState(false);
+
+  const handleOpenStory = (targetStory) => {
+    if (!targetStory) return;
+    const rating = targetStory.age_rating || targetStory.ageRating || '13+';
+    if (rating === '18+') {
+      setSelectedStoryForWarning(targetStory);
+      setShowAgeWarningModal(true);
+    } else {
+      const targetId = targetStory.story_id || targetStory.id || targetStory.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
+
+  const confirmOpenStory = () => {
+    if (selectedStoryForWarning) {
+      const targetId = selectedStoryForWarning.story_id || selectedStoryForWarning.id || selectedStoryForWarning.storyId;
+      router.push(`/stories/${targetId}/story-overview`);
+    }
+  };
 
   const router = useRouter();
 
@@ -37,39 +60,46 @@ const StoryOverview = () => {
 
 
   const StoryCard = ({ storyData, isEpisode = false, hasEpisode }) => {
+    const isGame = storyData.story_type === 'game' || storyData.storyType === 'game' || storyData.type === 'game' || storyData.story_type === 'interactive';
+
     const handleClick = () => {
       if (isEpisode) {
         router.push(
-          (story.story_type === 'chat' || story.story_type === 'game')
+          (story?.story_type === 'chat' || story?.story_type === 'game')
             ? `/stories/${storyData.id}/${id}/chat-story`
             : `/stories/${id}/normal-story`
         );
       } else {
-        router.push(`/stories/${storyData.story_id}/story-overview`);
+        handleOpenStory(storyData);
       }
     };
 
     return (
       <div 
-        className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105"
+        className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105 group relative"
         onClick={handleClick}
       >
         {isEpisode ? (
           <div className="w-full h-28 md:h-44 bg-gray-800 rounded-2xl border-[6px] border-white mb-2 flex items-center justify-center">
             <span className="text-white text-xl"> 
-              {/* { hasEpisode ? `Episode ${storyData.episodeNumber}`
-              : 'Full Story'} */}
               { `Episode ${storyData.episodeNumber}`}
             </span>
           </div>
         ) : (
-          <img 
-            src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
-            alt={storyData.title}
-            className="w-full h-28 md:h-44 object-cover rounded-2xl border-[6px] border-white mb-2"
-          />
+          <div className="relative">
+            {storyData.age_rating === '18+' && (
+              <div className="absolute top-2.5 right-2.5 bg-red-600/90 text-white z-10 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                18+
+              </div>
+            )}
+            <img 
+              src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
+              alt={storyData.title}
+              className="w-full h-28 md:h-44 object-cover rounded-2xl border-[6px] border-white mb-2"
+            />
+          </div>
         )}
-        <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
+        <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2 group-hover:text-purple-400 transition-colors">
           {isEpisode ? storyData.name : storyData.title}
         </p>
       </div>
@@ -158,6 +188,13 @@ const StoryOverview = () => {
           </div>
         </div>
       </div>
+
+      <AgeWarningModal
+        isOpen={showAgeWarningModal}
+        onClose={() => setShowAgeWarningModal(false)}
+        onConfirm={confirmOpenStory}
+        story={selectedStoryForWarning}
+      />
     </div>
   );
 };

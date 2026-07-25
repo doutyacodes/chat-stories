@@ -114,7 +114,7 @@ const LazyCategoryRow = ({ category, onOpenStory, router }) => {
         {stories.map((story, idx) => (
           <div 
             key={idx}
-            className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105 relative"
+            className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105 relative group"
             onClick={() => onOpenStory(story)}
           >
             <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm z-10 px-2 py-1 rounded-full">

@@ -19,6 +19,7 @@ export async function GET(request, { params }) {
         title: STORIES.title,
         cover_img: STORIES.cover_img,
         story_type: STORIES.story_type,
+        age_rating: STORIES.age_rating,
         created_at: STORIES.created_at,
       };
 
@@ -45,7 +46,7 @@ export async function GET(request, { params }) {
 
       // Add group by for all fields when using aggregates
       if (sortBy === 'most_viewed' || sortBy === 'most_liked' || type === 'trending') {
-        query = query.groupBy(STORIES.id, STORIES.title, STORIES.cover_img, STORIES.story_type, STORIES.created_at);
+        query = query.groupBy(STORIES.id, STORIES.title, STORIES.cover_img, STORIES.story_type, STORIES.age_rating, STORIES.created_at);
       }
 
       // Apply specific conditions and ordering based on type and sort
@@ -71,7 +72,32 @@ export async function GET(request, { params }) {
         }
       }
 
-      stories = await query;
+      const rawStories = await query;
+      const storyIds = rawStories.map(s => s.story_id).filter(Boolean);
+
+      let tagsMap = {};
+      if (storyIds.length > 0) {
+        const { TAGS, STORY_TAGS } = await import('@/utils/schema');
+        const { inArray } = await import('drizzle-orm');
+        const allTags = await db
+          .select({
+            story_id: STORY_TAGS.story_id,
+            name: TAGS.name
+          })
+          .from(STORY_TAGS)
+          .innerJoin(TAGS, eq(STORY_TAGS.tag_id, TAGS.id))
+          .where(inArray(STORY_TAGS.story_id, storyIds));
+
+        allTags.forEach(({ story_id, name }) => {
+          if (!tagsMap[story_id]) tagsMap[story_id] = [];
+          tagsMap[story_id].push(name);
+        });
+      }
+
+      stories = rawStories.map(story => ({
+        ...story,
+        genres: tagsMap[story.story_id] || []
+      }));
 
       // Set category info for trending/latest
       categoryInfo = {

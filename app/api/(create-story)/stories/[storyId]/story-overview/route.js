@@ -94,6 +94,26 @@ export async function GET(request, { params }) {
         )
     );
 
+    const similarIds = similarStories.map(s => s.storyId).filter(Boolean);
+    let similarTagsMap = {};
+    if (similarIds.length > 0) {
+      const { TAGS, STORY_TAGS } = await import('@/utils/schema');
+      const { inArray } = await import('drizzle-orm');
+      const allSimilarTags = await db
+        .select({
+          story_id: STORY_TAGS.story_id,
+          name: TAGS.name
+        })
+        .from(STORY_TAGS)
+        .innerJoin(TAGS, eq(STORY_TAGS.tag_id, TAGS.id))
+        .where(inArray(STORY_TAGS.story_id, similarIds));
+
+      allSimilarTags.forEach(({ story_id, name }) => {
+        if (!similarTagsMap[story_id]) similarTagsMap[story_id] = [];
+        similarTagsMap[story_id].push(name);
+      });
+    }
+
     const similarStoriesData = {
       id: 'similar',
       title: 'Similar Stories',
@@ -104,6 +124,8 @@ export async function GET(request, { params }) {
         story_type: similar.storyType,
         age_rating: similar.ageRating,
         language: similar.language,
+        genres: similarTagsMap[similar.storyId] || [],
+        tags: similarTagsMap[similar.storyId] || [],
       })),
     };
 
