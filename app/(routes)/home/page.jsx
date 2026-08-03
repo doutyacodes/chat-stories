@@ -324,7 +324,7 @@ const ImageCarousel = () => {
               )}
 
               {/* HERO CONTENT */}
-              <div className="absolute left-16 bottom-20 z-20 w-[90%] max-w-[560px] group">
+              <div className="absolute left-4 md:left-9 bottom-20 z-20 w-[90%] max-w-[560px] group">
                 <h1
                   style={{ textShadow: "0 8px 35px rgba(0,0,0,.55)" }}
                   className="text-white text-7xl font-extrabold tracking-[-0.04em] leading-[0.92] drop-shadow-2xl mb-7"

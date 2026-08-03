@@ -98,11 +98,11 @@ export default function NavBar() {
           ${isTransparent ? 'md:absolute md:top-0 md:left-0 md:right-0 md:z-50 md:bg-black/85' : 'bg-black'}
           ${!isTransparent ? 'bg-black' : 'bg-black md:bg-black/85'}
         `}>
-          <div className={`${isTransparent ? 'md:h-24' : ''} md:py-4`}>
-            <div className="container mx-auto">
-              <div className="flex md:justify-between justify-center items-center">
-                {/* Logo */}
-                <div className="flex items-center">
+          <div className={`${isTransparent ? 'md:h-24' : ''} flex items-center py-2 md:py-0`}>
+            <div className="w-full max-w-[1920px] mx-auto px-4 md:px-9 h-full">
+              <div className="relative flex justify-center md:justify-between items-center h-full min-h-[80px]">
+                {/* Logo (Centered Vertically and Horizontally) */}
+                <div className="flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
                   <img 
                     src="/Transparentlogo.png" 
                     alt="Ping Tales Logo" 
@@ -111,7 +111,7 @@ export default function NavBar() {
                 </div>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:block">
+                <nav className="hidden md:block ml-auto">
                   <ul className="flex gap-6 text-lg font-medium items-center">
                     <li 
                       className="text-white hover:text-gray-300 cursor-pointer transition-colors"
