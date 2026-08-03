@@ -100,18 +100,37 @@ export default function NavBar() {
         `}>
           <div className={`${isTransparent ? 'md:h-24' : ''} flex items-center py-2 md:py-0`}>
             <div className="w-full max-w-[1920px] mx-auto px-4 md:px-9 h-full">
-              <div className="relative flex justify-center md:justify-between items-center h-full min-h-[80px]">
-                {/* Logo (Centered Vertically and Horizontally) */}
-                <div className="flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
+              <div className="relative flex justify-between items-center h-full min-h-[80px]">
+                {/* Left Logo (ByRoice) - Hidden on Mobile, Shown on Desktop (50% size of Qatha / matches nav text size) */}
+                <div className="hidden md:flex items-center z-10">
+                  <a 
+                    href="https://www.byroice.com/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center transition-opacity hover:opacity-85"
+                  >
+                    <img 
+                      src="/ByRoice-white-transp.png" 
+                      alt="ByRoice Logo" 
+                      className="max-h-[28px] md:max-h-[34px] w-auto object-contain"
+                    />
+                  </a>
+                </div>
+
+                {/* Main Logo (Centered Vertically and Horizontally) */}
+                <div 
+                  className="flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
+                  onClick={() => router.push('/')}
+                >
                   <img 
                     src="/Transparentlogo.png" 
                     alt="Ping Tales Logo" 
-                    className="max-w-[167px] max-h-[77px] object-contain md:max-w-[220px] md:max-h-[80px]"
+                    className="max-w-[140px] max-h-[60px] xs:max-w-[170px] object-contain md:max-w-[260px] md:max-h-[92px]"
                   />
                 </div>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:block ml-auto">
+                <nav className="hidden md:block ml-auto z-10">
                   <ul className="flex gap-6 text-lg font-medium items-center">
                     <li 
                       className="text-white hover:text-gray-300 cursor-pointer transition-colors"
@@ -212,7 +231,7 @@ export default function NavBar() {
 
                             <div className="my-1 border-t border-gray-100" />
 
-                            {isAuthenticated ? (
+                             {isAuthenticated ? (
                               <button
                                 onClick={handleLogout}
                                 className="w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors duration-200"
@@ -230,6 +249,25 @@ export default function NavBar() {
                                 <span className="font-medium">Login</span>
                               </Link>
                             )}
+
+                            <div className="my-1 border-t border-gray-100" />
+
+                            <a
+                              href="https://www.byroice.com/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            >
+                              <div className="bg-black p-1 rounded flex items-center justify-center">
+                                <img 
+                                  src="/ByRoice-white-transp.png" 
+                                  alt="ByRoice Logo" 
+                                  className="w-3.5 h-3.5 object-contain"
+                                />
+                              </div>
+                              <span className="font-medium">ByRoice</span>
+                            </a>
                           </div>
                         </div>
                       )}
@@ -391,6 +429,28 @@ export default function NavBar() {
                 </div>
               </button>
             )}
+
+            <div className="my-1 border-t border-gray-100" />
+
+            <a
+              href="https://www.byroice.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
+            >
+              <div className="bg-black p-2 rounded-lg flex items-center justify-center">
+                <img 
+                  src="/ByRoice-white-transp.png" 
+                  alt="ByRoice Logo" 
+                  className="w-6 h-6 object-contain"
+                />
+              </div>
+              <div>
+                <div className="font-semibold">ByRoice</div>
+                <div className="text-sm text-gray-500">Visit byroice.com</div>
+              </div>
+            </a>
           </div>
         </div>
       </div>
