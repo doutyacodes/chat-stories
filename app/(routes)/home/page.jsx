@@ -282,7 +282,7 @@ const ImageCarousel = () => {
                     ref={videoRef}
                     key={`video-desktop-${currentIndex}`}
                     src={`${BASE_VIDEO_URL}${currentStory.trailer}`}
-                    className="w-full h-full object-cover transition-opacity duration-700"
+                    className="w-full h-full object-cover object-top transition-opacity duration-700"
                     autoPlay
                     muted={isMuted}
                     playsInline
@@ -294,14 +294,14 @@ const ImageCarousel = () => {
                     src={`${BASE_IMAGE_URL}${currentStory.trailer}`}
                     alt={currentStory.title}
                     decoding="async"
-                    className="w-full h-full object-cover transition-opacity duration-700"
+                    className="w-full h-full object-cover object-top transition-opacity duration-700"
                   />
                 ) : (
                   <img
                     src={`${BASE_IMAGE_URL}${currentStory.cover_img}`}
                     alt={currentStory.title}
                     decoding="async"
-                    className="w-full h-full object-cover transition-opacity duration-700"
+                    className="w-full h-full object-cover object-top transition-opacity duration-700"
                   />
                 )}
               </div>
@@ -323,8 +323,8 @@ const ImageCarousel = () => {
                 </button>
               )}
 
-              {/* HERO CONTENT — Positioned Upward for Laptop Screens */}
-              <div className="absolute left-8 sm:left-12 lg:left-16 bottom-8 lg:bottom-12 xl:bottom-16 z-20 w-[90%] max-w-[560px] group">
+              {/* HERO CONTENT — Anchored at screen bottom */}
+              <div className="absolute left-6 sm:left-10 lg:left-14 bottom-6 lg:bottom-8 xl:bottom-10 z-20 w-[90%] max-w-[580px] group">
                 <h1
                   style={{ textShadow: "0 8px 35px rgba(0,0,0,.55)" }}
                   className="text-white text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-[-0.03em] leading-[1.05] drop-shadow-2xl mb-3 lg:mb-4"
@@ -351,13 +351,13 @@ const ImageCarousel = () => {
                 </div>
 
                 {currentStory.synopsis && (
-                  <p className="max-w-[520px] text-xs sm:text-sm lg:text-base leading-relaxed text-white/80 mb-4 lg:mb-6 line-clamp-2 lg:line-clamp-3 transition-opacity duration-300 group-hover:text-white">
+                  <p className="max-w-[520px] text-xs sm:text-sm lg:text-base leading-relaxed text-white/80 mb-3 lg:mb-5 line-clamp-2 lg:line-clamp-3 transition-opacity duration-300 group-hover:text-white">
                     {currentStory.synopsis}
                   </p>
                 )}
 
                 {currentStory.genres && currentStory.genres.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-4 lg:mb-6 transition-opacity duration-300 text-white/80 group-hover:text-white">
+                  <div className="flex flex-wrap items-center gap-2 mb-3 lg:mb-5 transition-opacity duration-300 text-white/80 group-hover:text-white">
                     {currentStory.genres.map((genre, index) => (
                       <React.Fragment key={index}>
                         {index !== 0 && <span className="text-white/20">|</span>}
@@ -393,8 +393,8 @@ const ImageCarousel = () => {
                 </div>
               </div>
 
-              {/* Bottom-right thumbnail carousel — Moved Upward */}
-              <div className="absolute bottom-6 lg:bottom-10 right-6 lg:right-12 z-20">
+              {/* Bottom-right thumbnail carousel */}
+              <div className="absolute bottom-6 lg:bottom-8 right-6 lg:right-10 z-20">
                 <div className="relative flex items-center">
                   {currentIndex > 0 && (
                     <button
@@ -482,7 +482,7 @@ const ImageCarousel = () => {
                   <video
                     key={`video-mobile-${currentIndex}`}
                     src={`${BASE_VIDEO_URL}${currentStory.trailer}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                     autoPlay
                     muted={isMuted}
                     playsInline
@@ -493,13 +493,13 @@ const ImageCarousel = () => {
                   <img
                     src={`${BASE_IMAGE_URL}${currentStory.trailer}`}
                     alt={currentStory.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 ) : (
                   <img
                     src={`${BASE_IMAGE_URL}${currentStory.cover_img}`}
                     alt={currentStory.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 )}
 
