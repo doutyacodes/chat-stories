@@ -91,23 +91,39 @@ export default function NavBar() {
     <div className={`relative ${isChatStoryPage() ? 'hidden' : ''}`}>
       {/* Desktop and Mobile Top Navigation */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#171A20] border-b border-white/10 shadow-md">
-        <div>
-          <div className="py-2 lg:py-2.5">
-            <div className="w-full px-4 sm:px-8 lg:px-16">
-              <div className="flex justify-between items-center relative min-h-[52px] lg:min-h-[64px]">
-                {/* Logo */}
-                <div className="flex items-center">
-                  <Link href="/home">
-                    <img 
-                      src="/Transparentlogo.png" 
-                      alt="Ping Tales Logo" 
-                      className="max-w-[140px] max-h-[55px] lg:max-w-[185px] lg:max-h-[62px] object-contain"
-                    />
-                  </Link>
-                </div>
+        <div className="py-2 lg:py-2.5">
+          <div className="w-full px-4 sm:px-8 lg:px-16">
+            <div className="flex justify-between items-center relative min-h-[52px] lg:min-h-[64px]">
+              {/* Left Logo (ByRoice) - Hidden on Mobile */}
+              <div className="hidden lg:flex items-center z-10">
+                <a 
+                  href="https://www.byroice.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center transition-opacity hover:opacity-85"
+                >
+                  <img 
+                    src="/ByRoice-white-transp.png" 
+                    alt="ByRoice Logo" 
+                    className="max-h-[24px] lg:max-h-[28px] w-auto object-contain"
+                  />
+                </a>
+              </div>
 
-                {/* Desktop Navigation */}
-                <nav className="hidden lg:block z-10">
+              {/* Main Logo (Centered Vertically and Horizontally) */}
+              <div 
+                className="flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10"
+                onClick={() => router.push('/')}
+              >
+                <img 
+                  src="/Transparentlogo.png" 
+                  alt="Ping Tales Logo" 
+                  className="max-w-[140px] max-h-[55px] lg:max-w-[185px] lg:max-h-[62px] object-contain"
+                />
+              </div>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden lg:block ml-auto z-10">
                   <ul className="flex gap-6 text-lg font-medium items-center">
                     <li 
                       className="text-white hover:text-gray-300 cursor-pointer transition-colors"
@@ -208,7 +224,7 @@ export default function NavBar() {
 
                             <div className="my-1 border-t border-gray-100" />
 
-                            {isAuthenticated ? (
+                             {isAuthenticated ? (
                               <button
                                 onClick={handleLogout}
                                 className="w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors duration-200"
@@ -226,6 +242,25 @@ export default function NavBar() {
                                 <span className="font-medium">Login</span>
                               </Link>
                             )}
+
+                            <div className="my-1 border-t border-gray-100" />
+
+                            <a
+                              href="https://www.byroice.com/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => setIsMenuOpen(false)}
+                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            >
+                              <div className="bg-black p-1 rounded flex items-center justify-center">
+                                <img 
+                                  src="/ByRoice-white-transp.png" 
+                                  alt="ByRoice Logo" 
+                                  className="w-3.5 h-3.5 object-contain"
+                                />
+                              </div>
+                              <span className="font-medium">ByRoice</span>
+                            </a>
                           </div>
                         </div>
                       )}
@@ -379,6 +414,28 @@ export default function NavBar() {
                 </div>
               </button>
             )}
+
+            <div className="my-1 border-t border-gray-100" />
+
+            <a
+              href="https://www.byroice.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
+            >
+              <div className="bg-black p-2 rounded-lg flex items-center justify-center">
+                <img 
+                  src="/ByRoice-white-transp.png" 
+                  alt="ByRoice Logo" 
+                  className="w-6 h-6 object-contain"
+                />
+              </div>
+              <div>
+                <div className="font-semibold">ByRoice</div>
+                <div className="text-sm text-gray-500">Visit byroice.com</div>
+              </div>
+            </a>
           </div>
         </div>
       </div>

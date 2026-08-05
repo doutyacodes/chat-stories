@@ -126,7 +126,7 @@ const StoryOverview = () => {
                   />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+              <div className="absolute bottom-0 left-0 right-0 px-4 md:px-9 pb-4 md:pb-12">
                   <h2 className="text-white text-2xl md:text-5xl font-bold mb-2">
                   {story?.title}
                   </h2>
