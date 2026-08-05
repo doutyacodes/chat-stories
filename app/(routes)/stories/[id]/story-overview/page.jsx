@@ -122,7 +122,7 @@ const StoryOverview = () => {
                 <img
                       src={`${BASE_IMAGE_URL}${story?.cover_img}`}
                       alt={story?.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-top"
                   />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
