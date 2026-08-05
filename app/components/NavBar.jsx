@@ -271,7 +271,6 @@ export default function NavBar() {
             </div>
           </div>
         </div>
-      </div>
 
         {/* Mobile Drawer Overlay */}
         {(isMobileCreateOpen || isMobileMenuOpen) && (
