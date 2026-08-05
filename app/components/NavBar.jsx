@@ -18,13 +18,10 @@ export default function NavBar() {
 
   // Check if the current path should have a transparent navbar
   const shouldBeTransparent = () => {
-    if (pathname === '/' || pathname === '/home') return true;
-    // Check for story-overview pages with dynamic IDs
-    if (pathname.match(/^\/stories\/\d+\/story-overview$/)) return true;
     return false;
   };
 
-  const isTransparent = shouldBeTransparent();
+  const isTransparent = false;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isMobileCreateOpen, setIsMobileCreateOpen] = useState(false);
@@ -93,25 +90,24 @@ export default function NavBar() {
     <>
     <div className={`relative ${isChatStoryPage() ? 'hidden' : ''}`}>
       {/* Desktop and Mobile Top Navigation */}
-      <div className="relative">
-        <div className={`
-          ${isTransparent ? 'md:absolute md:top-0 md:left-0 md:right-0 md:z-50 md:bg-black/85' : 'bg-black'}
-          ${!isTransparent ? 'bg-black' : 'bg-black md:bg-black/85'}
-        `}>
-          <div className={`${isTransparent ? 'md:h-24' : ''} md:py-4`}>
-            <div className="container mx-auto">
-              <div className="flex md:justify-between justify-center items-center">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[#171A20] border-b border-white/10 shadow-md">
+        <div>
+          <div className="py-2 lg:py-2.5">
+            <div className="w-full px-4 sm:px-8 lg:px-16">
+              <div className="flex justify-between items-center relative min-h-[52px] lg:min-h-[64px]">
                 {/* Logo */}
                 <div className="flex items-center">
-                  <img 
-                    src="/Transparentlogo.png" 
-                    alt="Ping Tales Logo" 
-                    className="max-w-[167px] max-h-[77px] object-contain md:max-w-[220px] md:max-h-[80px]"
-                  />
+                  <Link href="/home">
+                    <img 
+                      src="/Transparentlogo.png" 
+                      alt="Ping Tales Logo" 
+                      className="max-w-[140px] max-h-[55px] lg:max-w-[185px] lg:max-h-[62px] object-contain"
+                    />
+                  </Link>
                 </div>
 
                 {/* Desktop Navigation */}
-                <nav className="hidden md:block">
+                <nav className="hidden lg:block z-10">
                   <ul className="flex gap-6 text-lg font-medium items-center">
                     <li 
                       className="text-white hover:text-gray-300 cursor-pointer transition-colors"
@@ -241,30 +237,22 @@ export default function NavBar() {
           </div>
         </div>
       </div>
-    </div>
+    {/* Mobile Drawer Overlay */}
+    {(isMobileCreateOpen || isMobileMenuOpen) && (
+      <div 
+        className="lg:hidden fixed inset-0 bg-black/60 z-[101]"
+        onClick={() => {
+          setIsMobileCreateOpen(false);
+          setIsMobileMenuOpen(false);
+        }}
+      />
+    )}
 
-    <div className={`md:hidden bg-[#111111] fixed pt-1 pb-2.5 -bottom-1 left-0 right-0 z-[100] text-white shadow-lg ${isChatStoryPage() ? 'hidden' : ''}`}>
-      {/* Mobile Create Menu Overlay */}
-      {isMobileCreateOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black/60 z-[101]"
-          onClick={() => setIsMobileCreateOpen(false)}
-        />
-      )}
-
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black/60 z-[101]"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile Create Menu */}
-      <div className={`
-        md:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
-        ${isMobileCreateOpen ? 'translate-y-0' : 'translate-y-full'}
-      `}>
+    {/* Mobile Create Drawer */}
+    <div ref={createDropdownRef} className={`
+      lg:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
+      ${isMobileCreateOpen ? 'translate-y-0' : 'translate-y-full'}
+    `}>
         <div className="p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Create</h3>
@@ -306,9 +294,9 @@ export default function NavBar() {
         </div>
       </div>
 
-      {/* Mobile Menu (Profile, Our Story, Contact, Logout) */}
+      {/* Mobile Menu Drawer */}
       <div ref={mobileMenuRef} className={`
-        md:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
+        lg:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
         ${isMobileMenuOpen ? 'translate-y-0' : 'translate-y-full'}
       `}>
         <div className="p-4">
@@ -396,7 +384,7 @@ export default function NavBar() {
       </div>
 
        {/* Mobile Bottom Navigation */}
-       <div className="md:hidden bg-[#111111] fixed pt-1 pb-2.5 -bottom-1 left-0 right-0 z-[100] text-white shadow-lg">
+       <div className="lg:hidden bg-[#111111] fixed pt-1 pb-2.5 -bottom-1 left-0 right-0 z-[100] text-white shadow-lg">
         <div className="flex justify-around items-center h-16 px-4">
           <button
             onClick={() => navigateTo('/')}

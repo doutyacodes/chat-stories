@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
             <NavBar />
           </nav>
         </header>
-        <main>
+        <main className="pt-[64px] lg:pt-[72px] pb-24 lg:pb-12">
           {children}
         </main>
         <Toaster richColors />

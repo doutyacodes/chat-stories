@@ -188,8 +188,8 @@ const StoriesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black pb-24 md:pt-8">
-      <div className="w-full max-w-[1920px] mx-auto px-4 md:px-8">
+    <div className="min-h-screen bg-black py-6">
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
 
         {/* Header Title Section */}
         <div className="mb-6">

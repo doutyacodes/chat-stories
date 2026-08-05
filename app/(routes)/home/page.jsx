@@ -253,15 +253,15 @@ const ImageCarousel = () => {
     <div className="min-h-screen bg-black pb-16">
       <div className="w-full max-w-[1920px] mx-auto">
         {/* ======================================================== */}
-        {/* DESKTOP VIEW (md:block) — Preserved Immersive Overlay   */}
+        {/* DESKTOP VIEW (lg:block) — Fullscreen Hero Banner        */}
         {/* ======================================================== */}
         <div
           className="
-            hidden md:block
+            hidden lg:block
             group
             relative
-            mx-auto
-            h-screen
+            w-full
+            h-[calc(100vh-64px)] lg:h-[calc(100vh-72px)] min-h-[560px]
             overflow-hidden
             bg-neutral-950
           "
@@ -307,8 +307,8 @@ const ImageCarousel = () => {
               </div>
 
               {/* Gradient overlays */}
-              <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
-              <div className="absolute left-0 top-0 h-full w-[42%] bg-gradient-to-r from-black/65 via-black/25 to-transparent pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-80 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+              <div className="absolute left-0 top-0 h-full w-[52%] bg-gradient-to-r from-black/85 via-black/35 to-transparent pointer-events-none" />
 
               {/* Mute toggle */}
               {currentStory.trailer && isTrailerVideo(currentStory.trailer) && (
@@ -317,51 +317,51 @@ const ImageCarousel = () => {
                     e.stopPropagation();
                     setIsMuted(!isMuted);
                   }}
-                  className="absolute top-8 right-8 z-30 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full p-3 text-white hover:bg-white/20 transition-all duration-300"
+                  className="absolute top-6 right-8 z-30 bg-white/10 backdrop-blur-xl border border-white/10 rounded-full p-2.5 text-white hover:bg-white/20 transition-all duration-300"
                 >
                   {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
               )}
 
-              {/* HERO CONTENT */}
-              <div className="absolute left-16 bottom-20 z-20 w-[90%] max-w-[560px] group">
+              {/* HERO CONTENT — Positioned Upward for Laptop Screens */}
+              <div className="absolute left-8 sm:left-12 lg:left-16 bottom-8 lg:bottom-12 xl:bottom-16 z-20 w-[90%] max-w-[560px] group">
                 <h1
                   style={{ textShadow: "0 8px 35px rgba(0,0,0,.55)" }}
-                  className="text-white text-7xl font-extrabold tracking-[-0.04em] leading-[0.92] drop-shadow-2xl mb-7"
+                  className="text-white text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-[-0.03em] leading-[1.05] drop-shadow-2xl mb-3 lg:mb-4"
                 >
                   {currentStory.title}
                 </h1>
 
-                <div className="flex flex-wrap items-center gap-3 text-base mb-6 text-white/75 transition-opacity duration-300 group-hover:text-white">
-                  <span className="rounded-md border border-white/25 bg-white/5 px-2.5 py-[2px] text-white/85 font-medium">
+                <div className="flex flex-wrap items-center gap-2.5 text-xs lg:text-sm mb-3 lg:mb-4 text-white/80 transition-opacity duration-300 group-hover:text-white font-semibold">
+                  <span className="rounded-md border border-white/25 bg-white/10 backdrop-blur-md px-2.5 py-0.5 text-white font-medium">
                     {(currentStory?.story_type === 'game' || currentStory?.storyType === 'game' || currentStory?.type === 'game' || currentStory?.story_type === 'interactive' || currentStory?.storyType === 'interactive') ? 'Game' : 'Story'}
                   </span>
                   <span className="text-white/20">•</span>
-                  <span className="rounded-md border border-white/25 bg-white/5 px-2.5 py-[2px] text-white/85 font-medium">
+                  <span className="rounded-md border border-white/25 bg-white/10 backdrop-blur-md px-2.5 py-0.5 text-white font-medium">
                     {currentStory.age_rating || '13+'}
                   </span>
                   <span className="text-white/20">•</span>
-                  <span className="text-white/70 font-semibold">
+                  <span className="text-white/80 font-semibold">
                     {currentStory.episode_count || 0} Episodes
                   </span>
                   <span className="text-white/20">•</span>
-                  <span className="text-white/70">
+                  <span className="text-white/80">
                     {currentStory.language || 'English'}
                   </span>
                 </div>
 
                 {currentStory.synopsis && (
-                  <p className="max-w-[560px] text-[17px] leading-8 text-white/65 mb-8 line-clamp-3 transition-opacity duration-300 group-hover:text-white/80">
+                  <p className="max-w-[520px] text-xs sm:text-sm lg:text-base leading-relaxed text-white/80 mb-4 lg:mb-6 line-clamp-2 lg:line-clamp-3 transition-opacity duration-300 group-hover:text-white">
                     {currentStory.synopsis}
                   </p>
                 )}
 
                 {currentStory.genres && currentStory.genres.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-9 transition-opacity duration-300 text-white/80 group-hover:text-white">
+                  <div className="flex flex-wrap items-center gap-2 mb-4 lg:mb-6 transition-opacity duration-300 text-white/80 group-hover:text-white">
                     {currentStory.genres.map((genre, index) => (
                       <React.Fragment key={index}>
                         {index !== 0 && <span className="text-white/20">|</span>}
-                        <span className="text-white/90 font-semibold text-base">
+                        <span className="text-white/90 font-semibold text-xs lg:text-sm">
                           {genre}
                         </span>
                       </React.Fragment>
@@ -369,20 +369,20 @@ const ImageCarousel = () => {
                   </div>
                 )}
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 lg:gap-4">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleOpenStory(currentStory);
                     }}
-                    className="h-14 min-w-[280px] px-12 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#9900FF] to-[#E60073] hover:from-[#1A75FF] hover:via-[#A61AFF] hover:to-[#FF1A82] text-white font-bold text-xl tracking-wide shadow-lg shadow-purple-900/40 hover:shadow-[0_0_30px_rgba(153,0,255,0.5)] transition-all duration-300 active:scale-95 flex items-center justify-center"
+                    className="h-12 lg:h-14 min-w-[200px] lg:min-w-[240px] px-8 rounded-xl bg-gradient-to-r from-[#0066FF] via-[#9900FF] to-[#E60073] hover:from-[#1A75FF] hover:via-[#A61AFF] hover:to-[#FF1A82] text-white font-bold text-base lg:text-lg tracking-wide shadow-lg shadow-purple-900/40 hover:shadow-[0_0_30px_rgba(153,0,255,0.5)] transition-all duration-300 active:scale-95 flex items-center justify-center"
                   >
                     {(currentStory?.story_type === 'game' || currentStory?.storyType === 'game' || currentStory?.type === 'game' || currentStory?.story_type === 'interactive' || currentStory?.storyType === 'interactive') ? 'Play Now' : 'Read Now'}
                   </button>
 
                   <button
                     onClick={(e) => handleSave(e, currentStory.story_id)}
-                    className={`h-14 w-14 rounded-xl backdrop-blur-xl border border-white/10 transition-all duration-300 ${
+                    className={`h-12 w-12 lg:h-14 lg:w-14 rounded-xl backdrop-blur-xl border border-white/10 transition-all duration-300 ${
                       savedStories[currentStory.story_id]
                         ? "bg-white text-black"
                         : "bg-white/10 text-white hover:bg-white/20"
@@ -393,8 +393,8 @@ const ImageCarousel = () => {
                 </div>
               </div>
 
-              {/* Bottom-right thumbnail carousel */}
-              <div className="absolute bottom-10 right-12 z-20">
+              {/* Bottom-right thumbnail carousel — Moved Upward */}
+              <div className="absolute bottom-6 lg:bottom-10 right-6 lg:right-12 z-20">
                 <div className="relative flex items-center">
                   {currentIndex > 0 && (
                     <button
@@ -461,9 +461,9 @@ const ImageCarousel = () => {
 
 
         {/* ======================================================== */}
-        {/* MOBILE VIEW (block md:hidden) — Structured 3-Tier Stack  */}
+        {/* MOBILE & TABLET VIEW (block lg:hidden) — Structured 3-Tier Stack */}
         {/* ======================================================== */}
-        <div className="block md:hidden bg-black overflow-hidden">
+        <div className="block lg:hidden bg-black overflow-hidden">
           {isCarouselLoading ? (
             <div className="h-[280px] flex items-center justify-center bg-neutral-950 animate-pulse">
               <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
