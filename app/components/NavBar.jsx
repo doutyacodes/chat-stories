@@ -272,22 +272,23 @@ export default function NavBar() {
           </div>
         </div>
       </div>
-    {/* Mobile Drawer Overlay */}
-    {(isMobileCreateOpen || isMobileMenuOpen) && (
-      <div 
-        className="lg:hidden fixed inset-0 bg-black/60 z-[101]"
-        onClick={() => {
-          setIsMobileCreateOpen(false);
-          setIsMobileMenuOpen(false);
-        }}
-      />
-    )}
 
-    {/* Mobile Create Drawer */}
-    <div ref={createDropdownRef} className={`
-      lg:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
-      ${isMobileCreateOpen ? 'translate-y-0' : 'translate-y-full'}
-    `}>
+        {/* Mobile Drawer Overlay */}
+        {(isMobileCreateOpen || isMobileMenuOpen) && (
+          <div 
+            className="lg:hidden fixed inset-0 bg-black/60 z-[101]"
+            onClick={() => {
+              setIsMobileCreateOpen(false);
+              setIsMobileMenuOpen(false);
+            }}
+          />
+        )}
+
+      {/* Mobile Create Drawer */}
+      <div ref={createDropdownRef} className={`
+        lg:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
+        ${isMobileCreateOpen ? 'translate-y-0' : 'translate-y-full'}
+      `}>
         <div className="p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Create</h3>
