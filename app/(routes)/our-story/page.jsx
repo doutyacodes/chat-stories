@@ -18,7 +18,7 @@ const OurStoryPage = () => {
           <div className="max-w-3xl mx-auto text-center">
             <img
               src="/Transparentlogo.png"
-              alt="Ping Tales"
+              alt="Qatha"
               className="mx-auto w-44 md:w-56 mb-10"
             />
             <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
@@ -40,7 +40,7 @@ const OurStoryPage = () => {
             something wild that happened last night. It can be a series of images 
             that set the mood before a single word is spoken. It can be a voice 
             note that pulls you in, or a video clip that drops you right into the 
-            middle of the action. On Ping Tales, stories aren&apos;t locked into one 
+            middle of the action. On Qatha, stories aren&apos;t locked into one 
             format — they use all of them together.
           </p>
 
@@ -54,7 +54,7 @@ const OurStoryPage = () => {
           </p>
 
           <p>
-            But reading is only half of it. Some stories on Ping Tales are games. 
+            But reading is only half of it. Some stories on Qatha are games. 
             You&apos;re following along, getting deep into the plot, and then a quiz 
             shows up — answer it right and you unlock the next episode. Or the 
             story gives you a real-life challenge: walk a thousand steps before 
@@ -66,7 +66,7 @@ const OurStoryPage = () => {
 
           <p>
             And anyone can build this. You don&apos;t need to be a developer or a 
-            filmmaker. If you have a story to tell, Ping Tales gives you the 
+            filmmaker. If you have a story to tell, Qatha gives you the 
             tools to tell it in any way you want — chats, images, audio, video, 
             quizzes, real-world challenges, all of it. The platform is as much 
             for creators as it is for readers and players.
@@ -83,7 +83,7 @@ const OurStoryPage = () => {
               Stories meet real life
             </h2>
             <p className="text-white/60 text-base md:text-[17px] leading-[1.85] text-justify">
-              Most storytelling apps keep you sitting still. Ping Tales does the 
+              Most storytelling apps keep you sitting still. Qatha does the 
               opposite when the story calls for it. Imagine reading a thriller 
               where the detective needs to get to a safehouse — and your app tells 
               you to walk 2,000 steps before the next chapter opens. Or a treasure 

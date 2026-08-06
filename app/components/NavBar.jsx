@@ -117,7 +117,7 @@ export default function NavBar() {
               >
                 <img 
                   src="/Transparentlogo.png" 
-                  alt="Ping Tales Logo" 
+                  alt="Qatha Logo" 
                   className="max-w-[140px] max-h-[55px] lg:max-w-[185px] lg:max-h-[62px] object-contain"
                 />
               </div>

@@ -16,6 +16,10 @@ export const metadata = {
   authors: [{ name: "Qatha" }],
   creator: "Qatha",
   publisher: "ByRoice",
+  metadataBase: new URL("https://www.qatha.com"),
+  alternates: {
+    canonical: "https://www.qatha.com",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -29,10 +33,11 @@ export const metadata = {
     title: "Qatha — Interactive Chat Stories & Audio Books",
     description:
       "Experience interactive chat stories, immersive audio tales, and visual narratives on Qatha.",
+    url: "https://www.qatha.com",
     siteName: "Qatha",
     images: [
       {
-        url: "/android-chrome-512x512.png",
+        url: "https://www.qatha.com/android-chrome-512x512.png",
         width: 512,
         height: 512,
         alt: "Qatha Icon",
@@ -40,6 +45,13 @@ export const metadata = {
     ],
     locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Qatha — Interactive Chat Stories & Audio Books",
+    description:
+      "Experience interactive chat stories, immersive audio tales, and visual narratives on Qatha.",
+    images: ["https://www.qatha.com/android-chrome-512x512.png"],
   },
 };
 

@@ -128,10 +128,10 @@ const ContactUsPage = () => {
               <div>
                 <p className="text-xs uppercase tracking-widest text-white/25 font-medium mb-3">Email</p>
                 <a
-                  href="mailto:hello@pingtales.com"
+                  href="mailto:hello@qatha.com"
                   className="text-white/70 hover:text-white transition-colors duration-200 text-base"
                 >
-                  hello@pingtales.com
+                  hello@qatha.com
                 </a>
               </div>
 
@@ -145,7 +145,7 @@ const ContactUsPage = () => {
               <div>
                 <p className="text-xs uppercase tracking-widest text-white/25 font-medium mb-3">For creators</p>
                 <p className="text-white/50 text-base text-justify">
-                  Want to publish stories or games on Ping Tales? 
+                  Want to publish stories or games on Qatha? 
                   You can start right away — hit the Create button in the menu 
                   and you&apos;re good to go.
                 </p>
@@ -156,7 +156,7 @@ const ContactUsPage = () => {
             <div className="hidden md:block mt-16">
               <div className="h-px bg-gradient-to-r from-white/10 via-white/5 to-transparent mb-6" />
               <p className="text-white/20 text-sm">
-                Ping Tales — stories that feel like conversations.
+                Qatha — stories that feel like conversations.
               </p>
             </div>
           </div>

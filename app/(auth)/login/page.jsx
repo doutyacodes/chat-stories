@@ -78,7 +78,7 @@ const LoginPage = () => {
           </button>
         </form>
         <p className="text-gray-400 text-sm text-center mt-6">
-          New to PingTales?{' '}
+          New to Qatha?{' '}
           <Link href="/signup" className="text-red-500 hover:underline font-semibold">
             Sign up now
           </Link>
