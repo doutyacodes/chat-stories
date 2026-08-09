@@ -972,7 +972,7 @@ const SlideContainer = ({
       <h2 className="text-2xl font-bold mb-4">{locationData.description}</h2>
       
       {userLocation ? (
-        <div className="space-y-6">
+        <div className="space-y-4 w-full">
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-gray-400 mb-2">Distance Remaining</p>
             <div className="space-y-2">
@@ -983,18 +983,49 @@ const SlideContainer = ({
             </div>
           </div>
 
-          {/* Added mt-12 to create more space from the content above */}
-          <div className="mt-12">
+          {/* View in Google Maps Button */}
+          {locationData?.latitude && locationData?.longitude && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 border border-blue-400/30 text-sm cursor-pointer"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              View Location in Google Maps
+            </a>
+          )}
+
+          <div className="mt-4">
             <button
               onClick={handleQuit}
-              className="py-2.5 px-6 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-gray-200 font-medium text-sm border border-gray-600"
+              className="py-2.5 px-6 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-gray-200 font-medium text-sm border border-gray-600 cursor-pointer"
             >
               Quit now & continue later
             </button>
           </div>
         </div>
       ) : (
-        <div className="text-gray-300 animate-pulse">Getting your location...</div>
+        <div className="space-y-4 w-full">
+          <div className="text-gray-300 animate-pulse">Getting your location...</div>
+          {locationData?.latitude && locationData?.longitude && (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${locationData.latitude},${locationData.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 border border-blue-400/30 text-sm cursor-pointer"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              View Location in Google Maps
+            </a>
+          )}
+        </div>
       )}
     </div>
   </div>

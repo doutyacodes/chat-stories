@@ -99,30 +99,38 @@ const StorySlides = () => {
       setLocationPermissionDenied(true);
       return;
     }
-    console.log("inside the latitude calculation");
+    
+    if (watchId) {
+      clearInterval(watchId);
+      if (typeof watchId === 'number' && navigator.geolocation.clearWatch) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      setWatchId(null);
+    }
     
     const id = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          setUserLocation((prev) => {
+            if (prev && prev.latitude === lat && prev.longitude === lng) return prev;
+            return { latitude: lat, longitude: lng };
           });
           
           // Calculate distance between user and target
           const distance = calculateDistance(
-            position.coords.latitude,
-            position.coords.longitude,
+            lat,
+            lng,
             locationData.latitude,
             locationData.longitude
           );
-
-          console.log("distance", distance)
           
           if (distance <= locationData.radius) {
             setLocationCompleted(true);
             setShowLocationCompletedModal(true);
-            clearInterval(id); // Stop tracking
+            clearInterval(id);
             setWatchId(null);
           }
         },
@@ -130,7 +138,7 @@ const StorySlides = () => {
           console.error('Error getting location:', error);
           setLocationPermissionDenied(true);
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, maximumAge: 3000 }
       );
     }, 3000);
 
@@ -243,7 +251,7 @@ const StorySlides = () => {
         document.removeEventListener('click', handleFirstInteraction);
       };
     }
-  }, [slideContent, chatMessages, quizData, conversation]);
+  }, [slideContent?.audio_url, chatAudio, conversationAudio, quizData?.audio_url]);
 
   // 4. Update volume effect
   useEffect(() => {
@@ -467,7 +475,10 @@ const StorySlides = () => {
   useEffect(() => {
     return () => {
       if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
+        clearInterval(watchId);
+        if (typeof watchId === 'number' && navigator.geolocation.clearWatch) {
+          navigator.geolocation.clearWatch(watchId);
+        }
       }
     };
   }, [watchId]);
