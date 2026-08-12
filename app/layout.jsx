@@ -1,7 +1,8 @@
 import './globals.css'; // Import global CSS
 import { Inter } from 'next/font/google'; 
-import NavBar from './components/NavBar'  // Make sure this matches your file name exactly
-import { Toaster } from "sonner"
+import NavBar from './components/NavBar';
+import Footer from './components/Footer';
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ['latin'] }); 
 
@@ -65,7 +66,7 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen flex flex-col justify-between`}>
         {/* Global layout elements like header, footer can go here */}
         <header>
           <nav>
@@ -73,9 +74,10 @@ export default function RootLayout({ children }) {
             <NavBar />
           </nav>
         </header>
-        <main className="pt-[64px] lg:pt-[72px] pb-24 lg:pb-12">
+        <main className="pt-[64px] lg:pt-[72px] pb-24 lg:pb-12 flex-1">
           {children}
         </main>
+        <Footer />
         <Toaster richColors />
       </body>
     </html>

@@ -204,24 +204,6 @@ export default function NavBar() {
                               <span className="font-medium">Profile</span>
                             </Link>
 
-                            <Link
-                              onClick={() => setIsMenuOpen(false)}
-                              href="/our-story"
-                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
-                            >
-                              <Info className="w-4 h-4" />
-                              <span className="font-medium">Our Story</span>
-                            </Link>
-                            
-                            <Link 
-                              onClick={() => setIsMenuOpen(false)}
-                              href="/contact-us"
-                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
-                            >
-                              <Mail className="w-4 h-4" />
-                              <span className="font-medium">Contact Us</span>
-                            </Link>
-
                             <div className="my-1 border-t border-gray-100" />
 
                              {isAuthenticated ? (
@@ -356,32 +338,6 @@ export default function NavBar() {
               <div>
                 <div className="font-semibold">Profile</div>
                 <div className="text-sm text-gray-500">View your profile</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => navigateTo('/our-story')}
-              className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
-            >
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <Info size={24} className="text-orange-500" />
-              </div>
-              <div>
-                <div className="font-semibold">Our Story</div>
-                <div className="text-sm text-gray-500">Learn more about us</div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => navigateTo('/contact-us')}
-              className="w-full flex items-center gap-3 p-4 text-left text-gray-700 hover:bg-orange-50 hover:text-orange-500 rounded-xl transition-colors"
-            >
-              <div className="bg-orange-100 p-2 rounded-lg">
-                <Mail size={24} className="text-orange-500" />
-              </div>
-              <div>
-                <div className="font-semibold">Contact Us</div>
-                <div className="text-sm text-gray-500">Get in touch with us</div>
               </div>
             </button>
 
