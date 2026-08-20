@@ -10,6 +10,7 @@ import {
   QUIZ_OPTIONS,
   LOCATION_TASKS,
   PEDOMETER_TASKS,
+  AI_IMAGE_TASKS,
 } from '@/utils/schema';
 import { authenticate } from '@/lib/jwtMiddleware';
 import { eq, and, gte, lt } from 'drizzle-orm';
@@ -275,6 +276,29 @@ export async function GET(request, { params }) {
               longitude: locationTask[0]?.longitude || 0,
               radius: locationTask[0]?.radius || 0,
               description: locationTask[0]?.description || '',
+              audio: content[0]?.audio_url ? { name: content[0].audio_url } : null,
+            },
+          };
+        } else if (slide.slide_type === 'ai_image_task') {
+          const imageTask = await db
+            .select()
+            .from(AI_IMAGE_TASKS)
+            .where(eq(AI_IMAGE_TASKS.slide_id, slide.id))
+            .limit(1);
+
+          const content = await db
+            .select()
+            .from(SLIDE_CONTENT)
+            .where(eq(SLIDE_CONTENT.slide_id, slide.id))
+            .limit(1);
+
+          return {
+            id: slide.id,
+            type: 'ai_image_task',
+            position: slide.position,
+            content: {
+              description: imageTask[0]?.description || '',
+              media: content[0]?.media_url ? { preview: content[0].media_url, type: content[0].media_type } : null,
               audio: content[0]?.audio_url ? { name: content[0].audio_url } : null,
             },
           };

@@ -14,6 +14,7 @@ export default function NavBar() {
   // Refs for click-outside detection
   const createDropdownRef = useRef(null);
   const menuDropdownRef = useRef(null);
+  const mobileCreateRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
   // Check if the current path should have a transparent navbar
@@ -159,23 +160,23 @@ export default function NavBar() {
                           <div className="absolute left-4 -top-2 w-4 h-4 bg-white transform rotate-45 border-l border-t border-black/5" />
                           
                           <div className="relative bg-white rounded-lg">
-                            <Link
-                              onClick={() => setIsCreateOpen(false)}
-                              href="/your-stories"
-                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            <button
+                              type="button"
+                              onClick={() => navigateTo('/your-stories')}
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200 text-left cursor-pointer"
                             >
                               <Layout className="w-4 h-4" />
                               <span className="font-medium">Your Stories</span>
-                            </Link>
+                            </button>
                             
-                            <Link 
-                              onClick={() => setIsCreateOpen(false)}
-                              href="/create-story"
-                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            <button
+                              type="button"
+                              onClick={() => navigateTo('/create-story')}
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200 text-left cursor-pointer"
                             >
                               <PenLine className="w-4 h-4" />
                               <span className="font-medium">Create Story/Game</span>
-                            </Link>
+                            </button>
                           </div>
                         </div>
                       )}
@@ -195,34 +196,35 @@ export default function NavBar() {
                           <div className="absolute right-3 -top-2 w-4 h-4 bg-white transform rotate-45 border-l border-t border-black/5" />
                           
                           <div className="relative bg-white rounded-lg">
-                            <Link
-                              onClick={() => setIsMenuOpen(false)}
-                              href="/profile"
-                              className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                            <button
+                              type="button"
+                              onClick={() => navigateTo('/profile')}
+                              className="w-full flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200 text-left cursor-pointer"
                             >
                               <User className="w-4 h-4" />
                               <span className="font-medium">Profile</span>
-                            </Link>
+                            </button>
 
                             <div className="my-1 border-t border-gray-100" />
 
                              {isAuthenticated ? (
                               <button
+                                type="button"
                                 onClick={handleLogout}
-                                className="w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors duration-200 text-left cursor-pointer"
                               >
                                 <LogOut className="w-4 h-4" />
                                 <span className="font-medium">Logout</span>
                               </button>
                             ) : (
-                              <Link
-                                onClick={() => setIsMenuOpen(false)}
-                                href="/login"
-                                className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200"
+                              <button
+                                type="button"
+                                onClick={() => navigateTo('/login')}
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition-colors duration-200 text-left cursor-pointer"
                               >
                                 <LogIn className="w-4 h-4" />
                                 <span className="font-medium">Login</span>
-                              </Link>
+                              </button>
                             )}
 
                             <div className="my-1 border-t border-gray-100" />
@@ -266,7 +268,7 @@ export default function NavBar() {
         )}
 
       {/* Mobile Create Drawer */}
-      <div ref={createDropdownRef} className={`
+      <div ref={mobileCreateRef} className={`
         lg:hidden fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[102] transition-transform duration-300 ease-out
         ${isMobileCreateOpen ? 'translate-y-0' : 'translate-y-full'}
       `}>

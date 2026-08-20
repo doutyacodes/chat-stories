@@ -4,7 +4,7 @@
   import path from 'path';
   import Client from 'ssh2-sftp-client';
   import { db } from '@/utils';
-  import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, QUIZ_OPTIONS, QUIZZES, PEDOMETER_TASKS, LOCATION_TASKS } from '@/utils/schema';
+  import { STORIES, CHARACTERS, EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, QUIZ_OPTIONS, QUIZZES, PEDOMETER_TASKS, LOCATION_TASKS, AI_IMAGE_TASKS } from '@/utils/schema';
   import { authenticate } from '@/lib/jwtMiddleware';
   import { eq, and, desc } from 'drizzle-orm';
 
@@ -66,6 +66,15 @@
           }
           if (!slide.content.targetSteps || slide.content.targetSteps <= 0) {
             throw new Error('Valid number of steps is required for pedometer task');
+          }
+        }
+      }
+
+      // Validate photo task (ai_image_task) slides
+      for (const slide of slides) {
+        if (slide.type === 'ai_image_task') {
+          if (!slide.content.description?.trim()) {
+            throw new Error('Photo task description is required');
           }
         }
       }
@@ -282,6 +291,21 @@
           await db.insert(SLIDE_CONTENT).values({
             slide_id: slideId,
             audio_url: slide.content.audio?.name || null,
+          });
+        } else if (slide.type === 'ai_image_task') {
+          // Create AI image task entry
+          await db.insert(AI_IMAGE_TASKS).values({
+            slide_id: slideId,
+            description: slide.content.description || '',
+          });
+
+          // Insert slide content for optional background media and voiceover audio
+          await db.insert(SLIDE_CONTENT).values({
+            slide_id: slideId,
+            media_type: slide.content.media?.type || 'image',
+            media_url: slide.content.media?.name || null,
+            audio_url: slide.content.audio?.name || null,
+            description: slide.content.description || '',
           });
         }
       }

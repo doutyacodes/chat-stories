@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/utils';
-import { EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, CHARACTERS, QUIZZES, QUIZ_OPTIONS, PEDOMETER_TASKS, LOCATION_TASKS } from '@/utils/schema';
+import { EPISODES, SLIDES, SLIDE_CONTENT, CHAT_MESSAGES, CHARACTERS, QUIZZES, QUIZ_OPTIONS, PEDOMETER_TASKS, LOCATION_TASKS, AI_IMAGE_TASKS } from '@/utils/schema';
 import { authenticate } from '@/lib/jwtMiddleware';
 import { eq, and, gte, lt } from 'drizzle-orm';
 
@@ -462,6 +462,20 @@ export async function PUT(request, { params }) {
               description: slide.content.description
             });
           }
+          else if (slide.type === 'ai_image_task') {
+            await trx.insert(AI_IMAGE_TASKS).values({
+              slide_id: slideId,
+              description: slide.content.description || '',
+            });
+
+            await trx.insert(SLIDE_CONTENT).values({
+              slide_id: slideId,
+              media_type: slide.content.media?.type || 'image',
+              media_url: slide.content.media?.file || null,
+              audio_url: slide.content.audio?.file || null,
+              description: slide.content.description || '',
+            });
+          }
         } else {
           if (slide.changes.positionModified) {
             await trx
@@ -581,6 +595,51 @@ export async function PUT(request, { params }) {
                   description: slide.content.description
                 })
                 .where(eq(LOCATION_TASKS.slide_id, slide.id));
+            }
+          } else if (slide.type === 'ai_image_task') {
+            if (slide.changes.descriptionModified || slide.changes.mediaModified || slide.changes.audioModified) {
+              if (slide.changes.descriptionModified) {
+                await trx
+                  .update(AI_IMAGE_TASKS)
+                  .set({
+                    description: slide.content.description || '',
+                  })
+                  .where(eq(AI_IMAGE_TASKS.slide_id, slide.id));
+              }
+
+              if (slide.changes.mediaModified || slide.changes.audioModified || slide.changes.descriptionModified) {
+                const updateData = {
+                  description: slide.content.description || '',
+                };
+                if (slide.changes.mediaModified) {
+                  updateData.media_url = slide.content.media?.file || null;
+                  updateData.media_type = slide.content.media?.type || 'image';
+                }
+                if (slide.changes.audioModified) {
+                  updateData.audio_url = slide.content.audio?.file || null;
+                }
+
+                const existingContent = await trx
+                  .select()
+                  .from(SLIDE_CONTENT)
+                  .where(eq(SLIDE_CONTENT.slide_id, slide.id))
+                  .limit(1);
+
+                if (existingContent.length > 0) {
+                  await trx
+                    .update(SLIDE_CONTENT)
+                    .set(updateData)
+                    .where(eq(SLIDE_CONTENT.slide_id, slide.id));
+                } else {
+                  await trx.insert(SLIDE_CONTENT).values({
+                    slide_id: slide.id,
+                    media_type: updateData.media_type || 'image',
+                    media_url: updateData.media_url || null,
+                    audio_url: updateData.audio_url || null,
+                    description: updateData.description || '',
+                  });
+                }
+              }
             }
           }
         }

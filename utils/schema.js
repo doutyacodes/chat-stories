@@ -126,7 +126,7 @@ export const SLIDES = mysqlTable("slides", {
   id: int("id").primaryKey().autoincrement(),
   story_id: int("story_id").notNull().references(() => STORIES.id),
   episode_id: int("episode_id").references(() => EPISODES.id), // Optional for slide-based episodes
-  slide_type: mysqlEnum("slide_type", ["image", "chat", "conversation", "quiz", "pedometer", "location"]).notNull(),
+  slide_type: mysqlEnum("slide_type", ["image", "chat", "conversation", "quiz", "pedometer", "location", "ai_image_task"]).notNull(),
   position: int("position").notNull(), // Order of the slide
   is_locked: boolean("is_locked").notNull().default(false), // Determines if a slide is gated by a quiz
   created_at: timestamp("created_at").defaultNow(),
@@ -237,6 +237,13 @@ export const LOCATION_TASKS = mysqlTable("location_tasks", {
   latitude: decimal("latitude", 10, 8).notNull(),
   longitude: decimal("longitude", 11, 8).notNull(),
   radius: int("radius").notNull(), // in meters
+  description: text("description").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const AI_IMAGE_TASKS = mysqlTable("ai_image_tasks", {
+  id: int("id").primaryKey().autoincrement(),
+  slide_id: int("slide_id").notNull().references(() => SLIDES.id),
   description: text("description").notNull(),
   created_at: timestamp("created_at").defaultNow(),
 });

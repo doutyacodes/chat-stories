@@ -71,6 +71,13 @@ const StorySlides = () => {
 
   const [showLocationCompletedModal, setShowLocationCompletedModal] = useState(false);
 
+  const [photoTaskData, setPhotoTaskData] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoVerificationResult, setPhotoVerificationResult] = useState(null);
+  const [isVerifyingPhoto, setIsVerifyingPhoto] = useState(false);
+  const [photoTaskCompleted, setPhotoTaskCompleted] = useState(false);
+
 
   const BASE_IMAGE_URL = 'https://wowfy.in/testusr/images/';
   const BASE_VIDEO_URL = 'https://wowfy.in/testusr/videos/';
@@ -460,12 +467,59 @@ const StorySlides = () => {
         if (hasPermission && locationData) {
           startLocationTracking(locationData);
         }
+      } else if (slideType === 'ai_image_task') {
+        const photoTaskResponse = await fetch(`/api/ai-image-task-content/${slideId}`);
+        if (!photoTaskResponse.ok) throw new Error('Failed to fetch photo task content');
+        const taskData = await photoTaskResponse.json();
+        setPhotoTaskData(taskData);
+        setPhotoFile(null);
+        setPhotoPreview(null);
+        setPhotoVerificationResult(null);
+        setPhotoTaskCompleted(false);
       }
       
       setLoading(false);
     } catch (err) {
       setError(err.message);
       setLoading(false);
+    }
+  };
+
+  const handlePhotoVerificationSubmit = async () => {
+    if (!photoFile || !currentSlide?.id) return;
+    setIsVerifyingPhoto(true);
+    setPhotoVerificationResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('slide_id', currentSlide.id);
+      formData.append('photo', photoFile);
+
+      const res = await fetch('/api/stories/verify-photo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data) {
+        setPhotoVerificationResult(data);
+        if (data.is_valid) {
+          setPhotoTaskCompleted(true);
+        }
+      } else {
+        setPhotoVerificationResult({
+          is_valid: false,
+          feedback: data.error || 'Failed to verify photo. Please try again.',
+        });
+      }
+    } catch (err) {
+      console.error('Photo verification error:', err);
+      setPhotoVerificationResult({
+        is_valid: false,
+        feedback: 'Network error verifying photo. Please try again.',
+      });
+    } finally {
+      setIsVerifyingPhoto(false);
     }
   };
 
@@ -599,6 +653,10 @@ const StorySlides = () => {
     }
 
     if (currentSlide.slide_type === 'quiz' && !validateAnswer()) {
+      return;
+    }
+
+    if (currentSlide.slide_type === 'ai_image_task' && !photoVerificationResult?.is_valid) {
       return;
     }
 
@@ -827,10 +885,17 @@ const StorySlides = () => {
           {!isLastSlide ? (
             <button 
               onClick={onNext}
-              disabled={loading || (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer)) ||
-                (currentSlide?.slide_type === 'pedometer' && !pedometerCompleted) }
+              disabled={
+                loading ||
+                (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer)) ||
+                (currentSlide?.slide_type === 'pedometer' && !pedometerCompleted) ||
+                (currentSlide?.slide_type === 'ai_image_task' && !photoVerificationResult?.is_valid)
+              }
               className={`pointer-events-auto ml-auto p-4 rounded-full transition-colors shadow-lg backdrop-blur-sm ${
-                loading || (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer))
+                loading ||
+                (currentSlide?.slide_type === 'quiz' && (!isAnswerCorrect || !hasSubmittedAnswer)) ||
+                (currentSlide?.slide_type === 'pedometer' && !pedometerCompleted) ||
+                (currentSlide?.slide_type === 'ai_image_task' && !photoVerificationResult?.is_valid)
                   ? 'bg-green-600/80 opacity-50 cursor-not-allowed'
                   : 'bg-green-600/80 hover:bg-green-700/80'
               }`}
@@ -1015,7 +1080,18 @@ const StorySlides = () => {
                 userLocation={userLocation}
                 locationPermissionDenied={locationPermissionDenied}
                 calculateDistance={calculateDistance}
-                // locationCompleted={locationCompleted}
+                photoTaskData={photoTaskData}
+                photoFile={photoFile}
+                setPhotoFile={setPhotoFile}
+                photoPreview={photoPreview}
+                setPhotoPreview={setPhotoPreview}
+                photoVerificationResult={photoVerificationResult}
+                setPhotoVerificationResult={setPhotoVerificationResult}
+                isVerifyingPhoto={isVerifyingPhoto}
+                handlePhotoVerificationSubmit={handlePhotoVerificationSubmit}
+                photoTaskCompleted={photoTaskCompleted}
+                setPhotoTaskCompleted={setPhotoTaskCompleted}
+                onNextSlide={() => handleSlideChange('next')}
               />
             <Navigation 
               onNext={() => handleSlideChange('next')}

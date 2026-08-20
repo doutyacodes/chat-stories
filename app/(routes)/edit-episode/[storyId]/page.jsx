@@ -179,6 +179,19 @@ console.log('modifications', modifications)
                 radius: slide.content.radius || 0,
                 audio: slide.content.audio ? { name: slide.content.audio.name } : null
               } :
+              slide.type === "ai_image_task" ? {
+                description: slide.content.description || "",
+                media: slide.content.media
+                  ? { 
+                    preview: slide.content.media.type === 'video'
+                      ? `${BASE_VIDEO_URL}${slide.content.media.preview}`
+                      : `${BASE_IMAGE_URL}${slide.content.media.preview}`,
+                    type: slide.content.media.type || 'image',
+                    file: null
+                    }
+                  : null,
+                audio: slide.content.audio ? { name: slide.content.audio.name } : null
+              } :
              {},
       }));
 
@@ -396,6 +409,12 @@ const handleRemoveEpisodeAudio = () => {
               latitude: 0,
               longitude: 0,
               radius: 0,
+              audio: null,
+            }
+          : type === "ai_image_task"
+          ? {
+              description: "",
+              media: null,
               audio: null,
             }
           : {}
@@ -717,38 +736,46 @@ const handleRemoveEpisodeAudio = () => {
   
       let modifiedSlides = Object.entries(modifications.slides)
         .filter(([_, changes]) => Object.values(changes).some((v) => v))
-        .map(([slideId, changes]) => ({
-          id: slideId,
-          changes,
-          ...episodeData.slides.find((s) => s.id === slideId),
-        }));
-  
+        .map(([slideId, changes]) => {
+          const slide = episodeData.slides.find((s) => s.id === slideId);
+          if (!slide || !slide.content) return null;
+          return {
+            id: slideId,
+            changes,
+            ...slide,
+          };
+        })
+        .filter(Boolean);
+
       // **Upload media & audio before appending to FormData**
       for (const slide of modifiedSlides) {
-        if (slide.content.media?.file) {
+        if (slide?.content?.media?.file && typeof slide.content.media.file !== "string") {
           const mediaPath = await uploadMediaToCPanel(slide.content.media.file);
-          // slide.content.media.file = mediaPath; // Update file path
           slide.content.media = {
-            file: mediaPath,  // Only send file name
-            type: slide.content.media.type, // Keep the type
+            file: mediaPath, // Only send file name
+            type: slide.content.media.type || "image", // Keep the type
           };
         }
-        if (slide.content.audio?.file) {
+        if (slide?.content?.audio?.file && typeof slide.content.audio.file !== "string") {
           const audioPath = await uploadAudioToCPanel(slide.content.audio.file);
-          // slide.content.audio.file = audioPath; // Update file path
-          slide.content.media = {
-            file: audioPath,  // Only send file name
-            type: 'audio' // Keep the type
-            // type: slide.content.media.type,
+          slide.content.audio = {
+            file: audioPath,
+            name: audioPath,
           };
+          if (!slide.content.media) {
+            slide.content.media = {
+              file: audioPath,
+              type: "audio",
+            };
+          }
         }
       }
-  
+
       // **Now append modifiedSlides with updated paths**
       formData.append("modifiedSlides", JSON.stringify(modifiedSlides));
-  
+
       for (const slide of modifiedSlides) {
-        if (slide.content.pdfFile) {
+        if (slide?.content?.pdfFile) {
           formData.append(`slides.${slide.id}.pdfFile`, slide.content.pdfFile);
         }
       }
@@ -963,9 +990,16 @@ const handleRemoveEpisodeAudio = () => {
                 <button
                   type="button"
                   onClick={() => handleAddSlide("location")}
-                  className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg"
+                  className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg mr-2"
                 >
                   Add Location Task Slide
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAddSlide("ai_image_task")}
+                  className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg"
+                >
+                  Add Photo Task Slide
                 </button>
               </>
             )}
@@ -1670,6 +1704,90 @@ const handleRemoveEpisodeAudio = () => {
                                     className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600"
                                     placeholder="Enter radius in meters"
                                   />
+                                </div>
+                              </div>
+                            )}
+
+                            {slide.type === "ai_image_task" && (
+                              <div className="space-y-4 mb-4">
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">
+                                    Photo Challenge Task / Prompt *
+                                  </label>
+                                  <textarea
+                                    value={slide.content.description || ""}
+                                    onChange={(e) => {
+                                      const updatedSlides = [...episodeData.slides];
+                                      updatedSlides[index].content.description = e.target.value;
+                                      setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                      setModifications((prev) => ({
+                                        ...prev,
+                                        slides: { ...prev.slides, [slide.id]: { descriptionModified: true } },
+                                      }));
+                                    }}
+                                    className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
+                                    placeholder="Describe what the user should photograph (e.g. 'Take a photo of a clock showing the time' or 'Find and capture a green plant')"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-sm font-medium mb-2">
+                                    Slide Background Image (Optional)
+                                  </label>
+                                  <div className="flex items-center gap-4">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      id={`edit-ai-bg-${index}`}
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                          handleMediaUploadWithCrop(index, file);
+                                        }
+                                      }}
+                                    />
+                                    <label
+                                      htmlFor={`edit-ai-bg-${index}`}
+                                      className="flex items-center gap-2 px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-500 cursor-pointer text-sm font-medium transition"
+                                    >
+                                      <Upload className="h-4 w-4" />
+                                      <span>
+                                        {slide.content.media?.preview || slide.content.media?.name
+                                          ? "Change Background"
+                                          : "Upload Background"}
+                                      </span>
+                                    </label>
+                                    {(slide.content.media?.preview || slide.content.media?.name) && (
+                                      <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-500 group">
+                                        <img
+                                          src={
+                                            slide.content.media?.preview ||
+                                            (slide.content.media?.name?.startsWith("http")
+                                              ? slide.content.media.name
+                                              : `https://wowfy.in/testusr/images/${slide.content.media?.name}`)
+                                          }
+                                          alt="Background Preview"
+                                          className="w-full h-full object-cover"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const updatedSlides = [...episodeData.slides];
+                                            updatedSlides[index].content.media = null;
+                                            setEpisodeData((prev) => ({ ...prev, slides: updatedSlides }));
+                                            setModifications((prev) => ({
+                                              ...prev,
+                                              slides: { ...prev.slides, [slide.id]: { mediaModified: true } },
+                                            }));
+                                          }}
+                                          className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 text-xs shadow transition"
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             )}

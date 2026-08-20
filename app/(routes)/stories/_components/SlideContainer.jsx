@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaArrowLeft, FaArrowRight, FaEllipsisV, FaPhone, FaVideo, FaVolumeMute, FaVolumeUp, FaCheckDouble } from 'react-icons/fa';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -59,7 +59,19 @@ const SlideContainer = ({
     locationData,
     userLocation,
     locationPermissionDenied,
-    calculateDistance
+    calculateDistance,
+    photoTaskData,
+    photoFile,
+    setPhotoFile,
+    photoPreview,
+    setPhotoPreview,
+    photoVerificationResult,
+    setPhotoVerificationResult,
+    isVerifyingPhoto,
+    handlePhotoVerificationSubmit,
+    photoTaskCompleted,
+    setPhotoTaskCompleted,
+    onNextSlide,
     }) => {
 
     const [slideDirection, setSlideDirection] = useState('right');
@@ -245,6 +257,19 @@ const SlideContainer = ({
                   <div className="w-3/4 h-8 bg-gray-700 rounded animate-pulse mx-auto mb-8" />
                   <div className="w-16 h-16 bg-gray-700 rounded-full animate-pulse mx-auto" />
                   <div className="w-48 h-4 bg-gray-700 rounded animate-pulse mx-auto" />
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'ai_image_task':
+          return (
+            <div className="flex-1 h-full bg-gray-900 relative">
+              <div className="max-w-[500px] mx-auto h-full flex flex-col items-center justify-center p-6">
+                <div className="space-y-6 text-center w-full flex flex-col items-center">
+                  <div className="w-3/4 h-8 bg-gray-700 rounded animate-pulse mx-auto mb-4" />
+                  <div className="w-[280px] h-[280px] bg-gray-800 rounded-3xl animate-pulse mx-auto" />
+                  <div className="w-48 h-10 bg-gray-700 rounded-xl animate-pulse mx-auto" />
                 </div>
               </div>
             </div>
@@ -1042,6 +1067,316 @@ const SlideContainer = ({
       );
     };
 
+    const AIImageTaskView = () => {
+      const fileInputRef = useRef(null);
+      const videoRef = useRef(null);
+      const streamRef = useRef(null);
+
+      const [isCameraActive, setIsCameraActive] = useState(false);
+      const [isCameraLoading, setIsCameraLoading] = useState(false);
+      const [cameraError, setCameraError] = useState(null);
+
+      // Stop camera helper
+      const stopCamera = () => {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
+        }
+        setIsCameraActive(false);
+      };
+
+      // Start live camera stream
+      const startCamera = async () => {
+        try {
+          setIsCameraLoading(true);
+          setCameraError(null);
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "environment" },
+              width: { ideal: 640 },
+              height: { ideal: 640 },
+            },
+            audio: false,
+          });
+          streamRef.current = stream;
+          setIsCameraActive(true);
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            await videoRef.current.play().catch(() => {});
+          }
+        } catch (err) {
+          console.error("Camera access error:", err);
+          setCameraError("Camera unavailable or permission denied. You can select a photo directly below.");
+          setIsCameraActive(false);
+        } finally {
+          setIsCameraLoading(false);
+        }
+      };
+
+      // Attach stream when video element renders
+      useEffect(() => {
+        if (isCameraActive && videoRef.current && streamRef.current) {
+          videoRef.current.srcObject = streamRef.current;
+          videoRef.current.play().catch(() => {});
+        }
+      }, [isCameraActive]);
+
+      // Cleanup camera on unmount
+      useEffect(() => {
+        return () => {
+          stopCamera();
+        };
+      }, []);
+
+      // Snap a 300x300 square image directly from video stream
+      const handleCaptureSnap = () => {
+        if (!videoRef.current) return;
+        const video = videoRef.current;
+        const canvas = document.createElement("canvas");
+        canvas.width = 300;
+        canvas.height = 300;
+        const ctx = canvas.getContext("2d");
+
+        const videoWidth = video.videoWidth || 300;
+        const videoHeight = video.videoHeight || 300;
+        const minDim = Math.min(videoWidth, videoHeight);
+        const startX = (videoWidth - minDim) / 2;
+        const startY = (videoHeight - minDim) / 2;
+
+        ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, 300, 300);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+              setPhotoFile(file);
+              setPhotoPreview(URL.createObjectURL(blob));
+              setPhotoVerificationResult(null);
+              setPhotoTaskCompleted?.(false);
+              stopCamera();
+            }
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+
+      // Fallback file capture / picker resized to 300x300 square
+      const handleNativeCapture = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              canvas.width = 300;
+              canvas.height = 300;
+              const ctx = canvas.getContext("2d");
+              const minDim = Math.min(img.width, img.height);
+              const startX = (img.width - minDim) / 2;
+              const startY = (img.height - minDim) / 2;
+
+              ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, 300, 300);
+
+              canvas.toBlob(
+                (blob) => {
+                  if (blob) {
+                    const croppedFile = new File([blob], "upload-capture.jpg", { type: "image/jpeg" });
+                    setPhotoFile(croppedFile);
+                    setPhotoPreview(URL.createObjectURL(blob));
+                    setPhotoVerificationResult(null);
+                    setPhotoTaskCompleted?.(false);
+                    stopCamera();
+                  }
+                },
+                "image/jpeg",
+                0.85
+              );
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+
+      return (
+        <div className="flex-1 h-full bg-gray-900 relative overflow-hidden flex flex-col justify-between">
+          {/* Background Image Overlay if present */}
+          {photoTaskData?.media_url ? (
+            <img
+              src={
+                photoTaskData.media_url.startsWith("http")
+                  ? photoTaskData.media_url
+                  : `${BASE_IMAGE_URL}${photoTaskData.media_url}`
+              }
+              alt="Background"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-gray-900 to-purple-950" />
+          )}
+          <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px]" />
+
+          {/* Main Content Container */}
+          <div className="relative z-10 max-w-[500px] mx-auto w-full h-full flex flex-col justify-between p-6 overflow-y-auto scrollbar-hide">
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4 my-auto w-full">
+              {/* Challenge Task Card */}
+              <div className="w-full bg-gray-800/80 backdrop-blur-md p-4 rounded-2xl border border-teal-500/30 text-center shadow-xl">
+                <span className="text-[11px] font-extrabold text-teal-400 uppercase tracking-widest block mb-1">
+                  📸 Photo Challenge
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-white leading-snug">
+                  {photoTaskData?.description || "Take or upload a photo for this challenge!"}
+                </h3>
+              </div>
+
+              {/* Square 300x300 Camera Viewfinder / Preview Container */}
+              <div className="w-full flex flex-col items-center justify-center">
+                {photoPreview ? (
+                  /* 1. Captured Photo Preview (300x300 Square) */
+                  <div className="relative w-[280px] h-[280px] sm:w-[300px] sm:h-[300px] rounded-3xl overflow-hidden border-4 border-teal-400 shadow-2xl group">
+                    <img src={photoPreview} alt="Captured preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoFile(null);
+                        setPhotoPreview(null);
+                        setPhotoVerificationResult(null);
+                        setPhotoTaskCompleted?.(false);
+                      }}
+                      className="absolute top-3 right-3 px-3 py-1.5 bg-black/80 text-white rounded-full hover:bg-red-600 transition-colors text-xs font-bold shadow-lg cursor-pointer"
+                    >
+                      Retake 🔄
+                    </button>
+                  </div>
+                ) : isCameraActive ? (
+                  /* 2. Live Camera Viewfinder (300x300 Square) */
+                  <div className="relative w-[280px] h-[280px] sm:w-[300px] sm:h-[300px] rounded-3xl overflow-hidden border-4 border-teal-400 shadow-2xl bg-black flex flex-col items-center justify-center">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Viewfinder Target Guidelines */}
+                    <div className="absolute inset-4 border-2 border-dashed border-white/60 rounded-2xl pointer-events-none" />
+
+                    {/* Snap & Cancel Buttons */}
+                    <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-3 px-3">
+                      <button
+                        type="button"
+                        onClick={handleCaptureSnap}
+                        className="px-5 py-2 bg-teal-500 hover:bg-teal-400 text-black font-extrabold text-xs rounded-full shadow-lg transition-transform active:scale-95 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span>📸 Snap Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        className="px-3 py-2 bg-black/70 hover:bg-black/90 text-white font-bold text-xs rounded-full shadow transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* 3. Initial Open Camera Button (300x300 Square) */
+                  <div className="flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      disabled={isCameraLoading}
+                      className="w-[280px] h-[280px] sm:w-[300px] sm:h-[300px] border-4 border-dashed border-teal-500/50 hover:border-teal-400 rounded-3xl bg-gray-800/50 hover:bg-gray-800/80 flex flex-col items-center justify-center cursor-pointer transition-all shadow-2xl p-4 group"
+                    >
+                      <div className="w-16 h-16 rounded-full bg-teal-500/20 text-teal-300 border border-teal-400/30 flex items-center justify-center mb-3 text-3xl group-hover:scale-110 transition-transform">
+                        📷
+                      </div>
+                      <span className="text-sm font-bold text-white mb-1">
+                        {isCameraLoading ? "Starting Camera..." : "Open Device Camera"}
+                      </span>
+                      <span className="text-[11px] text-teal-300 font-semibold bg-teal-950/80 px-3 py-1 rounded-full border border-teal-500/40">
+                        Tap to Start Live Camera
+                      </span>
+                    </button>
+
+                    {/* Direct file picker option */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-xs text-teal-400/80 hover:text-teal-300 underline font-medium cursor-pointer pt-1"
+                    >
+                      Or upload photo from files
+                    </button>
+                  </div>
+                )}
+
+                {cameraError && (
+                  <p className="text-[11px] text-rose-300 bg-rose-950/80 border border-rose-500/40 px-3 py-1.5 rounded-lg mt-2 text-center max-w-[300px]">
+                    {cameraError}
+                  </p>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={handleNativeCapture}
+                />
+              </div>
+
+              {/* Verification Feedback Alert Box */}
+              {photoVerificationResult && (
+                <div
+                  className={`w-full p-3 rounded-xl border text-xs leading-relaxed font-semibold text-center transition-all ${
+                    photoVerificationResult.is_valid
+                      ? "bg-emerald-950/80 border-emerald-500/50 text-emerald-200"
+                      : "bg-rose-950/80 border-rose-500/50 text-rose-200"
+                  }`}
+                >
+                  {photoVerificationResult.is_valid ? "🌟 " : "💡 "}
+                  {photoVerificationResult.feedback}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="w-full pt-2">
+                {photoVerificationResult?.is_valid ? (
+                  <button
+                    type="button"
+                    onClick={onNextSlide}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg cursor-pointer"
+                  >
+                    Continue Story →
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePhotoVerificationSubmit}
+                    disabled={!photoFile || isVerifyingPhoto}
+                    className="w-full py-3 bg-teal-600 hover:bg-teal-500 text-white text-sm font-bold rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    {isVerifyingPhoto ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Checking photo...</span>
+                      </>
+                    ) : (
+                      <span>Verify Photo ✨</span>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     return (
         <div className="relative h-full overflow-hidden">
             {/* Sliding Placeholder with no exit animation */}
@@ -1070,10 +1405,11 @@ const SlideContainer = ({
                     {currentSlide?.slide_type === 'quiz' && quizData && <QuizView />}
                     {currentSlide?.slide_type === 'pedometer' && pedometerData && <PedometerView />}
                     {currentSlide?.slide_type === 'location' && locationData && <LocationView />}
+                    {currentSlide?.slide_type === 'ai_image_task' && photoTaskData && <AIImageTaskView />}
                 </div>
             )}
         </div>
     );
-};;
+};
 
 export default SlideContainer;

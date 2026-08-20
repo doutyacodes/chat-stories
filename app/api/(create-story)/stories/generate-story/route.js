@@ -81,8 +81,7 @@ export async function POST(req) {
   
       return NextResponse.json(
         { 
-          error: "Failed to generate story", 
-          details: error.message 
+          error: "Failed to generate story. Please try again later.",
         }, 
         { status: 500 }
       );

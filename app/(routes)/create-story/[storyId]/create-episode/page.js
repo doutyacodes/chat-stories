@@ -47,7 +47,8 @@ console.log(storyType)
     ...(storyType === "game" ? [
       { value: "quiz", label: "Quiz Slide" },
       { value: "pedometer", label: "Step Task Slide" },
-      { value: "location", label: "Location Task Slide" }
+      { value: "location", label: "Location Task Slide" },
+      { value: "ai_image_task", label: "Photo Task Slide" }
     ] : [])
   ];
 
@@ -131,6 +132,10 @@ console.log(storyType)
             latitude : 0,
             longitude : 0,
             radius : 0,
+            audio: null
+          } : type === "ai_image_task" ? {
+            description: "",
+            media: null,
             audio: null
           } : type === "conversation" ? { // New case for chatWithBg
             characters: mergedCharacters,
@@ -454,7 +459,7 @@ console.log(storyType)
 const handleImageSlideChange = (index, field, value) => {
   setEpisodeData(prev => {
     const updatedSlides = [...prev.slides];
-    if (updatedSlides[index].type === 'image' || updatedSlides[index].type === 'quiz') {
+    if (updatedSlides[index].type === 'image' || updatedSlides[index].type === 'quiz' || updatedSlides[index].type === 'ai_image_task') {
       updatedSlides[index].content[field] = value;
     } else if (updatedSlides[index].type === 'conversation' && field === 'media') {
       // For conversation, we set the backgroundImage
@@ -1665,6 +1670,99 @@ const handleSubmit = async (e) => {
                           </div>
                         )}
 
+                        {(slide.type === 'ai_image_task' && storyType === 'game') && (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Photo Challenge Task / Prompt *
+                              </label>
+                              <textarea
+                                value={slide.content.description || ''}
+                                onChange={(e) => setEpisodeData(prev => ({
+                                  ...prev,
+                                  slides: prev.slides.map((s, i) => 
+                                    i === index ? {
+                                      ...s,
+                                      content: { ...s.content, description: e.target.value }
+                                    } : s
+                                  )
+                                }))}
+                                className="w-full p-3 rounded-lg bg-gray-600 focus:ring-2 focus:ring-purple-600 h-24"
+                                placeholder="Describe what the user should photograph (e.g. 'Take a photo of a clock showing the time' or 'Find and capture a green plant')"
+                              />
+                            </div>
+
+                            {/* Optional Background Image */}
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Slide Background Image (Optional)
+                              </label>
+                              <div className="flex items-center gap-4">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  id={`ai-task-bg-${index}`}
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                      handleMediaUpload(index, file);
+                                    }
+                                  }}
+                                />
+                                <label
+                                  htmlFor={`ai-task-bg-${index}`}
+                                  className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg cursor-pointer text-sm font-medium transition flex items-center gap-2"
+                                >
+                                  <Upload className="h-4 w-4" />
+                                  <span>{slide.content.media?.preview ? 'Change Background' : 'Upload Background'}</span>
+                                </label>
+                                {slide.content.media?.preview && (
+                                  <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-500 group">
+                                    <img src={slide.content.media.preview} alt="Background Preview" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => handleImageSlideChange(index, 'media', null)}
+                                      className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-0.5 text-xs shadow transition"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Optional Audio */}
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Voiceover Audio (Optional MP3)
+                              </label>
+                              <input
+                                type="file"
+                                accept="audio/*"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    setEpisodeData(prev => ({
+                                      ...prev,
+                                      slides: prev.slides.map((s, i) =>
+                                        i === index ? {
+                                          ...s,
+                                          content: {
+                                            ...s.content,
+                                            audio: { file, name: file.name }
+                                          }
+                                        } : s
+                                      )
+                                    }));
+                                  }
+                                }}
+                                className="w-full p-2 bg-gray-600 rounded-lg text-sm"
+                              />
+                            </div>
+                          </div>
+                        )}
+
                     </div>
                 </React.Fragment>
             ))}
@@ -1701,7 +1799,9 @@ const handleSubmit = async (e) => {
                   ref={imgRef}
                   // src={episodeData.slides[currentSlideIndex]?.content?.media?.preview}
                   src={ 
-                    episodeData.slides[currentSlideIndex]?.type === "quiz" || episodeData.slides[currentSlideIndex]?.type === "image"
+                    episodeData.slides[currentSlideIndex]?.type === "quiz" || 
+                    episodeData.slides[currentSlideIndex]?.type === "image" ||
+                    episodeData.slides[currentSlideIndex]?.type === "ai_image_task"
                       ? episodeData.slides[currentSlideIndex]?.content?.media?.preview
                       : episodeData.slides[currentSlideIndex]?.content?.backgroundImage?.preview 
                   }
