@@ -1,14 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import GlobalApi from "../../_services/GlobalApi";
 import toast, { Toaster } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
+import GoogleAuthButton from '@/app/components/GoogleAuthButton';
 
 const LoginPage = () => {
   const router = useRouter();
+  const [isSubmittingGoogle, setIsSubmittingGoogle] = useState(false);
+  const [googleAuthData, setGoogleAuthData] = useState(null); // { idToken, profile }
+  const [dobModalOpen, setDobModalOpen] = useState(false);
+  const [googleDob, setGoogleDob] = useState("");
+  const [googleUsername, setGoogleUsername] = useState("");
 
   const {
     register,
@@ -18,14 +24,13 @@ const LoginPage = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Send login request
       const response = await GlobalApi.LoginUser(data);
 
       if (response.data.token) {
-        localStorage.setItem('token', response.data.token); // Store token
-        window.dispatchEvent(new Event("auth-change")); // Notify auth listeners
+        localStorage.setItem('token', response.data.token);
+        window.dispatchEvent(new Event("auth-change"));
         toast.success("Logged in successfully!");
-        router.replace("/home"); // Redirect to home
+        router.replace("/home");
       }
     } catch (error) {
       toast.error(
@@ -34,11 +39,106 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credential) => {
+    setIsSubmittingGoogle(true);
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: credential }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Google authentication failed");
+      }
+
+      if (data.status === "LOGGED_IN") {
+        localStorage.setItem("token", data.token);
+        window.dispatchEvent(new Event("auth-change"));
+        toast.success("Logged in successfully!");
+        router.replace("/home");
+      } else if (data.status === "NEW_USER") {
+        // Need Date of Birth to complete setup
+        setGoogleAuthData({ idToken: credential, profile: data.googleProfile });
+        setGoogleUsername(data.googleProfile?.username || "");
+        setDobModalOpen(true);
+      }
+    } catch (err) {
+      toast.error(err.message || "Google sign in failed");
+    } finally {
+      setIsSubmittingGoogle(false);
+    }
+  };
+
+  const handleCompleteGoogleSignup = async (e) => {
+    e.preventDefault();
+    if (!googleDob) {
+      toast.error("Please select your date of birth");
+      return;
+    }
+
+    setIsSubmittingGoogle(true);
+    try {
+      const res = await fetch("/api/auth/google/complete-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken: googleAuthData.idToken,
+          username: googleUsername || googleAuthData.profile?.username,
+          date_of_birth: googleDob,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to complete account setup");
+      }
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        window.dispatchEvent(new Event("auth-change"));
+        toast.success("Account created successfully!");
+        setDobModalOpen(false);
+        router.replace("/home");
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to complete signup");
+    } finally {
+      setIsSubmittingGoogle(false);
+    }
+  };
+
+  const todayStr = new Date().toISOString().split("T")[0];
+
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black p-4">
       <Toaster />
       <div className="bg-gray-800 bg-opacity-90 rounded-md shadow-lg p-8 w-full max-w-md">
         <h2 className="text-3xl font-bold text-white text-center mb-6">Sign In</h2>
+
+        {/* Google Sign-In Button */}
+        <div className="mb-5">
+          <GoogleAuthButton
+            text="Sign in with Google"
+            onSuccess={handleGoogleSuccess}
+            onError={(msg) => toast.error(msg)}
+            disabled={isSubmittingGoogle}
+          />
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-gray-700" />
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            or with email
+          </span>
+          <div className="flex-1 h-px bg-gray-700" />
+        </div>
+
+        {/* Normal Email / Password Form */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm text-gray-300 font-medium mb-2">
@@ -72,11 +172,12 @@ const LoginPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-red-600 text-white py-3 px-4 rounded font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="w-full bg-red-600 text-white py-3 px-4 rounded font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
           >
             Sign In
           </button>
         </form>
+
         <p className="text-gray-400 text-sm text-center mt-6">
           New to Qatha?{' '}
           <Link href="/signup" className="text-red-500 hover:underline font-semibold">
@@ -84,6 +185,64 @@ const LoginPage = () => {
           </Link>
         </p>
       </div>
+
+      {/* Date of Birth Modal for First-Time Google Users */}
+      {dobModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-sm shadow-2xl text-white">
+            <h3 className="text-xl font-bold mb-2 text-center">Complete Your Profile</h3>
+            <p className="text-xs text-gray-400 text-center mb-5">
+              Please provide your Date of Birth to personalize your reading experience.
+            </p>
+
+            <form onSubmit={handleCompleteGoogleSignup} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={googleUsername}
+                  onChange={(e) => setGoogleUsername(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={googleDob}
+                  max={todayStr}
+                  onChange={(e) => setGoogleDob(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDobModalOpen(false)}
+                  className="flex-1 py-2.5 rounded bg-gray-700 hover:bg-gray-600 text-xs font-semibold text-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingGoogle}
+                  className="flex-[2] py-2.5 rounded bg-red-600 hover:bg-red-700 text-xs font-semibold text-white transition-colors disabled:opacity-60"
+                >
+                  {isSubmittingGoogle ? "Saving..." : "Complete Setup"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
