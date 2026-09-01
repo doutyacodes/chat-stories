@@ -80,13 +80,13 @@ const StoryOverview = () => {
         onClick={handleClick}
       >
         {isEpisode ? (
-          <div className="w-full h-28 md:h-44 bg-gray-800 rounded-2xl border-[6px] border-white mb-2 flex items-center justify-center">
-            <span className="text-white text-xl"> 
+          <div className="w-full h-28 md:h-44 bg-neutral-900 rounded-2xl border border-white/10 group-hover:border-purple-500/40 mb-2 flex items-center justify-center transition-all duration-300 shadow-sm group-hover:shadow-md">
+            <span className="text-white text-xl font-bold"> 
               { `Episode ${storyData.episodeNumber}`}
             </span>
           </div>
         ) : (
-          <div className="relative">
+          <div className="relative rounded-2xl border border-white/10 group-hover:border-purple-500/40 overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300 mb-2 bg-neutral-900">
             {storyData.age_rating === '18+' && (
               <div className="absolute top-2.5 right-2.5 bg-red-600/90 text-white z-10 px-1.5 py-0.5 rounded text-[10px] font-bold">
                 18+
@@ -95,7 +95,7 @@ const StoryOverview = () => {
             <img 
               src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
               alt={storyData.title}
-              className="w-full h-28 md:h-44 object-cover rounded-2xl border-[6px] border-white mb-2"
+              className="w-full h-28 md:h-44 object-cover transition-transform duration-300 group-hover:scale-105 bg-neutral-900"
             />
           </div>
         )}

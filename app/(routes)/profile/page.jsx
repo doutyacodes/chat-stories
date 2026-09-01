@@ -617,7 +617,7 @@ export default function ProfilePage() {
                                 alt={item.title}
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full h-full object-cover rounded-xl border-[3px] border-white/90 group-hover:border-purple-500 transition-colors"
+                                className="w-full h-full object-cover rounded-xl border border-white/10 group-hover:border-purple-500/40 transition-colors"
                               />
                             </div>
                             <div className="flex-1 min-w-0 space-y-1.5">
@@ -674,7 +674,7 @@ export default function ProfilePage() {
                                 alt={item.title}
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full h-full object-cover rounded-xl border-[3px] border-white/90 group-hover:border-purple-500 transition-colors"
+                                className="w-full h-full object-cover rounded-xl border border-white/10 group-hover:border-purple-500/40 transition-colors"
                               />
                             </div>
                             <div className="flex-1 min-w-0 space-y-1.5">
@@ -730,7 +730,7 @@ export default function ProfilePage() {
                                 alt={item.title}
                                 loading="lazy"
                                 decoding="async"
-                                className="w-full h-full object-cover rounded-xl border-[3px] border-white/90 group-hover:border-purple-500 transition-colors"
+                                className="w-full h-full object-cover rounded-xl border border-white/10 group-hover:border-purple-500/40 transition-colors"
                               />
                             </div>
                             <div className="flex-1 min-w-0 space-y-1.5">

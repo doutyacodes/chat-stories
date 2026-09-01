@@ -334,7 +334,7 @@ const StoryCard = ({ storyData, onOpenStory }) => {
       className="flex-none cursor-pointer transition-transform hover:scale-105 group relative"
       onClick={() => onOpenStory(storyData)}
     >
-      <div className="relative">
+      <div className="relative rounded-2xl border border-white/10 group-hover:border-purple-500/40 overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300 mb-2 bg-neutral-900">
         {storyData.age_rating === '18+' && (
           <div className="absolute top-2.5 right-2.5 bg-red-600/90 text-white z-10 px-1.5 py-0.5 rounded text-[10px] font-bold">
             18+
@@ -345,7 +345,7 @@ const StoryCard = ({ storyData, onOpenStory }) => {
           alt={storyData.title}
           loading="lazy"
           decoding="async"
-          className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white/90 group-hover:border-purple-500 mb-2 transition-colors bg-neutral-900"
+          className="w-full aspect-[3/2.5] object-cover transition-transform duration-300 group-hover:scale-105 bg-neutral-900"
         />
       </div>
       <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2 group-hover:text-purple-400 transition-colors">

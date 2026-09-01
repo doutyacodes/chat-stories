@@ -165,19 +165,17 @@ const ViewAllPage = () => {
 };
 
 const StoryCard = ({ storyData, isEpisode = false, onOpenStory }) => {
-  const isGame = storyData.story_type === 'game' || storyData.storyType === 'game' || storyData.type === 'game' || storyData.story_type === 'interactive';
-
   return (
     <div 
       className="flex-none cursor-pointer transition-transform hover:scale-105 group relative"
       onClick={() => onOpenStory ? onOpenStory(storyData, isEpisode) : null}
     >
       {isEpisode ? (
-        <div className="w-full aspect-[3/2.5] bg-gray-800 rounded-2xl border-[6px] border-white mb-2 flex items-center justify-center">
-          <span className="text-white text-xl">Episode {storyData.episodeNumber}</span>
+        <div className="w-full aspect-[3/2.5] bg-neutral-900 rounded-2xl border border-white/10 group-hover:border-purple-500/40 mb-2 flex items-center justify-center transition-all duration-300 shadow-sm group-hover:shadow-md">
+          <span className="text-white text-xl font-bold">Episode {storyData.episodeNumber}</span>
         </div>
       ) : (
-        <div className="relative">
+        <div className="relative rounded-2xl border border-white/10 group-hover:border-purple-500/40 overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300 mb-2 bg-neutral-900">
           {storyData.age_rating === '18+' && (
             <div className="absolute top-2.5 right-2.5 bg-red-600/90 text-white z-10 px-1.5 py-0.5 rounded text-[10px] font-bold">
               18+
@@ -186,11 +184,11 @@ const StoryCard = ({ storyData, isEpisode = false, onOpenStory }) => {
           <img 
             src={`${BASE_IMAGE_URL}${storyData.cover_img}`}
             alt={storyData.title}
-            className="w-full aspect-[3/2.5] object-cover rounded-2xl border-[6px] border-white mb-2"
+            className="w-full aspect-[3/2.5] object-cover transition-transform duration-300 group-hover:scale-105 bg-neutral-900"
           />
         </div>
       )}
-      <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
+      <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2 group-hover:text-purple-400 transition-colors">
         {isEpisode ? storyData.name : storyData.title}
       </p>
     </div>

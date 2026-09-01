@@ -117,23 +117,25 @@ const LazyCategoryRow = ({ category, onOpenStory, router }) => {
             className="flex-none w-32 md:w-56 cursor-pointer transition-transform hover:scale-105 relative group"
             onClick={() => onOpenStory(story)}
           >
-            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm z-10 px-2 py-1 rounded-full">
-              <p className="text-xs text-purple-400 font-medium">
-                {story.story_type === 'game' ? (
-                  <Gamepad2 className="w-5 h-5 md:w-6 md:h-6 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" />
-                ) : (
-                  <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" />
-                )}
-              </p>
+            <div className="relative rounded-2xl border border-white/10 group-hover:border-purple-500/40 overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300 mb-2 bg-neutral-900">
+              <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm z-10 px-2 py-1 rounded-full">
+                <p className="text-xs text-purple-400 font-medium">
+                  {story.story_type === 'game' ? (
+                    <Gamepad2 className="w-4 h-4 md:w-5 md:h-5 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" />
+                  ) : (
+                    <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-white/90 stroke-[2.5] drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]" />
+                  )}
+                </p>
+              </div>
+              <img 
+                src={`${BASE_IMAGE_URL}${story.cover_img}`}
+                alt={story.title}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-28 md:h-44 object-cover transition-transform duration-300 group-hover:scale-105 bg-neutral-900"
+              />
             </div>
-            <img 
-              src={`${BASE_IMAGE_URL}${story.cover_img}`}
-              alt={story.title}
-              loading="lazy"
-              decoding="async"
-              className="w-full h-28 md:h-44 object-cover rounded-2xl border-[6px] border-white mb-2 bg-neutral-900"
-            />
-            <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2">
+            <p className="text-xs md:text-sm text-center text-white font-medium line-clamp-2 group-hover:text-purple-400 transition-colors">
               {story.title}
             </p>
           </div>
